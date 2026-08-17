@@ -88,22 +88,32 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Instant R2 Direct Stream + Background RAM Blob Upgrade ── */
+        /* ── Step 1: Responsive R2 Video Streaming (Mobile: hero-mobil.mp4 / PC: hero-oemil.mp4) ── */
         const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
-        const videoSrc = `${R2_URL}/hero-oemil.mp4`;
+        const isMobile = window.innerWidth <= 768;
+        const mobileVideoSrc = `${R2_URL}/hero-mobil.mp4`;
+        const desktopVideoSrc = `${R2_URL}/hero-oemil.mp4`;
+        const primaryVideoSrc = isMobile ? mobileVideoSrc : desktopVideoSrc;
 
-        // ⚡ 1. Synchronously set direct R2 streaming source so browser decodes frame 0 in <50ms (Zero Black Screen!)
+        // ⚡ 1. Synchronously set primary video streaming source on mount
         if (!video.src || video.src === window.location.href) {
-            video.src = videoSrc;
+            video.src = primaryVideoSrc;
             video.load();
             try {
                 video.currentTime = 0;
             } catch (_) { }
         }
 
-        // ⚡ 2. Concurrently fetch full Blob into RAM in background for lag-free 60fps scroll scrubbing
-        fetch(videoSrc)
-            .then((r) => (r.ok ? r.blob() : Promise.reject('R2 Fetch Error')))
+        // ⚡ 2. Concurrently fetch full Blob into RAM in background (with fallback if mobile video is not yet on R2)
+        fetch(primaryVideoSrc)
+            .then((r) => {
+                if (r.ok) return r.blob();
+                if (isMobile && primaryVideoSrc !== desktopVideoSrc) {
+                    // Mobile video 404 fallback to desktop video
+                    return fetch(desktopVideoSrc).then((fr) => (fr.ok ? fr.blob() : Promise.reject('R2 Fetch Error')));
+                }
+                return Promise.reject('R2 Fetch Error');
+            })
             .then((blob) => {
                 blobUrl = URL.createObjectURL(blob);
                 const pos = video.currentTime || 0;
@@ -112,6 +122,10 @@ export const ScrollScrubHero: React.FC = () => {
                 setVideoLoaded(true);
             })
             .catch(() => {
+                // Fallback to desktop video on network error
+                if (isMobile && video.src !== desktopVideoSrc) {
+                    video.src = desktopVideoSrc;
+                }
                 setVideoLoaded(true);
             });
 
