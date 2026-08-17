@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
 import { getAssetUrl } from '../utils/assets';
@@ -11,8 +12,11 @@ export interface NavProps {
 }
 
 export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
+        setIsMobileMenuOpen(false);
         const element = document.getElementById(targetId);
         if (element) {
             const headerOffset = 75;
@@ -56,17 +60,64 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     </a>
                 </nav>
 
-                <button
-                    className="oc-cta-fill"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        onOpenDrawer?.('single');
-                    }}
-                >
-                    <ShoppingBag size={18} />
-                    <span>지금 구매하기</span>
-                </button>
+                <div className="oc-nav__right-actions">
+                    <button
+                        className="oc-cta-fill oc-nav__cta-mobile"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onOpenDrawer?.('single');
+                        }}
+                    >
+                        <ShoppingBag size={15} />
+                        <span>지금 구매하기</span>
+                    </button>
+
+                    <button
+                        className="oc-nav__hamburger"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="모바일 메뉴"
+                    >
+                        {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
+                </div>
             </div>
+
+            {/* Mobile Menu Overlay Portal: Rendered directly to document.body */}
+            {isMobileMenuOpen && typeof window !== 'undefined' && createPortal(
+                <div className="oc-mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}>
+                    <div className="oc-mobile-menu-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="oc-mobile-menu-header">
+                            <span className="oc-mobile-menu-title">OatCare 메뉴</span>
+                            <button className="oc-mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <nav className="oc-mobile-menu-nav">
+                            <a className="oc-mobile-menu-link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
+                                <span>WHY OATCARE</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
+                                <span>맛 둘러보기</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="#reviews" onClick={(e) => handleNavClick(e, 'reviews')}>
+                                <span>고객 후기</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="#bundles" onClick={(e) => handleNavClick(e, 'bundles')}>
+                                <span>세트 구성</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="#content" onClick={(e) => handleNavClick(e, 'content')}>
+                                <span>아침 가이드</span>
+                                <ArrowRight size={18} />
+                            </a>
+                        </nav>
+                    </div>
+                </div>,
+                document.body
+            )}
         </header>
     );
 };

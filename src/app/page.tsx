@@ -6,6 +6,7 @@ import { ProductDetailModal, ProductDetailItem } from '../components/ProductDeta
 import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
 import { LegalModal, LegalModalType } from '../components/LegalModal';
 import { LegalPage } from '../components/LegalPage';
+import { ScrollReveal } from '../components/ScrollReveal';
 import {
     BoldStatement,
     Bundles,
@@ -84,17 +85,17 @@ export default function Home() {
             <Nav onOpenDrawer={handleOpenDrawer} />
             <ScrollScrubHero />
 
-            <div className="oc-band oc-band--cream">
+            <ScrollReveal className="oc-band oc-band--cream">
                 <BoldStatement />
-            </div>
+            </ScrollReveal>
 
-            <div className="oc-band oc-band--tan">
+            <ScrollReveal className="oc-band oc-band--tan">
                 <QuickReviews />
-            </div>
+            </ScrollReveal>
 
-            <div className="oc-band oc-band--cream">
+            <ScrollReveal className="oc-band oc-band--cream">
                 <ProductGrid onSelectProduct={setSelectedProduct} />
-            </div>
+            </ScrollReveal>
 
             <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
 
@@ -106,19 +107,22 @@ export default function Home() {
 
             <LegalModal type={legalModalType} onClose={() => setLegalModalType(null)} />
 
-            <div className="oc-band oc-band--tan">
+            <ScrollReveal className="oc-band oc-band--tan">
                 <FamilyStory />
-            </div>
+            </ScrollReveal>
 
-            <div className="oc-band oc-band--cream">
+            <ScrollReveal className="oc-band oc-band--cream">
                 <Bundles onSelectProduct={setSelectedProduct} />
-            </div>
+            </ScrollReveal>
 
-            <div className="oc-band oc-band--tan">
+            <ScrollReveal className="oc-band oc-band--tan">
                 <ContentTeaser />
-            </div>
+            </ScrollReveal>
 
-            <FinalCta onOpenDrawer={handleOpenDrawer} />
+            <ScrollReveal>
+                <FinalCta onOpenDrawer={handleOpenDrawer} />
+            </ScrollReveal>
+
             <Footer onOpenLegal={handleOpenLegal} />
         </div>
     );

@@ -88,12 +88,24 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Ultra-Fast Responsive R2 Video Streaming (PC: hero-desktop-v2.mp4 / Mobile: hero-mobil.mp4) ── */
+        /* ── Step 1: Ultra-Fast Responsive R2 Video Streaming (PC: hero-desktop-v2.mp4 / Mobile: hero-mobile-v2.mp4) ── */
         const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
         const isMobile = window.innerWidth <= 768;
-        const mobileVideoSrc = `${R2_URL}/hero-mobil.mp4`;
+        const mobileVideoSrc = `${R2_URL}/hero-mobile-v2.mp4`;
         const desktopVideoSrc = `${R2_URL}/hero-desktop-v2.mp4`;
         const primaryVideoSrc = isMobile ? mobileVideoSrc : desktopVideoSrc;
+
+        const localMobileFallback = '/assets/hero-mobile-v2.mp4';
+        const localDesktopFallback = '/assets/hero-desktop-v2.mp4';
+        const localFallback = isMobile ? localMobileFallback : localDesktopFallback;
+
+        // ⚡ 0. Instant Poster: set poster attribute to eliminate black screen flash
+        const posterDesktop = `${R2_URL}/hero-poster-desktop.webp`;
+        const posterMobile = `${R2_URL}/hero-poster-mobile.webp`;
+        const posterSrc = isMobile ? posterMobile : posterDesktop;
+        const localPosterFallback = isMobile ? '/assets/hero-poster-mobile.webp' : '/assets/hero-poster-desktop.webp';
+        video.poster = posterSrc;
+        video.onerror = () => { video.poster = localPosterFallback; };
 
         // ⚡ 1. Synchronously set primary video streaming source on mount (0ms faststart playback)
         if (!video.src || video.src === window.location.href) {
@@ -104,25 +116,46 @@ export const ScrollScrubHero: React.FC = () => {
             } catch (_) { }
         }
 
-        // ⚡ 2. Concurrently fetch full Blob into RAM in background (with fallback to local /assets/ if R2 is pending)
-        fetch(primaryVideoSrc)
-            .then((r) => {
-                if (r.ok) return r.blob();
-                const localFallback = isMobile ? '/assets/hero-mobil.mp4' : '/assets/hero-desktop-v2.mp4';
-                return fetch(localFallback).then((fr) => (fr.ok ? fr.blob() : Promise.reject('Local Fetch Error')));
-            })
-            .then((blob) => {
+        // ⚡ 2. Concurrently fetch full Blob into RAM in background (with robust try/catch fallback for R2 CORS/404)
+        const loadVideoBlob = async () => {
+            try {
+                // Try R2 CDN first
+                const res = await fetch(primaryVideoSrc);
+                if (res.ok) {
+                    const blob = await res.blob();
+                    return blob;
+                }
+            } catch (r2Err) {
+                console.warn('[ScrollScrubHero] R2 CDN fetch failed or CORS blocked, loading local fallback:', r2Err);
+            }
+
+            // Fallback to local /assets/
+            try {
+                const localRes = await fetch(localFallback);
+                if (localRes.ok) {
+                    const localBlob = await localRes.blob();
+                    return localBlob;
+                }
+            } catch (localErr) {
+                console.error('[ScrollScrubHero] Local video fetch failed:', localErr);
+            }
+            return null;
+        };
+
+        loadVideoBlob().then((blob) => {
+            if (blob) {
                 blobUrl = URL.createObjectURL(blob);
                 const pos = video.currentTime || 0;
                 video.src = blobUrl;
-                video.currentTime = pos;
-                setVideoLoaded(true);
-            })
-            .catch(() => {
-                setVideoLoaded(true);
-            });
+                video.load();
+                try {
+                    video.currentTime = pos;
+                } catch (_) { }
+            }
+            setVideoLoaded(true);
+        });
 
-        /* ── Step 2: Scroll listener → updates targetRef ── */
+        /* ── Step 2: Scroll & Touch listeners → updates targetRef for mobile & desktop ── */
         const onScroll = () => {
             const track = trackRef.current;
             if (!track) return;
@@ -182,6 +215,8 @@ export const ScrollScrubHero: React.FC = () => {
         video.addEventListener('loadedmetadata', onMeta);
 
         window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('touchmove', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
         onScroll();
 
         if (video.readyState >= 1) {
@@ -191,6 +226,8 @@ export const ScrollScrubHero: React.FC = () => {
         return () => {
             cancelAnimationFrame(animId);
             window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('touchmove', onScroll);
+            window.removeEventListener('resize', onScroll);
             video.removeEventListener('loadedmetadata', onMeta);
             if (blobUrl) URL.revokeObjectURL(blobUrl);
         };
@@ -347,7 +384,7 @@ export const ScrollScrubHero: React.FC = () => {
                             ))}
                         </div>
 
-                        <span style={{ fontSize: '0.85rem', opacity: 0.8, fontWeight: 600 }}>
+                        <span className="oc-scroll-progress-title">
                             {progressPct < 15 ? 'OatCare Intro' : currentScene.title}
                         </span>
                     </div>

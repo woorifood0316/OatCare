@@ -72,9 +72,9 @@ body {
 .oc-nav {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 9999;
   height: 4.5rem;
-  background: rgba(247, 241, 228, 0.88);
+  background: rgba(247, 241, 228, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--oc-line);
@@ -132,6 +132,147 @@ body {
 .oc-nav__link:hover {
   opacity: 1;
   color: var(--oc-maroon);
+}
+
+/* Nav Right Actions & Mobile Hamburger */
+.oc-nav__right-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+@media (max-width: 859px) {
+  .oc-nav .oc-cta-fill {
+    padding: 0.55rem 0.95rem !important;
+    font-size: 0.81rem !important;
+    gap: 0.35rem !important;
+  }
+}
+
+.oc-nav__hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  border: 1px solid var(--oc-line);
+  background: rgba(247, 241, 228, 0.9);
+  color: var(--oc-maroon);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.oc-nav__hamburger:hover {
+  background: rgba(226, 211, 176, 0.4);
+  transform: scale(1.05);
+}
+
+@media (min-width: 860px) {
+  .oc-nav__hamburger {
+    display: none;
+  }
+}
+
+/* Mobile Menu Overlay Drawer — Header Visible, Right 70% Solid Cream Panel */
+.oc-mobile-menu-overlay {
+  position: fixed !important;
+  top: 4.5rem !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 4.5rem) !important;
+  z-index: 999999 !important;
+  background: rgba(22, 14, 10, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  animation: ocFadeIn 0.2s ease forwards;
+}
+
+.oc-mobile-menu-content {
+  width: 70vw !important;
+  max-width: 70% !important;
+  height: 100% !important;
+  background-color: #F7F1E4 !important;
+  background: #F7F1E4 !important;
+  opacity: 1 !important;
+  border-left: 2px solid var(--oc-line) !important;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.4) !important;
+  padding: 1.5rem 1.25rem 2.5rem 1.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  animation: ocSlideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.oc-mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--oc-line);
+  margin-bottom: 1.25rem;
+}
+
+.oc-mobile-menu-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--oc-maroon);
+}
+
+.oc-mobile-menu-close {
+  background: none;
+  border: none;
+  color: var(--oc-brown);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oc-mobile-menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.oc-mobile-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background-color: #EFE4CD !important;
+  background: #EFE4CD !important;
+  opacity: 1 !important;
+  border: 1px solid var(--oc-line) !important;
+  color: var(--oc-brown) !important;
+  font-weight: 700;
+  font-size: 0.98rem;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.oc-mobile-menu-link:hover,
+.oc-mobile-menu-link:active {
+  background-color: var(--oc-maroon) !important;
+  background: var(--oc-maroon) !important;
+  color: var(--oc-cream) !important;
+  transform: translateY(-1px);
+}
+
+@keyframes ocSlideLeft {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 /* CTAs */
@@ -246,7 +387,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000000 !important;
+  background: #1a1510 !important;
+  /* Warm dark tone matching video palette — eliminates jarring pure-black flash */
 }
 
 .oc-scroll-video {
@@ -301,6 +443,63 @@ body {
   align-self: flex-end;
 }
 
+/* Mobile positioning: Place chapters 1~4 right above the scroll hint (bottom: 6.8rem) with left offset (left: 1.5rem) */
+@media (max-width: 768px) {
+  .oc-scroll-chapter-card {
+    position: absolute !important;
+    top: auto !important;
+    bottom: 6.8rem !important;
+    left: 1.5rem !important;
+    right: auto !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: calc(100vw - 3rem) !important;
+    text-align: left !important;
+    pointer-events: auto !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .oc-scroll-chapter-card.align-left,
+  .oc-scroll-chapter-card.align-right {
+    align-self: flex-start !important;
+    left: 1.5rem !important;
+    right: auto !important;
+  }
+
+  .oc-scroll-chapter-card .oc-eyebrow {
+    display: inline-block !important;
+    font-size: clamp(1.0rem, 1.5vw, 1.15rem) !important;
+    background: rgba(20, 15, 10, 0.38) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    padding: 0.22rem 0.8rem !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(201, 150, 60, 0.28) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+    margin-bottom: 0.45rem !important;
+  }
+
+  .oc-scroll-chapter-card h2 {
+    font-size: clamp(1.65rem, 6vw, 2.15rem) !important;
+    margin-bottom: 0.4rem !important;
+    line-height: 1.25 !important;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.85), 0 1px 2px rgba(0, 0, 0, 1) !important;
+    font-weight: 800 !important;
+  }
+
+  .oc-scroll-chapter-card p {
+    font-size: 1.02rem !important;
+    line-height: 1.45 !important;
+    max-width: 100% !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 16px rgba(0, 0, 0, 0.85) !important;
+    font-weight: 600 !important;
+  }
+}
+
 .oc-scroll-progress-bar {
   position: absolute;
   bottom: 1.5rem;
@@ -309,26 +508,57 @@ body {
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  background: rgba(30, 19, 12, 0.88);
+  gap: 1rem;
+  background: rgba(30, 19, 12, 0.92);
   backdrop-filter: blur(12px);
-  padding: 0.45rem 1.35rem;
+  padding: 0.45rem 1.25rem;
   border-radius: 999px;
   border: 1px solid rgba(226, 211, 176, 0.25);
   color: var(--oc-cream);
+  white-space: nowrap !important;
+  max-width: calc(100vw - 2.5rem);
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.oc-scroll-progress-title {
+  font-size: 0.85rem;
+  opacity: 0.88;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+@media (max-width: 768px) {
+  .oc-scroll-progress-bar {
+    bottom: 1.2rem;
+    padding: 0.35rem 0.85rem;
+    gap: 0.5rem;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .oc-scroll-progress-title {
+    font-size: 0.78rem;
+    max-width: 110px;
+  }
 }
 
 .oc-scroll-steps-indicator {
   display: flex;
-  gap: 0.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .oc-scroll-step-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(247, 241, 228, 0.3);
   transition: background 0.3s ease, transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .oc-scroll-step-dot.active {
@@ -3854,4 +4084,20 @@ body {
     border: none !important;
     padding: 0 !important;
   }
+}
+
+/* ============================================================================
+   Apple-Style Smooth Float-Up Scroll Reveal Animations
+   ========================================================================== */
+.oc-scroll-reveal {
+  opacity: 0;
+  transform: translateY(45px);
+  will-change: opacity, transform;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.oc-scroll-reveal--active {
+  opacity: 1;
+  transform: translateY(0);
 }
