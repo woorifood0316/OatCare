@@ -69,6 +69,8 @@ const SCENES: ScrollScene[] = [
 export const ScrollScrubHero: React.FC = () => {
     const trackRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const introRef = useRef<HTMLDivElement>(null);
+    const chapterCardRef = useRef<HTMLDivElement>(null);
 
     // React state — updated ONLY on actual value change (no 60fps thrash)
     const [progressPct, setProgressPct] = useState(0);
@@ -117,50 +119,158 @@ export const ScrollScrubHero: React.FC = () => {
         }
 
         // ⚡ 2. Concurrently fetch full Blob into RAM in background (with robust try/catch fallback for R2 CORS/404)
-        const loadVideoBlob = async () => {
-            try {
-                // Try R2 CDN first
-                const res = await fetch(primaryVideoSrc);
-                if (res.ok) {
-                    const blob = await res.blob();
-                    return blob;
+        // Desktop-only: this exists so scroll-scrub can seek to any point with zero HTTP
+        // range-request latency. Mobile just plays forward once, so it doesn't need this —
+        // and the async video.load() this performs would otherwise abort an in-flight
+        // play() on mobile (AbortError: "interrupted by a new load request").
+        if (!isMobile) {
+            const loadVideoBlob = async () => {
+                try {
+                    // Try R2 CDN first
+                    const res = await fetch(primaryVideoSrc);
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        return blob;
+                    }
+                } catch (r2Err) {
+                    console.warn('[ScrollScrubHero] R2 CDN fetch failed or CORS blocked, loading local fallback:', r2Err);
                 }
-            } catch (r2Err) {
-                console.warn('[ScrollScrubHero] R2 CDN fetch failed or CORS blocked, loading local fallback:', r2Err);
-            }
 
-            // Fallback to local /assets/
-            try {
-                const localRes = await fetch(localFallback);
-                if (localRes.ok) {
-                    const localBlob = await localRes.blob();
-                    return localBlob;
+                // Fallback to local /assets/
+                try {
+                    const localRes = await fetch(localFallback);
+                    if (localRes.ok) {
+                        const localBlob = await localRes.blob();
+                        return localBlob;
+                    }
+                } catch (localErr) {
+                    console.error('[ScrollScrubHero] Local video fetch failed:', localErr);
                 }
-            } catch (localErr) {
-                console.error('[ScrollScrubHero] Local video fetch failed:', localErr);
-            }
-            return null;
-        };
+                return null;
+            };
 
-        loadVideoBlob()
-            .then((blob) => {
-                if (blob) {
-                    blobUrl = URL.createObjectURL(blob);
-                    const pos = video.currentTime || 0;
-                    video.src = blobUrl;
-                    video.load();
-                    try {
-                        video.currentTime = pos;
-                    } catch (_) { }
+            loadVideoBlob()
+                .then((blob) => {
+                    if (blob) {
+                        blobUrl = URL.createObjectURL(blob);
+                        const pos = video.currentTime || 0;
+                        video.src = blobUrl;
+                        video.load();
+                        try {
+                            video.currentTime = pos;
+                        } catch (_) { }
+                    }
+                    setVideoLoaded(true);
+                })
+                .catch((err) => {
+                    console.warn('[ScrollScrubHero] Video blob load caught error:', err);
+                    setVideoLoaded(true);
+                });
+        }
+
+        /* ── Mobile: plays on first touch, then loops for as long as it's on screen ──
+           Touch scroll is too coarse/inertial for frame-accurate scrubbing, so on
+           mobile the video doesn't wait for scroll position — it waits for the
+           user's first touch (tap or the start of a scroll swipe) so playback
+           starts only once they've actually engaged with the page, then loops
+           continuously so scrolling away and back always shows it playing.
+           Chapter overlay switches on video time instead of scroll position.
+           Desktop keeps the scroll-scrub below. */
+        if (isMobile) {
+            video.loop = true;
+
+            // Drive the intro/chapter fade off a continuous (unrounded) fraction written
+            // straight to the DOM every RAF frame — bypassing React state, which only
+            // holds an integer percent. That rounding was the real cause of the choppy
+            // fade: React only re-renders ~7 times/sec during the 0-14% intro window,
+            // so the opacity was stepping in ~15 discrete jumps instead of dissolving.
+            // Scene switching stays on the rounded integer since chapters are inherently
+            // discrete anyway.
+            let rafId = 0;
+            const updateProgress = () => {
+                const dur = video.duration;
+                if (dur && !isNaN(dur) && dur > 0) {
+                    const rawPct = Math.min(100, (video.currentTime / dur) * 100);
+
+                    const introT = Math.min(1, rawPct / 14);
+                    const introOp = Math.max(0, 1 - introT);
+                    const introSc = Math.max(0.65, 1.15 - introT * 0.45);
+                    if (introRef.current) {
+                        introRef.current.style.opacity = String(introOp);
+                        introRef.current.style.transform = `translate(-50%, -50%) scale(${introSc})`;
+                        introRef.current.style.pointerEvents = introOp > 0.1 ? 'auto' : 'none';
+                    }
+                    if (chapterCardRef.current) {
+                        const chapterOp = rawPct < 15 ? 0 : Math.min(1, (rawPct - 15) / 5);
+                        chapterCardRef.current.style.opacity = String(chapterOp);
+                    }
+
+                    const pct = Math.round(rawPct);
+                    if (pct !== lastPctRef.current) {
+                        lastPctRef.current = pct;
+                        setProgressPct(pct);
+                    }
+                    const scene =
+                        SCENES.find((s) => pct >= s.startPercent && pct <= s.endPercent) ||
+                        (pct < SCENES[0].startPercent ? SCENES[0] : SCENES[SCENES.length - 1]);
+                    if (scene.id !== lastSceneRef.current) {
+                        lastSceneRef.current = scene.id;
+                        setCurrentScene(scene);
+                    }
                 }
-                setVideoLoaded(true);
-            })
-            .catch((err) => {
-                console.warn('[ScrollScrubHero] Video blob load caught error:', err);
-                setVideoLoaded(true);
-            });
+                rafId = requestAnimationFrame(updateProgress);
+            };
 
-        /* ── Step 2: Scroll & Touch listeners → updates targetRef for mobile & desktop ── */
+            const playVideo = () => {
+                video.play().catch(() => { });
+                cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(updateProgress);
+            };
+            const pauseVideo = () => {
+                video.pause();
+                cancelAnimationFrame(rafId);
+            };
+
+            let hasStarted = false; // set once the user's first touch unlocks playback
+            let isVisible = false;
+
+            const observer = new IntersectionObserver(
+                ([entry]) => {
+                    isVisible = entry.isIntersecting;
+                    if (!hasStarted) return;
+                    if (isVisible) {
+                        playVideo();
+                    } else {
+                        pauseVideo();
+                    }
+                },
+                { threshold: 0.5 }
+            );
+            if (trackRef.current) observer.observe(trackRef.current);
+
+            const startOnFirstTouch = () => {
+                if (hasStarted) return;
+                hasStarted = true;
+                if (isVisible) {
+                    playVideo();
+                }
+            };
+            window.addEventListener('touchstart', startOnFirstTouch, { passive: true });
+
+            const onMetaMobile = () => setVideoLoaded(true);
+            video.addEventListener('loadedmetadata', onMetaMobile);
+            if (video.readyState >= 1) setVideoLoaded(true);
+
+            return () => {
+                cancelAnimationFrame(rafId);
+                observer.disconnect();
+                window.removeEventListener('touchstart', startOnFirstTouch);
+                video.removeEventListener('loadedmetadata', onMetaMobile);
+                if (blobUrl) URL.revokeObjectURL(blobUrl);
+            };
+        }
+
+        /* ── Desktop: Step 2 — scroll/touch listeners update targetRef ── */
         const onScroll = () => {
             const track = trackRef.current;
             if (!track) return;
@@ -260,6 +370,7 @@ export const ScrollScrubHero: React.FC = () => {
 
                     {/* Central Hero Intro Brand Block (0% ~ 15% scroll scale-down & fade-out) */}
                     <div
+                        ref={introRef}
                         style={{
                             position: 'absolute',
                             top: '46%',
@@ -316,6 +427,7 @@ export const ScrollScrubHero: React.FC = () => {
                     {/* Active Chapter Card Overlay (Appears after 15% scroll) */}
                     {progressPct >= 15 && (
                         <div
+                            ref={chapterCardRef}
                             className={`oc-scroll-chapter-card ${currentScene.align === 'left' ? 'align-left' : 'align-right'}`}
                             style={{
                                 position: 'absolute',
@@ -394,8 +506,9 @@ export const ScrollScrubHero: React.FC = () => {
                         </span>
                     </div>
 
-                    {/* Scroll Hint */}
+                    {/* Scroll Hint — desktop only; mobile plays on touch, not scroll */}
                     <div
+                        className="oc-scroll-hint"
                         style={{
                             position: 'absolute',
                             bottom: '4.4rem',

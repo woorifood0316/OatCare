@@ -439,6 +439,20 @@ body {
   display: none !important;
 }
 
+/* Mobile: video plays on touch instead of scroll-scrubbing, so the section
+   only needs to occupy one viewport — no extra scroll runway to pin against.
+   The "scroll to explore" hint is desktop-only copy, since mobile playback
+   isn't driven by scrolling. */
+@media (max-width: 768px) {
+  .oc-scroll-scrub-track {
+    height: 100vh;
+  }
+
+  .oc-scroll-hint {
+    display: none !important;
+  }
+}
+
 .oc-scroll-content-container {
   position: relative;
   z-index: 10;
