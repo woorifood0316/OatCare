@@ -66,7 +66,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
         try {
             await navigator.clipboard.writeText(window.location.href);
             setCopiedToast(true);
-            setTimeout(() => setCopiedToast(false), 2500);
+            setTimeout(() => setCopiedToast(false), 4500);
         } catch (_) { }
     };
 
@@ -101,7 +101,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
 
             {copiedToast && (
                 <div className="oc-legal-page__toast">
-                    <span>링크가 복사되었습니다</span>
+                    <strong>링크가 복사되었습니다</strong>
+                    <span>현재 브라우저에서는 공유하기만 가능합니다.</span>
+                    <span>저장이 필요하신 경우 Chrome 등 다른 브라우저를 이용해 주세요.</span>
                 </div>
             )}
 
