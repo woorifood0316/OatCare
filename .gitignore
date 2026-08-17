@@ -33,6 +33,11 @@ lerna-debug.log*
 *.mp4
 *.mov
 *.avi
+# Hero scroll-scrub video fallback assets — must stay tracked so the
+# local /assets/ fallback in ScrollScrubHero.tsx actually exists in prod
+# if the R2 CDN source fails.
+!public/assets/hero-desktop-v2.mp4
+!public/assets/hero-mobile-v2.mp4
 오트케어_이미지 자료_260813/
 oatcare-hero-site/
 
