@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { X, ShoppingBag, Check, Star, Flame, Sparkles, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
 

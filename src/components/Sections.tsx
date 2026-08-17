@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';

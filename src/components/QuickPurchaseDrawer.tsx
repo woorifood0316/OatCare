@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import { RICH_PRODUCTS, BUNDLES } from './Sections';

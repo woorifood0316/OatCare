@@ -1,22 +1,47 @@
-# Logs
-logs
-*.log
+# Dependencies
+/node_modules
+/.pnpm
+
+# Next.js build output & cache (300+ build files)
+/.next/
+/out/
+
+# Production & preview build outputs
+/dist
+/dist-ssr
+/build
+
+# Cloudflare Pages & Wrangler
+/.cloudflare
+/.wrangler
+
+# Environment variables & secrets (Security)
+.env
+.env*.local
+.env.production
+.env.development
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log
 
-node_modules
-dist
-dist-ssr
-*.local
+# Large media files & raw source asset folders
+*.mp4
+*.mov
+*.avi
+오트케어_이미지 자료_260813/
+oatcare-hero-site/
 
-# Editor directories and files
+# IDE & OS Files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.ds_store
+.DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
