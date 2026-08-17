@@ -1,0 +1,49 @@
+/* =========================================================
+ * OatCare — standalone brand token layer (website, not app).
+ * 이 블록은 힉스필드 템플릿의 app/src/styles.css 맨 끝에 추가되어 있습니다.
+ * No @higgsfield/quanta/* usage below this point.
+ * ========================================================= */
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2")
+    format("woff2-variations");
+  font-weight: 45 920;
+  font-display: swap;
+}
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap");
+
+:root {
+  --oc-maroon: #7a2331;
+  --oc-brown: #3b2a20;
+  --oc-gold: #c9963c;
+  --oc-cream: #f7f1e4;
+  --oc-cream-2: #efe4cd;
+  --oc-line: #e2d3b0;
+  --oc-font: "Pretendard Variable", -apple-system, "Malgun Gothic", sans-serif;
+  --oc-mono: "IBM Plex Mono", monospace;
+}
+
+html[data-theme="oatcare-light"],
+html[data-theme="oatcare-light"] body {
+  background: var(--oc-cream);
+  color: var(--oc-brown);
+  color-scheme: light;
+}
+
+html[data-theme="oatcare-light"] * {
+  font-family: var(--oc-font);
+}
+
+.oc-eyebrow {
+  font-family: var(--oc-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--oc-gold);
+}
+
+.oc-num {
+  font-family: var(--oc-mono);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,128 @@
+.oc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4.5rem;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  background: color-mix(in srgb, var(--oc-cream) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--oc-line);
+}
+.oc-nav__brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.05rem; }
+.oc-nav__brand img { width: 30px; height: 30px; border-radius: 8px; }
+.oc-nav__links { display: none; gap: 2rem; font-size: 0.92rem; }
+@media (min-width: 860px) { .oc-nav__links { display: flex; } }
+.oc-nav__link { color: var(--oc-brown); text-decoration: none; opacity: 0.75; }
+.oc-nav__link:hover { opacity: 1; }
+
+.oc-cta-fill {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 1.5rem; border-radius: 999px; border: 0;
+  background: var(--oc-maroon); color: var(--oc-cream);
+  font-weight: 700; font-size: 0.95rem; text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.oc-cta-fill:hover { background: #611a26; transform: translateY(-1px); }
+.oc-cta-fill:active { transform: scale(0.98); }
+
+.oc-cta-link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  color: var(--oc-maroon); text-decoration: underline;
+  text-underline-offset: 0.28em; font-weight: 600;
+}
+.oc-cta-link svg { transition: transform 0.15s ease; }
+.oc-cta-link:hover svg { transform: translateX(3px); }
+
+.oc-cta-outline {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.75rem 1.3rem; border-radius: 4px;
+  border: 1.5px solid var(--oc-maroon); color: var(--oc-maroon);
+  font-weight: 700; text-decoration: none; background: transparent;
+}
+.oc-cta-outline:hover { background: var(--oc-maroon); color: var(--oc-cream); }
+
+.oc-section { padding: clamp(4rem, 9vw, 7rem) clamp(1.25rem, 6vw, 6rem); }
+
+/* Pain point — asymmetric split */
+.oc-pain { display: grid; gap: 2.5rem; align-items: center; }
+@media (min-width: 860px) { .oc-pain { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+.oc-pain__plate { position: relative; aspect-ratio: 4/3; overflow: hidden; border-radius: 6px; }
+.oc-pain__plate img { width: 100%; height: 100%; object-fit: cover; }
+.oc-pain h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0.6rem 0 1.1rem; max-width: 14ch; }
+.oc-pain p { max-width: 42ch; font-size: 1.05rem; line-height: 1.6; opacity: 0.85; }
+
+/* Product grid — bento */
+.oc-product-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 700px) { .oc-product-grid { grid-template-columns: repeat(6, 1fr); } }
+.oc-product-card {
+  grid-column: span 2; border-radius: 8px; background: var(--oc-cream-2);
+  border: 1px solid var(--oc-line); padding: 1.1rem; display: flex; flex-direction: column; gap: 0.7rem;
+  text-decoration: none; color: inherit;
+}
+.oc-product-card--lead { grid-column: span 2; }
+@media (min-width: 700px) { .oc-product-card--lead { grid-column: span 3; grid-row: span 2; } }
+.oc-product-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 6px; background: var(--oc-cream); }
+.oc-product-card__flavor { font-weight: 700; font-size: 1.05rem; }
+.oc-product-card__tag { font-size: 0.8rem; opacity: 0.7; }
+.oc-product-card__price { margin-top: auto; display: flex; align-items: baseline; gap: 0.5rem; }
+.oc-product-card__price .oc-num { font-weight: 700; color: var(--oc-maroon); }
+.oc-product-card__price s { opacity: 0.5; font-size: 0.82rem; }
+
+/* How it works — step rail */
+.oc-steps { display: grid; gap: 2rem; counter-reset: oc-step; }
+@media (min-width: 700px) { .oc-steps { grid-template-columns: repeat(3, 1fr); } }
+.oc-step { position: relative; padding-top: 3rem; }
+.oc-step::before {
+  counter-increment: oc-step; content: counter(oc-step);
+  font-family: var(--oc-mono); font-weight: 700; font-size: 1.4rem;
+  color: var(--oc-cream); background: var(--oc-maroon);
+  width: 2.5rem; height: 2.5rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;
+}
+.oc-step h3 { font-size: 1.2rem; margin: 0 0 0.4rem; }
+.oc-step p { opacity: 0.75; font-size: 0.95rem; line-height: 1.55; max-width: 30ch; }
+
+/* Nutrition band */
+.oc-nutrition { background: var(--oc-brown); color: var(--oc-cream); border-radius: 10px; overflow: hidden; position: relative; }
+.oc-nutrition__plate { position: absolute; inset: 0; opacity: 0.22; }
+.oc-nutrition__plate img { width: 100%; height: 100%; object-fit: cover; }
+.oc-nutrition__inner { position: relative; padding: clamp(2.5rem, 5vw, 4rem); }
+.oc-nutrition h2 { font-size: clamp(1.9rem, 3.6vw, 2.8rem); letter-spacing: -0.02em; margin: 0.6rem 0 2rem; max-width: 16ch; }
+.oc-nutrition__grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 700px) { .oc-nutrition__grid { grid-template-columns: repeat(5, 1fr); } }
+.oc-nutrition__stat { border-top: 1px solid color-mix(in srgb, var(--oc-cream) 30%, transparent); padding-top: 0.9rem; }
+.oc-nutrition__stat .oc-num { font-size: 1.5rem; font-weight: 700; color: var(--oc-gold); display: block; }
+.oc-nutrition__stat span.flavor { font-size: 0.85rem; opacity: 0.85; }
+
+/* Bundles */
+.oc-bundles { display: grid; gap: 1.25rem; }
+@media (min-width: 780px) { .oc-bundles { grid-template-columns: repeat(3, 1fr); } }
+.oc-bundle-card { border: 1.5px solid var(--oc-line); border-radius: 8px; padding: 1.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.oc-bundle-card--highlight { border-color: var(--oc-maroon); background: var(--oc-maroon); color: var(--oc-cream); }
+.oc-bundle-card h3 { margin: 0; font-size: 1.15rem; }
+.oc-bundle-card p.desc { opacity: 0.8; font-size: 0.92rem; margin: 0; }
+.oc-bundle-card .price { margin-top: auto; }
+.oc-bundle-card .price .oc-num { font-size: 1.6rem; font-weight: 700; }
+.oc-bundle-card .price s { opacity: 0.55; font-size: 0.85rem; margin-left: 0.4rem; }
+
+/* Content teaser */
+.oc-content-grid { display: grid; gap: 1.5rem; }
+@media (min-width: 780px) { .oc-content-grid { grid-template-columns: repeat(3, 1fr); } }
+.oc-content-card { border-radius: 8px; overflow: hidden; background: var(--oc-cream-2); border: 1px solid var(--oc-line); }
+.oc-content-card__body { padding: 1.1rem 1.2rem 1.4rem; }
+.oc-content-card__body h3 { font-size: 1.02rem; margin: 0 0 0.4rem; line-height: 1.4; }
+.oc-content-card__body p { font-size: 0.88rem; opacity: 0.75; margin: 0; }
+.oc-content-card__plate { aspect-ratio: 16/10; }
+.oc-content-card__plate img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Final CTA */
+.oc-final-cta { background: var(--oc-maroon); color: var(--oc-cream); text-align: center; border-radius: 10px; padding: clamp(3.5rem, 7vw, 6rem) 1.5rem; }
+.oc-final-cta h2 { font-size: clamp(2.1rem, 5vw, 3.6rem); letter-spacing: -0.02em; margin: 0 0 1.5rem; }
+.oc-final-cta .oc-cta-fill { background: var(--oc-gold); color: var(--oc-brown); }
+.oc-final-cta .oc-cta-fill:hover { background: #e0ac52; }
+
+/* Footer */
+.oc-footer { padding: 2.5rem clamp(1.25rem, 6vw, 6rem) 3rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; border-top: 1px solid var(--oc-line); font-size: 0.85rem; opacity: 0.75; }
