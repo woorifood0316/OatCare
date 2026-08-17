@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { ScrollScene } from '../types';
+import { getAssetUrl } from '../utils/assets';
 
 /* ============================================================================
    OatCare Scroll-Scrub Hero — scroll-world architecture
@@ -193,16 +194,44 @@ export const ScrollScrubHero: React.FC = () => {
     const introScale = Math.max(0.65, 1.15 - (progressPct / 14) * 0.45);
     const chapterOpacity = progressPct < 15 ? 0 : Math.min(1, (progressPct - 15) / 5);
 
+    const posterUrl = getAssetUrl('hero-poster.webp');
+
     return (
         <section ref={trackRef} className="oc-scroll-scrub-track" id="hero">
-            <div className="oc-scroll-scrub-sticky">
+            <div className="oc-scroll-scrub-sticky" style={{ backgroundColor: '#1A1815', position: 'relative', overflow: 'hidden' }}>
+                {/* ⚡ INSTANT 0ms POSTER BACKDROP: Renders 37KB WebP 1st frame instantly (Zero Black Screen!) */}
+                <img
+                    src={posterUrl}
+                    alt="OatCare Hero Backdrop"
+                    className="oc-scroll-video-poster"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 1,
+                        pointerEvents: 'none',
+                    }}
+                />
+
                 <video
                     ref={videoRef}
                     className="oc-scroll-video"
                     playsInline
                     muted
                     preload="auto"
-                    style={{ opacity: 1, filter: 'none' }}
+                    poster={posterUrl}
+                    style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        opacity: 1,
+                        filter: 'none',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                    }}
                 />
 
                 {/* Content & Chapters Overlay */}
