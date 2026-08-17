@@ -2,11 +2,13 @@ export const R2_BASE_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d
 
 /**
  * Returns full Cloudflare R2 CDN URL for static assets.
- * Falls back to local asset path if fetch fails or during offline dev.
+ * Strips leading /assets/ prefix to map directly to R2 bucket root files.
  */
 export const getAssetUrl = (path: string): string => {
     if (!path) return '';
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${R2_BASE_URL}${cleanPath}`;
+
+    // Strip optional leading slash and /assets/ directory prefix
+    const filename = path.replace(/^\/?(assets\/)?/, '');
+    return `${R2_BASE_URL}/${filename}`;
 };
