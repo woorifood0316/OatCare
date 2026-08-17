@@ -196,43 +196,14 @@ export const ScrollScrubHero: React.FC = () => {
 
     return (
         <section ref={trackRef} className="oc-scroll-scrub-track" id="hero">
-            <div className="oc-scroll-scrub-sticky" style={{ backgroundColor: '#1A1815' }}>
-                {/* ⚡ INSTANT 0ms POSTER BACKDROP: Renders 37KB WebP 1st frame instantly (Zero Black Screen & Zero Layout Shift!) */}
-                <img
-                    src="/assets/hero-poster.webp"
-                    alt=""
-                    onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 1,
-                        pointerEvents: 'none',
-                    }}
-                />
-
+            <div className="oc-scroll-scrub-sticky">
                 <video
                     ref={videoRef}
                     className="oc-scroll-video"
                     playsInline
                     muted
                     preload="auto"
-                    poster="/assets/hero-poster.webp"
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 2,
-                        filter: 'none',
-                    }}
+                    style={{ opacity: 1, filter: 'none' }}
                 />
 
                 {/* Content & Chapters Overlay */}
