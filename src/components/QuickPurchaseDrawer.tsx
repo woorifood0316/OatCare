@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import { RICH_PRODUCTS, BUNDLES } from './Sections';
 import { getAssetUrl } from '../utils/assets';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface QuickPurchaseDrawerProps {
     isOpen: boolean;
@@ -30,6 +31,8 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
     // Bundle selection state
     const [selectedBundleId, setSelectedBundleId] = useState<number>(20); // Default 20-pack BEST
     const [bundleMixOption, setBundleMixOption] = useState<'all' | 'custom'>('all');
+
+    useBodyScrollLock(isOpen);
 
     if (!isOpen) return null;
 

@@ -2271,6 +2271,7 @@ body {
   max-width: 1050px;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--oc-cream);
   border: 1px solid rgba(226, 211, 176, 0.8);
   border-radius: 32px;
@@ -3061,6 +3062,7 @@ body {
   max-height: 90vh;
   border-radius: 24px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   position: relative;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
   animation: ocModalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -3338,6 +3340,7 @@ body {
 .oc-drawer__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.2rem 1.5rem;
 }
 
@@ -3934,6 +3937,7 @@ body {
 .oc-legal-modal__body {
   padding: 1.5rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   flex: 1;
   color: var(--oc-brown);
   line-height: 1.6;

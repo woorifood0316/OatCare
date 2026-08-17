@@ -14,6 +14,8 @@ import {
     FamilyStory,
     FinalCta,
     Footer,
+    JournalArticle,
+    JournalArticleModal,
     Nav,
     ProductGrid,
     QuickReviews,
@@ -21,6 +23,7 @@ import {
 
 export default function Home() {
     const [selectedProduct, setSelectedProduct] = useState<ProductDetailItem | null>(null);
+    const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [drawerTab, setDrawerTab] = useState<'single' | 'bundle'>('single');
     const [legalModalType, setLegalModalType] = useState<LegalModalType>(null);
@@ -116,8 +119,10 @@ export default function Home() {
             </ScrollReveal>
 
             <ScrollReveal className="oc-band oc-band--tan">
-                <ContentTeaser />
+                <ContentTeaser onSelectArticle={setSelectedArticle} />
             </ScrollReveal>
+
+            <JournalArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
 
             <ScrollReveal>
                 <FinalCta onOpenDrawer={handleOpenDrawer} />

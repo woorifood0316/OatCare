@@ -7,6 +7,7 @@ import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
 import { getAssetUrl } from '../utils/assets';
 import { ScrollReveal } from './ScrollReveal';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 export interface NavProps {
     onOpenDrawer?: (tab?: 'single' | 'bundle') => void;
@@ -14,6 +15,8 @@ export interface NavProps {
 
 export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useBodyScrollLock(isMobileMenuOpen);
 
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
@@ -1046,6 +1049,8 @@ export const JournalArticleModal: React.FC<{
     article: JournalArticle | null;
     onClose: () => void;
 }> = ({ article, onClose }) => {
+    useBodyScrollLock(!!article);
+
     if (!article) return null;
 
     return (
@@ -1120,9 +1125,11 @@ export const JournalArticleModal: React.FC<{
     );
 };
 
-export const ContentTeaser: React.FC = () => {
-    const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
+export interface ContentTeaserProps {
+    onSelectArticle?: (article: JournalArticle) => void;
+}
 
+export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle }) => {
     return (
         <div className="oc-band oc-band--tan">
             <section className="oc-section" id="content">
@@ -1143,7 +1150,7 @@ export const ContentTeaser: React.FC = () => {
                         <ScrollReveal key={article.id} delay={0.3 + index * 0.12}>
                             <div
                                 className="oc-journal-card"
-                                onClick={() => setSelectedArticle(article)}
+                                onClick={() => onSelectArticle?.(article)}
                             >
                                 <div className="oc-journal-card__img-wrap">
                                     <img src={article.img} alt={article.title} loading="lazy" />
@@ -1167,11 +1174,6 @@ export const ContentTeaser: React.FC = () => {
                     ))}
                 </div>
             </section>
-
-            <JournalArticleModal
-                article={selectedArticle}
-                onClose={() => setSelectedArticle(null)}
-            />
         </div>
     );
 };

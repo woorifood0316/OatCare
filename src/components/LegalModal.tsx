@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X, ShieldCheck, FileText, Award } from 'lucide-react';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 export type LegalModalType = 'privacy' | 'terms' | 'license' | null;
 
@@ -11,6 +12,8 @@ interface LegalModalProps {
 }
 
 export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
+    useBodyScrollLock(!!type);
+
     if (!type) return null;
 
     const renderHeaderTitle = () => {

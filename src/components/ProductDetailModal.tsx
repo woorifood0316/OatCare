@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, ShoppingBag, Check, Star, Flame, Sparkles, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
 import { getAssetUrl } from '../utils/assets';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 export interface ProductDetailItem {
     flavor: string;
@@ -38,6 +39,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
+
+    useBodyScrollLock(!!product);
 
     if (!product) return null;
 
