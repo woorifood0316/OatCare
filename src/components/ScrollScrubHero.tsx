@@ -142,18 +142,23 @@ export const ScrollScrubHero: React.FC = () => {
             return null;
         };
 
-        loadVideoBlob().then((blob) => {
-            if (blob) {
-                blobUrl = URL.createObjectURL(blob);
-                const pos = video.currentTime || 0;
-                video.src = blobUrl;
-                video.load();
-                try {
-                    video.currentTime = pos;
-                } catch (_) { }
-            }
-            setVideoLoaded(true);
-        });
+        loadVideoBlob()
+            .then((blob) => {
+                if (blob) {
+                    blobUrl = URL.createObjectURL(blob);
+                    const pos = video.currentTime || 0;
+                    video.src = blobUrl;
+                    video.load();
+                    try {
+                        video.currentTime = pos;
+                    } catch (_) { }
+                }
+                setVideoLoaded(true);
+            })
+            .catch((err) => {
+                console.warn('[ScrollScrubHero] Video blob load caught error:', err);
+                setVideoLoaded(true);
+            });
 
         /* ── Step 2: Scroll & Touch listeners → updates targetRef for mobile & desktop ── */
         const onScroll = () => {
