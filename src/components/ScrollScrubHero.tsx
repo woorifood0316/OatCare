@@ -87,20 +87,30 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Load video into RAM as Blob from Cloudflare R2 CDN ── */
+        /* ── Step 1: Instant R2 Direct Stream + Background RAM Blob Upgrade ── */
         const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
         const videoSrc = `${R2_URL}/hero-oemil.mp4`;
 
+        // ⚡ 1. Synchronously set direct R2 streaming source so browser decodes frame 0 in <50ms (Zero Black Screen!)
+        if (!video.src || video.src === window.location.href) {
+            video.src = videoSrc;
+            video.load();
+            try {
+                video.currentTime = 0;
+            } catch (_) { }
+        }
+
+        // ⚡ 2. Concurrently fetch full Blob into RAM in background for lag-free 60fps scroll scrubbing
         fetch(videoSrc)
             .then((r) => (r.ok ? r.blob() : Promise.reject('R2 Fetch Error')))
             .then((blob) => {
                 blobUrl = URL.createObjectURL(blob);
+                const pos = video.currentTime || 0;
                 video.src = blobUrl;
+                video.currentTime = pos;
                 setVideoLoaded(true);
             })
             .catch(() => {
-                // Fallback to direct R2 streaming URL
-                video.src = videoSrc;
                 setVideoLoaded(true);
             });
 
