@@ -88,14 +88,14 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Responsive R2 Video Streaming (Mobile: hero-mobil.mp4 / PC: hero-oemil.mp4) ── */
+        /* ── Step 1: Ultra-Fast Responsive R2 Video Streaming (+faststart Web Optimized) ── */
         const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
         const isMobile = window.innerWidth <= 768;
         const mobileVideoSrc = `${R2_URL}/hero-mobil.mp4`;
-        const desktopVideoSrc = `${R2_URL}/hero-oemil.mp4`;
+        const desktopVideoSrc = `${R2_URL}/hero-web.mp4`;
         const primaryVideoSrc = isMobile ? mobileVideoSrc : desktopVideoSrc;
 
-        // ⚡ 1. Synchronously set primary video streaming source on mount
+        // ⚡ 1. Synchronously set primary video streaming source on mount (0ms faststart playback)
         if (!video.src || video.src === window.location.href) {
             video.src = primaryVideoSrc;
             video.load();
@@ -104,15 +104,12 @@ export const ScrollScrubHero: React.FC = () => {
             } catch (_) { }
         }
 
-        // ⚡ 2. Concurrently fetch full Blob into RAM in background (with fallback if mobile video is not yet on R2)
+        // ⚡ 2. Concurrently fetch full Blob into RAM in background (with fallback to local /assets/ if R2 is pending)
         fetch(primaryVideoSrc)
             .then((r) => {
                 if (r.ok) return r.blob();
-                if (isMobile && primaryVideoSrc !== desktopVideoSrc) {
-                    // Mobile video 404 fallback to desktop video
-                    return fetch(desktopVideoSrc).then((fr) => (fr.ok ? fr.blob() : Promise.reject('R2 Fetch Error')));
-                }
-                return Promise.reject('R2 Fetch Error');
+                const localFallback = isMobile ? '/assets/hero-mobil.mp4' : '/assets/hero-web.mp4';
+                return fetch(localFallback).then((fr) => (fr.ok ? fr.blob() : Promise.reject('Local Fetch Error')));
             })
             .then((blob) => {
                 blobUrl = URL.createObjectURL(blob);
@@ -122,10 +119,6 @@ export const ScrollScrubHero: React.FC = () => {
                 setVideoLoaded(true);
             })
             .catch(() => {
-                // Fallback to desktop video on network error
-                if (isMobile && video.src !== desktopVideoSrc) {
-                    video.src = desktopVideoSrc;
-                }
                 setVideoLoaded(true);
             });
 
