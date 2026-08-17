@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
+import { getAssetUrl } from '../utils/assets';
 
 export interface NavProps {
     onOpenDrawer?: (tab?: 'single' | 'bundle') => void;
@@ -33,7 +34,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     className="oc-nav__brand"
                     onClick={(e) => handleNavClick(e, 'hero')}
                 >
-                    <img src="/assets/oatcare-logo.png" alt="오트케어 로고" className="oc-nav__logo-img" />
+                    <img src={getAssetUrl('/assets/oatcare-logo.png')} alt="오트케어 로고" className="oc-nav__logo-img" />
                     <span>OatCare</span>
                 </a>
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X, ShoppingBag, Check, Star, Flame, Sparkles, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
+import { getAssetUrl } from '../utils/assets';
 
 export interface ProductDetailItem {
     flavor: string;
@@ -70,7 +71,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         {product.badge && <span className="oc-modal-badge">{product.badge}</span>}
 
                         <div className="oc-modal-img-wrap">
-                            <img src={product.img} alt={`오트케어 ${product.flavor}`} className="oc-modal-pouch-img" />
+                            <img src={getAssetUrl(product.img)} alt={`오트케어 ${product.flavor}`} className="oc-modal-pouch-img" />
                         </div>
 
                         <div className="oc-modal-flavor-pills">

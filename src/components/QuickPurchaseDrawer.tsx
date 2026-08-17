@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import { RICH_PRODUCTS, BUNDLES } from './Sections';
+import { getAssetUrl } from '../utils/assets';
 
 interface QuickPurchaseDrawerProps {
     isOpen: boolean;
@@ -108,7 +109,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                     const qty = singleQty[p.flavor] || 0;
                                     return (
                                         <div key={p.flavor} className={`oc-drawer-item ${qty > 0 ? 'is-selected' : ''}`}>
-                                            <img src={p.img} alt={p.flavor} className="oc-drawer-item__img" />
+                                            <img src={getAssetUrl(p.img)} alt={p.flavor} className="oc-drawer-item__img" />
 
                                             <div className="oc-drawer-item__info">
                                                 <div className="oc-drawer-item__title-row">
