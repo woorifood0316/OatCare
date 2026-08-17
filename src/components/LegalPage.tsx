@@ -26,6 +26,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [inAppBrowserName, setInAppBrowserName] = useState<string | null>(null);
     const [copiedToast, setCopiedToast] = useState(false);
+    const [showActionMenu, setShowActionMenu] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -38,36 +39,55 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
         window.print();
     };
 
-    // Mobile: try the native share sheet first (works in most in-app browsers,
-    // unlike print), fall back to print, then to copying the link so tapping
-    // the button always does *something* visible.
-    const handleShareOrSave = async () => {
-        const shareData = {
-            title: document.title,
-            text: isPrivacy ? '오트케어 개인정보처리방침' : '오트케어 이용약관',
-            url: window.location.href,
-        };
-        if (typeof navigator.share === 'function') {
-            try {
-                await navigator.share(shareData);
-                return;
-            } catch (err) {
-                if (err instanceof Error && err.name === 'AbortError') return;
-            }
+    const getShareData = () => ({
+        title: document.title,
+        text: isPrivacy ? '오트케어 개인정보처리방침' : '오트케어 이용약관',
+        url: window.location.href,
+    });
+
+    // Returns true once the share attempt is "handled" (succeeded, or the user
+    // deliberately cancelled it) -- false only when it genuinely never happened,
+    // so the caller knows whether it's worth falling further back.
+    const attemptShare = async (): Promise<boolean> => {
+        if (typeof navigator.share !== 'function') return false;
+        try {
+            await navigator.share(getShareData());
+            return true;
+        } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') return true;
+            return false;
         }
-        // window.print() always exists as a function even in in-app browsers that
-        // don't actually implement it (it just silently does nothing there), so
-        // there's no way to detect success -- use the UA check instead of a
-        // typeof guard to decide whether it's worth trying.
-        if (!inAppBrowserName && typeof window.print === 'function') {
-            window.print();
-            return;
-        }
+    };
+
+    const copyLinkFallback = async () => {
         try {
             await navigator.clipboard.writeText(window.location.href);
             setCopiedToast(true);
             setTimeout(() => setCopiedToast(false), 4500);
         } catch (_) { }
+    };
+
+    // In-app browsers (Kakao etc.) don't reliably support share OR print, so
+    // there's nothing to choose between -- just try share, then fall all the
+    // way back to copying the link so tapping the button always does
+    // *something* visible.
+    const runAutoFallbackChain = async () => {
+        const shared = await attemptShare();
+        if (shared) return;
+        await copyLinkFallback();
+    };
+
+    // Real browsers (Samsung Internet, Chrome, Safari) support share AND print
+    // independently -- picking one automatically meant tapping the button only
+    // ever did whichever came first (share), so "저장하기" was unreachable.
+    // Let the user choose instead.
+    const handleActionButtonClick = () => {
+        const canChoose = !inAppBrowserName && typeof navigator.share === 'function' && typeof window.print === 'function';
+        if (canChoose) {
+            setShowActionMenu(true);
+            return;
+        }
+        runAutoFallbackChain();
     };
 
     return (
@@ -86,10 +106,42 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                     </div>
 
                     {isMobile ? (
-                        <button className="oc-legal-page__print-btn" onClick={handleShareOrSave}>
-                            <Share2 size={16} />
-                            <span>공유/저장하기</span>
-                        </button>
+                        <div className="oc-legal-page__action-wrap">
+                            <button className="oc-legal-page__print-btn" onClick={handleActionButtonClick}>
+                                <Share2 size={16} />
+                                <span>공유/저장하기</span>
+                            </button>
+
+                            {showActionMenu && (
+                                <>
+                                    <div
+                                        className="oc-legal-page__menu-backdrop"
+                                        onClick={() => setShowActionMenu(false)}
+                                    />
+                                    <div className="oc-legal-page__action-menu">
+                                        <button
+                                            onClick={async () => {
+                                                setShowActionMenu(false);
+                                                const shared = await attemptShare();
+                                                if (!shared) await copyLinkFallback();
+                                            }}
+                                        >
+                                            <Share2 size={16} />
+                                            <span>공유하기</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowActionMenu(false);
+                                                window.print();
+                                            }}
+                                        >
+                                            <Printer size={16} />
+                                            <span>저장하기</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     ) : (
                         <button className="oc-legal-page__print-btn" onClick={handlePrint}>
                             <Printer size={16} />
