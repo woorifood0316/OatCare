@@ -6,6 +6,7 @@ import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
 import { getAssetUrl } from '../utils/assets';
+import { ScrollReveal } from './ScrollReveal';
 
 export interface NavProps {
     onOpenDrawer?: (tab?: 'single' | 'bundle') => void;
@@ -348,14 +349,18 @@ export const QuickReviews: React.FC = () => {
     return (
         <section className="oc-section oc-reviews-marquee-section" id="reviews">
             <div className="oc-section-header">
-                <span className="oc-eyebrow">Real Reviews</span>
-                <h2>5,400명+이 입을 모아 <span className="oc-highlight-maroon">재구매하는 이유</span></h2>
-                <p className="oc-section-subhead">
-                    12만+ 봉지로 검증된 오트케어 실제 구매자들의 생생한 리뷰입니다.
-                </p>
+                <ScrollReveal>
+                    <span className="oc-eyebrow">Real Reviews</span>
+                    <h2>5,400명+이 입을 모아 <span className="oc-highlight-maroon">재구매하는 이유</span></h2>
+                </ScrollReveal>
+                <ScrollReveal delay={0.15}>
+                    <p className="oc-section-subhead">
+                        12만+ 봉지로 검증된 오트케어 실제 구매자들의 생생한 리뷰입니다.
+                    </p>
+                </ScrollReveal>
             </div>
 
-            <div className="oc-marquee-container">
+            <ScrollReveal delay={0.3} className="oc-marquee-container">
                 <div className="oc-marquee-track">
                     {marqueeList.map((r, idx) => (
                         <div key={`${r.name}-${idx}`} className="oc-marquee-card">
@@ -375,7 +380,7 @@ export const QuickReviews: React.FC = () => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </ScrollReveal>
         </section>
     );
 };
@@ -518,68 +523,73 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
     const topProducts = RICH_PRODUCTS.slice(0, 2);
     const bottomProducts = RICH_PRODUCTS.slice(2, 5);
 
-    const renderCard = (p: ProductItemDetailed) => (
-        <div
-            key={p.flavor}
-            className="oc-grid-card"
-            style={{ '--card-glow': p.accentColor } as React.CSSProperties}
-        >
-            <div className="oc-grid-card-glow" />
-            {p.badge && <StampBadge text={p.badge} color={p.accentColor || '#7A2331'} />}
+    const renderCard = (p: ProductItemDetailed, index: number) => (
+        <ScrollReveal key={p.flavor} delay={0.3 + index * 0.12}>
+            <div
+                className="oc-grid-card"
+                style={{ '--card-glow': p.accentColor } as React.CSSProperties}
+            >
+                <div className="oc-grid-card-glow" />
+                {p.badge && <StampBadge text={p.badge} color={p.accentColor || '#7A2331'} />}
 
-            <div className="oc-grid-card-img-wrap" style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                <img src={p.img} alt={`오트케어 ${p.flavor}`} />
-            </div>
-
-            <div className="oc-grid-card-body">
-                <span className="oc-grid-tag">{p.tag}</span>
-                <h4 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                    {p.icon} 오트케어 {p.flavor}
-                </h4>
-                <p className="oc-grid-ingr">{p.ingredient}</p>
-
-                <div className="oc-grid-price-row">
-                    <span className="disc">-{Math.round(((p.listPrice - p.price) / p.listPrice) * 100)}%</span>
-                    <strong className="price">{p.price.toLocaleString('ko-KR')}원</strong>
-                    {p.listPrice > p.price && (
-                        <s className="list-price">{p.listPrice.toLocaleString('ko-KR')}원</s>
-                    )}
-                    <span className="cal">{p.calories}</span>
+                <div className="oc-grid-card-img-wrap" style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
+                    <img src={p.img} alt={`오트케어 ${p.flavor}`} />
                 </div>
 
-                <div className="oc-grid-cta-row">
-                    <button className="oc-cta-outline" onClick={() => onSelectProduct?.(p)}>
-                        <span>상세보기</span>
-                    </button>
-                    <button className="oc-cta-fill" onClick={() => alert(`[오트케어 ${p.flavor}] 장바구니에 담겼습니다!`)}>
-                        <ShoppingBag size={15} />
-                        <span style={{ textAlign: 'center', lineHeight: '1.25', display: 'inline-block' }}>
-                            장바구니<br />담기
-                        </span>
-                    </button>
+                <div className="oc-grid-card-body">
+                    <span className="oc-grid-tag">{p.tag}</span>
+                    <h4 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
+                        {p.icon} 오트케어 {p.flavor}
+                    </h4>
+                    <p className="oc-grid-ingr">{p.ingredient}</p>
+
+                    <div className="oc-grid-price-row">
+                        <span className="disc">-{Math.round(((p.listPrice - p.price) / p.listPrice) * 100)}%</span>
+                        <strong className="price">{p.price.toLocaleString('ko-KR')}원</strong>
+                        {p.listPrice > p.price && (
+                            <s className="list-price">{p.listPrice.toLocaleString('ko-KR')}원</s>
+                        )}
+                        <span className="cal">{p.calories}</span>
+                    </div>
+
+                    <div className="oc-grid-cta-row">
+                        <button className="oc-cta-outline" onClick={() => onSelectProduct?.(p)}>
+                            <span>상세보기</span>
+                        </button>
+                        <button className="oc-cta-fill" onClick={() => alert(`[오트케어 ${p.flavor}] 장바구니에 담겼습니다!`)}>
+                            <ShoppingBag size={15} />
+                            <span style={{ textAlign: 'center', lineHeight: '1.25', display: 'inline-block' }}>
+                                장바구니<br />담기
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </ScrollReveal>
     );
 
     return (
         <section className="oc-section" id="product-lineup">
             <div className="oc-section-header">
-                <span className="oc-eyebrow">5 FLAVORS COLLECTION</span>
-                <h2>다섯 가지 맛, <span className="oc-highlight-maroon">질리지 않는 아침</span></h2>
-                <p className="oc-section-subhead">
-                    매일 아침 기분에 따라 선택하세요. <span className="oc-highlight-maroon">오트케어 5종 라인업</span>입니다.
-                </p>
+                <ScrollReveal>
+                    <span className="oc-eyebrow">5 FLAVORS COLLECTION</span>
+                    <h2>다섯 가지 맛, <span className="oc-highlight-maroon">질리지 않는 아침</span></h2>
+                </ScrollReveal>
+                <ScrollReveal delay={0.15}>
+                    <p className="oc-section-subhead">
+                        매일 아침 기분에 따라 선택하세요. <span className="oc-highlight-maroon">오트케어 5종 라인업</span>입니다.
+                    </p>
+                </ScrollReveal>
             </div>
 
             {/* Top Row: 2 Cards */}
             <div className="oc-grid-row-top">
-                {topProducts.map(renderCard)}
+                {topProducts.map((p, i) => renderCard(p, i))}
             </div>
 
             {/* Bottom Row: 3 Cards */}
             <div className="oc-grid-row-bottom">
-                {bottomProducts.map(renderCard)}
+                {bottomProducts.map((p, i) => renderCard(p, i + topProducts.length))}
             </div>
         </section>
     );
@@ -728,25 +738,31 @@ export const FamilyStory: React.FC = () => {
     return (
         <section className="oc-section" id="family-story">
             <div className="oc-section-header">
-                <span className="oc-eyebrow">OUR BRAND STORY</span>
-                <h2>
-                    나와 내가 사랑하는 사람들이 매일 아침 <span className="oc-highlight-maroon">안심하고 먹는 정직함</span>
-                </h2>
-                <p className="oc-section-subhead">
-                    간편함 그 이상의 가치. <span className="oc-highlight-gold">정직한 귀리 영양</span>으로 소중한 사람들의 하루를 힘차게 시작하세요.
-                </p>
+                <ScrollReveal>
+                    <span className="oc-eyebrow">OUR BRAND STORY</span>
+                    <h2>
+                        나와 내가 사랑하는 사람들이 매일 아침 <span className="oc-highlight-maroon">안심하고 먹는 정직함</span>
+                    </h2>
+                </ScrollReveal>
+                <ScrollReveal delay={0.15}>
+                    <p className="oc-section-subhead">
+                        간편함 그 이상의 가치. <span className="oc-highlight-gold">정직한 귀리 영양</span>으로 소중한 사람들의 하루를 힘차게 시작하세요.
+                    </p>
+                </ScrollReveal>
             </div>
 
             <div className="oc-family-grid">
                 {familyMoments.map((item, index) => (
-                    <div key={index} className="oc-family-card">
-                        <div className="oc-family-card-head">
-                            <span className="family-icon">{item.icon}</span>
-                            <h4>{item.role}</h4>
+                    <ScrollReveal key={index} delay={0.3 + index * 0.12}>
+                        <div className="oc-family-card">
+                            <div className="oc-family-card-head">
+                                <span className="family-icon">{item.icon}</span>
+                                <h4>{item.role}</h4>
+                            </div>
+                            <p className="oc-family-quote">{item.quote}</p>
+                            <span className="oc-family-tag">{item.tag}</span>
                         </div>
-                        <p className="oc-family-quote">{item.quote}</p>
-                        <span className="oc-family-tag">{item.tag}</span>
-                    </div>
+                    </ScrollReveal>
                 ))}
             </div>
         </section>
@@ -851,19 +867,23 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
             id="bundles"
         >
             <div className="oc-section-header">
-                <span className="oc-eyebrow">Starter Bundles</span>
-                <h2>
-                    세트로 더 알차게 <span className="oc-highlight-maroon">챙기는 아침</span>
-                </h2>
-                <p className="oc-section-subhead">
-                    세트 구매 시 <span className="oc-highlight-gold">최대 28% 파격 할인</span>과 전 세트 <span className="oc-highlight-maroon">무료 배송 혜택</span>을 제공합니다.
-                </p>
+                <ScrollReveal>
+                    <span className="oc-eyebrow">Starter Bundles</span>
+                    <h2>
+                        세트로 더 알차게 <span className="oc-highlight-maroon">챙기는 아침</span>
+                    </h2>
+                </ScrollReveal>
+                <ScrollReveal delay={0.15}>
+                    <p className="oc-section-subhead">
+                        세트 구매 시 <span className="oc-highlight-gold">최대 28% 파격 할인</span>과 전 세트 <span className="oc-highlight-maroon">무료 배송 혜택</span>을 제공합니다.
+                    </p>
+                </ScrollReveal>
             </div>
 
             <div className="oc-bundles-grid">
-                {BUNDLES.map((b) => (
+                {BUNDLES.map((b, index) => (
+                    <ScrollReveal key={b.flavor} delay={0.3 + index * 0.12}>
                     <div
-                        key={b.flavor}
                         className={`oc-bundle-card ${b.highlight ? 'oc-bundle-card--highlight' : ''} ${b.count === 10 ? 'oc-bundle-card--starter' : ''} ${b.count === 30 ? 'oc-bundle-card--sub-highlight' : ''}`}
                     >
                         {b.badge && (
@@ -913,6 +933,7 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                             </button>
                         </div>
                     </div>
+                    </ScrollReveal>
                 ))}
             </div>
         </section>
@@ -1106,38 +1127,43 @@ export const ContentTeaser: React.FC = () => {
         <div className="oc-band oc-band--tan">
             <section className="oc-section" id="content">
                 <div className="oc-section-header">
-                    <span className="oc-eyebrow">From the Morning Journal</span>
-                    <h2>오트케어의 <span className="oc-highlight-maroon">아침 이야기</span></h2>
-                    <p className="oc-section-subhead">
-                        바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과 <span className="oc-highlight-maroon">오트케어 활용 레시피</span>를 전합니다.
-                    </p>
+                    <ScrollReveal>
+                        <span className="oc-eyebrow">From the Morning Journal</span>
+                        <h2>오트케어의 <span className="oc-highlight-maroon">아침 이야기</span></h2>
+                    </ScrollReveal>
+                    <ScrollReveal delay={0.15}>
+                        <p className="oc-section-subhead">
+                            바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과 <span className="oc-highlight-maroon">오트케어 활용 레시피</span>를 전합니다.
+                        </p>
+                    </ScrollReveal>
                 </div>
 
                 <div className="oc-journal-grid">
-                    {JOURNAL_ARTICLES.map((article) => (
-                        <div
-                            key={article.id}
-                            className="oc-journal-card"
-                            onClick={() => setSelectedArticle(article)}
-                        >
-                            <div className="oc-journal-card__img-wrap">
-                                <img src={article.img} alt={article.title} loading="lazy" />
-                                <span className="oc-journal-card__badge">{article.readTime}</span>
-                            </div>
+                    {JOURNAL_ARTICLES.map((article, index) => (
+                        <ScrollReveal key={article.id} delay={0.3 + index * 0.12}>
+                            <div
+                                className="oc-journal-card"
+                                onClick={() => setSelectedArticle(article)}
+                            >
+                                <div className="oc-journal-card__img-wrap">
+                                    <img src={article.img} alt={article.title} loading="lazy" />
+                                    <span className="oc-journal-card__badge">{article.readTime}</span>
+                                </div>
 
-                            <div className="oc-journal-card__body">
-                                <span className="oc-journal-card__category">{article.tag}</span>
-                                <h3>{article.title}</h3>
-                                <p>{article.subtitle}</p>
+                                <div className="oc-journal-card__body">
+                                    <span className="oc-journal-card__category">{article.tag}</span>
+                                    <h3>{article.title}</h3>
+                                    <p>{article.subtitle}</p>
 
-                                <div className="oc-journal-card__footer">
-                                    <span className="oc-journal-card__date">{article.date}</span>
-                                    <span className="oc-journal-card__read-btn">
-                                        아티클 읽기 <ArrowRight size={14} />
-                                    </span>
+                                    <div className="oc-journal-card__footer">
+                                        <span className="oc-journal-card__date">{article.date}</span>
+                                        <span className="oc-journal-card__read-btn">
+                                            아티클 읽기 <ArrowRight size={14} />
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </ScrollReveal>
                     ))}
                 </div>
             </section>
