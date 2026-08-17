@@ -4091,13 +4091,63 @@ body {
    ========================================================================== */
 .oc-scroll-reveal {
   opacity: 0;
-  transform: translateY(45px);
+  transform: translateY(60px);
   will-change: opacity, transform;
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .oc-scroll-reveal--active {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Staggered card animation inside active scroll reveal sections */
+.oc-scroll-reveal--active .oc-grid-card {
+  animation: ocCardSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.oc-scroll-reveal--active .oc-grid-row-top .oc-grid-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.oc-scroll-reveal--active .oc-grid-row-top .oc-grid-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.oc-scroll-reveal--active .oc-grid-row-bottom .oc-grid-card:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.oc-scroll-reveal--active .oc-grid-row-bottom .oc-grid-card:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.oc-scroll-reveal--active .oc-grid-row-bottom .oc-grid-card:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+/* Staggered bundle card animation */
+.oc-scroll-reveal--active .oc-bundle-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.oc-scroll-reveal--active .oc-bundle-card:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.oc-scroll-reveal--active .oc-bundle-card:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes ocCardSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
