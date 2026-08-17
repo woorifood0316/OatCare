@@ -87,16 +87,21 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Load video into RAM as Blob (scroll-world secret #1) ── */
-        fetch('/assets/hero-grain-pour-fastgop.mp4')
-            .then((r) => (r.ok ? r.blob() : Promise.reject('404')))
+        /* ── Step 1: Load video into RAM as Blob from Cloudflare R2 CDN ── */
+        const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
+        const videoSrc = `${R2_URL}/hero-oemil.mp4`;
+
+        fetch(videoSrc)
+            .then((r) => (r.ok ? r.blob() : Promise.reject('R2 Fetch Error')))
             .then((blob) => {
                 blobUrl = URL.createObjectURL(blob);
                 video.src = blobUrl;
+                setVideoLoaded(true);
             })
             .catch(() => {
-                // Fallback to direct URL if fastgop version doesn't exist
-                video.src = '/assets/hero-grain-pour.mp4';
+                // Fallback to direct R2 streaming URL
+                video.src = videoSrc;
+                setVideoLoaded(true);
             });
 
         /* ── Step 2: Scroll listener → updates targetRef ── */
