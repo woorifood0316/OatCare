@@ -88,11 +88,11 @@ export const ScrollScrubHero: React.FC = () => {
         let blobUrl: string | null = null;
         let animId = 0;
 
-        /* ── Step 1: Ultra-Fast Responsive R2 Video Streaming (+faststart Web Optimized) ── */
+        /* ── Step 1: Ultra-Fast Responsive R2 Video Streaming (PC: hero-oemil.mp4 / Mobile: hero-mobil.mp4) ── */
         const R2_URL = process.env.NEXT_PUBLIC_R2_URL || 'https://pub-a86a2d7952624f80aed6c433a53f18f9.r2.dev';
         const isMobile = window.innerWidth <= 768;
         const mobileVideoSrc = `${R2_URL}/hero-mobil.mp4`;
-        const desktopVideoSrc = `${R2_URL}/hero-web.mp4`;
+        const desktopVideoSrc = `${R2_URL}/hero-oemil.mp4`;
         const primaryVideoSrc = isMobile ? mobileVideoSrc : desktopVideoSrc;
 
         // ⚡ 1. Synchronously set primary video streaming source on mount (0ms faststart playback)
@@ -108,7 +108,7 @@ export const ScrollScrubHero: React.FC = () => {
         fetch(primaryVideoSrc)
             .then((r) => {
                 if (r.ok) return r.blob();
-                const localFallback = isMobile ? '/assets/hero-mobil.mp4' : '/assets/hero-web.mp4';
+                const localFallback = isMobile ? '/assets/hero-mobil.mp4' : '/assets/hero-oemil.mp4';
                 return fetch(localFallback).then((fr) => (fr.ok ? fr.blob() : Promise.reject('Local Fetch Error')));
             })
             .then((blob) => {
