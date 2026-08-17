@@ -886,56 +886,56 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
             <div className="oc-bundles-grid">
                 {BUNDLES.map((b, index) => (
                     <ScrollReveal key={b.flavor} delay={0.3 + index * 0.12}>
-                    <div
-                        className={`oc-bundle-card ${b.highlight ? 'oc-bundle-card--highlight' : ''} ${b.count === 10 ? 'oc-bundle-card--starter' : ''} ${b.count === 30 ? 'oc-bundle-card--sub-highlight' : ''}`}
-                    >
-                        {b.badge && (
-                            <StampBadge text={b.badge} color={b.highlight ? '#7A2331' : '#C9963C'} />
-                        )}
                         <div
-                            className="oc-bundle-card__img-wrap"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => onSelectProduct?.(b)}
+                            className={`oc-bundle-card ${b.highlight ? 'oc-bundle-card--highlight' : ''} ${b.count === 10 ? 'oc-bundle-card--starter' : ''} ${b.count === 30 ? 'oc-bundle-card--sub-highlight' : ''}`}
                         >
-                            <img src={b.img} alt={b.flavor} loading="lazy" />
-                        </div>
-
-                        <h3 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(b)}>
-                            {b.flavor}
-                        </h3>
-                        <p className="oc-bundle-card__desc">{b.desc}</p>
-
-                        <div className="oc-bundle-option-pill">
-                            <span>📌 {b.optionNotice}</span>
-                        </div>
-
-                        <div className="oc-bundle-card__price-box">
-                            <div className="price">
-                                <span className="oc-num">{b.price.toLocaleString('ko-KR')}원</span>
-                                <s className="oc-num">{b.listPrice.toLocaleString('ko-KR')}원</s>
+                            {b.badge && (
+                                <StampBadge text={b.badge} color={b.highlight ? '#7A2331' : '#C9963C'} />
+                            )}
+                            <div
+                                className="oc-bundle-card__img-wrap"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => onSelectProduct?.(b)}
+                            >
+                                <img src={b.img} alt={b.flavor} loading="lazy" />
                             </div>
-                            <span className="oc-bundle-card__unit">
-                                개당 <s style={{ opacity: 0.5, fontWeight: 'normal' }}>1,250원</s> ➔ <strong>{b.unitPrice.toLocaleString('ko-KR')}원</strong>
-                            </span>
-                        </div>
 
-                        <div className="oc-bundle-btn-group">
-                            <button
-                                className="oc-cta-outline oc-bundle-detail-btn"
-                                onClick={() => onSelectProduct?.(b)}
-                            >
-                                <span>상세보기</span>
-                            </button>
+                            <h3 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(b)}>
+                                {b.flavor}
+                            </h3>
+                            <p className="oc-bundle-card__desc">{b.desc}</p>
 
-                            <button
-                                className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
-                                onClick={() => onSelectProduct?.(b)}
-                            >
-                                <ShoppingBag size={16} />
-                                <span>세트로 담기</span>
-                            </button>
+                            <div className="oc-bundle-option-pill">
+                                <span>📌 {b.optionNotice}</span>
+                            </div>
+
+                            <div className="oc-bundle-card__price-box">
+                                <div className="price">
+                                    <span className="oc-num">{b.price.toLocaleString('ko-KR')}원</span>
+                                    <s className="oc-num">{b.listPrice.toLocaleString('ko-KR')}원</s>
+                                </div>
+                                <span className="oc-bundle-card__unit">
+                                    개당 <s style={{ opacity: 0.5, fontWeight: 'normal' }}>1,250원</s> ➔ <strong>{b.unitPrice.toLocaleString('ko-KR')}원</strong>
+                                </span>
+                            </div>
+
+                            <div className="oc-bundle-btn-group">
+                                <button
+                                    className="oc-cta-outline oc-bundle-detail-btn"
+                                    onClick={() => onSelectProduct?.(b)}
+                                >
+                                    <span>상세보기</span>
+                                </button>
+
+                                <button
+                                    className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
+                                    onClick={() => onSelectProduct?.(b)}
+                                >
+                                    <ShoppingBag size={16} />
+                                    <span>세트로 담기</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
                     </ScrollReveal>
                 ))}
             </div>
@@ -1286,7 +1286,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
                 <strong className="oc-footer__phone">031-998-7234</strong>
                 <p className="oc-footer__cs-hours">
                     운영시간: 평일 09:00 ~ 18:00 (점심 12:00 ~ 13:00)<br />
-                    주말 및 공휴일 휴무 | 문의: yyp0606@naver.com
+                    주말 및 공휴일 휴무 | 이메일문의: yyp0606@naver.com
                 </p>
                 <div className="oc-footer__escrow-box">
                     <span>🛡️ <strong>구매안전서비스 (에스크로)</strong></span>

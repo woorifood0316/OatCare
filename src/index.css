@@ -2316,6 +2316,18 @@ body {
   transform: rotate(90deg);
 }
 
+/* Journal modal's close button sits directly on the hero photo, where the
+   default faint tint disappears against bright/busy images. Give it the same
+   dark-blur pill treatment already used for text over photos elsewhere
+   (e.g. hero chapter tags) so it reads clearly regardless of what's behind it. */
+.oc-journal-modal .oc-modal-close-btn {
+  background: rgba(26, 18, 14, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
 .oc-modal-toast {
   position: absolute;
   top: 1.5rem;
@@ -4039,8 +4051,29 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+/* "공유/저장하기" is longer than "인쇄하기" was -- on narrow screens, drop the
+   brand wordmark text (logo alone still identifies the page) so both buttons
+   keep a single-line, unwrapped label. */
+@media (max-width: 420px) {
+  .oc-legal-page__header {
+    padding: 0.85rem 1rem;
+  }
+
+  .oc-legal-page__brand strong {
+    display: none;
+  }
+
+  .oc-legal-page__back-btn,
+  .oc-legal-page__print-btn {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.76rem;
+  }
 }
 
 .oc-legal-page__back-btn:hover,
@@ -4093,6 +4126,53 @@ body {
   font-weight: 600;
 }
 
+.oc-legal-page__inapp-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(201, 150, 60, 0.1);
+  border: 1px solid rgba(201, 150, 60, 0.3);
+  color: var(--oc-brown);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 1.75rem;
+}
+
+.oc-legal-page__inapp-notice svg {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  color: var(--oc-gold);
+}
+
+.oc-legal-page__toast {
+  position: fixed;
+  top: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--oc-maroon);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 200;
+  animation: ocLegalToastIn 0.2s ease forwards;
+}
+
+@keyframes ocLegalToastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 .oc-legal-page__footer {
   margin-top: 3rem;
   padding-top: 1.5rem;
@@ -4110,6 +4190,8 @@ body {
   .oc-legal-page__header,
   .oc-legal-page__back-btn,
   .oc-legal-page__print-btn,
+  .oc-legal-page__inapp-notice,
+  .oc-legal-page__toast,
   .oc-legal-page__footer button {
     display: none !important;
   }

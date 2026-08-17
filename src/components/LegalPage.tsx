@@ -1,23 +1,73 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { ShieldCheck, FileText, X, Printer } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShieldCheck, FileText, X, Printer, Share2, Info } from 'lucide-react';
 
 interface LegalPageProps {
     type: 'privacy' | 'terms';
     onGoBack: () => void;
 }
 
+// In-app WebView browsers (KakaoTalk, Naver, Instagram, Facebook, Line) commonly
+// don't implement window.print() at all -- it silently does nothing. Detecting
+// them lets us warn up front instead of leaving a dead-looking button.
+const detectInAppBrowser = (): string | null => {
+    const ua = navigator.userAgent || '';
+    if (/KAKAOTALK/i.test(ua)) return '카카오톡';
+    if (/NAVER\(/i.test(ua)) return '네이버';
+    if (/Instagram/i.test(ua)) return '인스타그램';
+    if (/FBAN|FBAV/i.test(ua)) return '페이스북';
+    if (/Line\//i.test(ua)) return '라인';
+    return null;
+};
+
 export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
     const isPrivacy = type === 'privacy';
+    const [isMobile, setIsMobile] = useState(false);
+    const [inAppBrowserName, setInAppBrowserName] = useState<string | null>(null);
+    const [copiedToast, setCopiedToast] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
         document.title = isPrivacy ? '개인정보처리방침 | OatCare 오트케어' : '이용약관 | OatCare 오트케어';
+        setIsMobile(window.innerWidth <= 768);
+        setInAppBrowserName(detectInAppBrowser());
     }, [isPrivacy]);
 
     const handlePrint = () => {
         window.print();
+    };
+
+    // Mobile: try the native share sheet first (works in most in-app browsers,
+    // unlike print), fall back to print, then to copying the link so tapping
+    // the button always does *something* visible.
+    const handleShareOrSave = async () => {
+        const shareData = {
+            title: document.title,
+            text: isPrivacy ? '오트케어 개인정보처리방침' : '오트케어 이용약관',
+            url: window.location.href,
+        };
+        if (typeof navigator.share === 'function') {
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch (err) {
+                if (err instanceof Error && err.name === 'AbortError') return;
+            }
+        }
+        // window.print() always exists as a function even in in-app browsers that
+        // don't actually implement it (it just silently does nothing there), so
+        // there's no way to detect success -- use the UA check instead of a
+        // typeof guard to decide whether it's worth trying.
+        if (!inAppBrowserName && typeof window.print === 'function') {
+            window.print();
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setCopiedToast(true);
+            setTimeout(() => setCopiedToast(false), 2500);
+        } catch (_) { }
     };
 
     return (
@@ -35,12 +85,25 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                         <strong style={{ fontSize: '1.1rem', color: 'var(--oc-maroon)', fontWeight: 800 }}>OatCare 오트케어</strong>
                     </div>
 
-                    <button className="oc-legal-page__print-btn" onClick={handlePrint}>
-                        <Printer size={16} />
-                        <span>인쇄하기</span>
-                    </button>
+                    {isMobile ? (
+                        <button className="oc-legal-page__print-btn" onClick={handleShareOrSave}>
+                            <Share2 size={16} />
+                            <span>공유/저장하기</span>
+                        </button>
+                    ) : (
+                        <button className="oc-legal-page__print-btn" onClick={handlePrint}>
+                            <Printer size={16} />
+                            <span>인쇄하기</span>
+                        </button>
+                    )}
                 </div>
             </header>
+
+            {copiedToast && (
+                <div className="oc-legal-page__toast">
+                    <span>링크가 복사되었습니다</span>
+                </div>
+            )}
 
             {/* Main Content Container */}
             <main className="oc-legal-page__container">
@@ -50,6 +113,15 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                         <h1>{isPrivacy ? '개인정보처리방침' : '오트케어 이용약관'}</h1>
                         <p className="oc-legal-page__meta">시행일자: 2026년 1월 1일 | 우리종합식품 (OatCare)</p>
                     </div>
+
+                    {isMobile && inAppBrowserName && (
+                        <div className="oc-legal-page__inapp-notice">
+                            <Info size={16} />
+                            <span>
+                                {inAppBrowserName} 브라우저에서는 공유하기만 가능합니다. 저장이 필요하신 경우 Chrome 등 다른 브라우저를 이용해 주세요.
+                            </span>
+                        </div>
+                    )}
 
                     {isPrivacy ? (
                         <div className="oc-legal-content">
