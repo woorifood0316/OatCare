@@ -5,6 +5,15 @@ import { ChevronDown } from 'lucide-react';
 import { ScrollScene } from '../types';
 import { getAssetUrl } from '../utils/assets';
 
+// Static default poster (desktop's video's exact first frame) baked directly
+// into the prerendered HTML, so the browser starts fetching it the moment it
+// parses the page -- before any JS runs. Without this, <video> has no poster
+// and no decoded frame yet on first paint, and browsers render that as a
+// solid black box regardless of any background color on ancestor elements.
+// The mobile-specific poster (also its video's own first frame) still swaps
+// in via JS once mounted, for a precise match on phones.
+const DEFAULT_POSTER = getAssetUrl('/assets/hero-poster-desktop.webp');
+
 /* ============================================================================
    OatCare Scroll-Scrub Hero — scroll-world architecture
    ---------------------------------------------------------------------------
@@ -362,6 +371,7 @@ export const ScrollScrubHero: React.FC = () => {
                     playsInline
                     muted
                     preload="auto"
+                    poster={DEFAULT_POSTER}
                     style={{ opacity: 1, filter: 'none' }}
                 />
 
