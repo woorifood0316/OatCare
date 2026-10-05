@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth, signOut } from '../../auth';
+import { auth } from '../../auth';
 import { getSql } from '../../lib/db';
 import { WithdrawButton } from '../../components/WithdrawButton';
+import { LogoutButton } from '../../components/LogoutButton';
 
 export const runtime = 'edge';
 
@@ -59,16 +60,7 @@ export default async function MyPage() {
                     </div>
                 </dl>
 
-                <form
-                    action={async () => {
-                        'use server';
-                        await signOut({ redirectTo: '/' });
-                    }}
-                >
-                    <button type="submit" className="oc-auth__btn oc-auth__btn--plain">
-                        로그아웃
-                    </button>
-                </form>
+                <LogoutButton />
 
                 <WithdrawButton />
 

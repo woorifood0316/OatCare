@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '../index.css';
 import { Providers } from '../components/Providers';
+import { getAssetUrl, R2_BASE_URL } from '../utils/assets';
 
 const SITE_URL = 'https://chamoatcare.com';
 
@@ -31,6 +32,14 @@ export default function RootLayout({
     return (
         <html lang="ko">
             <head>
+                <link rel="preconnect" href={R2_BASE_URL} />
+                <link
+                    rel="preload"
+                    as="image"
+                    href={getAssetUrl('/assets/chamoatcare-logo-512.webp')}
+                    imageSrcSet={`${getAssetUrl('/assets/chamoatcare-logo-256.webp')} 256w, ${getAssetUrl('/assets/chamoatcare-logo-512.webp')} 512w`}
+                    imageSizes="(max-width: 800px) 72px, 112px"
+                />
                 <link
                     rel="stylesheet"
                     as="style"

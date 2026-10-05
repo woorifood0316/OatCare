@@ -71,7 +71,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     {status !== 'loading' && (
                         <a className="oc-nav__auth" href={isLoggedIn ? '/mypage' : '/login'}>
                             <User size={15} />
-                            <span>{isLoggedIn ? '마이' : '로그인'}</span>
+                            <span>{isLoggedIn ? '마이페이지' : '로그인'}</span>
                         </a>
                     )}
                     <button

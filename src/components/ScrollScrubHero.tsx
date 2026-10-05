@@ -14,6 +14,50 @@ import { getAssetUrl } from '../utils/assets';
 // in via JS once mounted, for a precise match on phones.
 const DEFAULT_POSTER = getAssetUrl('/assets/hero-poster-desktop.webp');
 
+// Hero logo: served from R2 (256w/512w webp). Local copies in /public/assets are the fallback.
+const HERO_LOGO_256 = getAssetUrl('/assets/chamoatcare-logo-256.webp');
+const HERO_LOGO_512 = getAssetUrl('/assets/chamoatcare-logo-512.webp');
+
+// Falls back to the bundled copy if the R2 object is missing or fails. The mount-time check covers
+// images that already failed during SSR/hydration, where onError would never fire.
+const HeroLogo: React.FC = () => {
+    const ref = useRef<HTMLImageElement>(null);
+
+    const useFallback = () => {
+        const img = ref.current;
+        if (!img || img.dataset.fallback) return;
+        img.dataset.fallback = '1';
+        img.removeAttribute('srcset');
+        img.src = '/assets/chamoatcare-logo-512.webp';
+    };
+
+    useEffect(() => {
+        const img = ref.current;
+        if (img && img.complete && img.naturalWidth === 0) useFallback();
+    }, []);
+
+    return (
+        <img
+            ref={ref}
+            src={HERO_LOGO_512}
+            srcSet={`${HERO_LOGO_256} 256w, ${HERO_LOGO_512} 512w`}
+            sizes="(max-width: 800px) 72px, 112px"
+            alt="참오트케어 로고"
+            width={512}
+            height={512}
+            decoding="async"
+            fetchPriority="high"
+            onError={useFallback}
+            style={{
+                height: 'clamp(4.5rem, 9vw, 7rem)',
+                width: 'clamp(4.5rem, 9vw, 7rem)',
+                filter: 'drop-shadow(0 12px 28px rgba(0,0,0,0.5))',
+                marginBottom: '1.2rem',
+            }}
+        />
+    );
+};
+
 /* ============================================================================
    chamoatcare Scroll-Scrub Hero — scroll-world architecture
    ---------------------------------------------------------------------------
@@ -397,17 +441,7 @@ export const ScrollScrubHero: React.FC = () => {
                             transition: 'opacity 0.05s ease-out',
                         }}
                     >
-                        <img
-                            src="/assets/oatcare-logo.png"
-                            alt="참오트케어 로고"
-                            style={{
-                                height: 'clamp(4.5rem, 9vw, 7rem)',
-                                width: 'auto',
-                                borderRadius: '16px',
-                                boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
-                                marginBottom: '1.2rem',
-                            }}
-                        />
+                        <HeroLogo />
                         <h1
                             style={{
                                 color: '#F7F1E4',
