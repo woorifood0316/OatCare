@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
+import { useCart } from './cart/CartProvider';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
@@ -18,6 +19,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { status } = useSession();
     const isLoggedIn = status === 'authenticated';
+    const { count: cartCount, hydrated: cartReady } = useCart();
 
     useBodyScrollLock(isMobileMenuOpen);
 
@@ -68,6 +70,10 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                 </nav>
 
                 <div className="oc-nav__right-actions">
+                    <a className="oc-nav__cart" href="/cart" aria-label={`장바구니${cartReady && cartCount > 0 ? ` ${cartCount}개` : ''}`}>
+                        <ShoppingBag size={18} />
+                        {cartReady && cartCount > 0 ? <span className="oc-nav__cart-badge">{cartCount}</span> : null}
+                    </a>
                     {status !== 'loading' && (
                         <a className="oc-nav__auth" href={isLoggedIn ? '/mypage' : '/login'}>
                             <User size={15} />
@@ -124,6 +130,10 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                             </a>
                             <a className="oc-mobile-menu-link" href="#content" onClick={(e) => handleNavClick(e, 'content')}>
                                 <span>아침 가이드</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="/cart">
+                                <span>장바구니{cartReady && cartCount > 0 ? ` (${cartCount})` : ''}</span>
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href={isLoggedIn ? '/mypage' : '/login'}>

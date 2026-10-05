@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { RICH_PRODUCTS, BUNDLES } from './Sections';
+import { useCart } from './cart/CartProvider';
+import { CYCLE_OPTIONS, SUBSCRIPTION_DISCOUNT_RATE, getItem, subscriptionUnitPrice } from '../lib/catalog';
 import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
@@ -31,6 +34,11 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
     // Bundle selection state
     const [selectedBundleId, setSelectedBundleId] = useState<number>(20); // Default 20-pack BEST
     const [bundleMixOption, setBundleMixOption] = useState<'all' | 'custom'>('all');
+    const [purchaseMode, setPurchaseMode] = useState<'once' | 'subscribe'>('once');
+    const [cycleDays, setCycleDays] = useState<number | null>(null);
+
+    const router = useRouter();
+    const { addLine } = useCart();
 
     useBodyScrollLock(isOpen);
 
@@ -52,17 +60,47 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
         });
     };
 
-    const handleCheckout = () => {
+    const bundleItem = getItem(`bundle:${currentBundle.count}`);
+    const canSubscribe = Boolean(bundleItem?.subscribable);
+    const isSubscribe = activeTab === 'bundle' && canSubscribe && purchaseMode === 'subscribe';
+    const effectiveCycle = cycleDays ?? currentBundle.count;
+    const subUnit = bundleItem ? subscriptionUnitPrice(bundleItem) : currentBundle.price;
+
+    // Returns true when something was added to the cart.
+    const addToCart = (): boolean => {
         if (activeTab === 'single') {
             if (totalSingleCount === 0) {
                 alert('최소 1개 이상의 상품 수량을 선택해 주세요.');
-                return;
+                return false;
             }
-            alert(`[단품 주문] 총 ${totalSingleCount}개 (${totalSinglePrice.toLocaleString('ko-KR')}원) 주문 페이지로 이동합니다!`);
-        } else {
-            alert(`[세트 주문] ${currentBundle.flavor} (${currentBundle.price.toLocaleString('ko-KR')}원) 주문 페이지로 이동합니다!`);
+            Object.entries(singleQty).forEach(([flavor, qty]) => {
+                if (qty > 0) addLine({ sku: `single:${flavor}`, qty, mode: 'once' });
+            });
+            return true;
         }
-        onClose();
+        if (isSubscribe) {
+            addLine({
+                sku: `bundle:${currentBundle.count}`,
+                qty: 1,
+                mode: 'subscribe',
+                cycleDays: effectiveCycle,
+                mix: bundleMixOption,
+            });
+        } else {
+            addLine({ sku: `bundle:${currentBundle.count}`, qty: 1, mode: 'once', mix: bundleMixOption });
+        }
+        return true;
+    };
+
+    const handleAddToCart = () => {
+        if (addToCart()) onClose();
+    };
+
+    const handleCheckout = () => {
+        if (addToCart()) {
+            onClose();
+            router.push('/cart');
+        }
     };
 
     return (
@@ -201,6 +239,41 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                     </button>
                                 </div>
                             </div>
+
+                            {canSubscribe ? (
+                                <div className="oc-drawer__mix-option">
+                                    <span>구매 방식</span>
+                                    <div className="oc-drawer__mix-btns">
+                                        <button
+                                            className={purchaseMode === 'once' ? 'is-active' : ''}
+                                            onClick={() => setPurchaseMode('once')}
+                                        >
+                                            한 번만 구매
+                                        </button>
+                                        <button
+                                            className={purchaseMode === 'subscribe' ? 'is-active' : ''}
+                                            onClick={() => setPurchaseMode('subscribe')}
+                                        >
+                                            🔁 정기구독 ({Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인)
+                                        </button>
+                                    </div>
+                                    {purchaseMode === 'subscribe' ? (
+                                        <label className="oc-drawer__cycle">
+                                            배송 주기
+                                            <select
+                                                value={effectiveCycle}
+                                                onChange={(e) => setCycleDays(Number(e.target.value))}
+                                            >
+                                                {CYCLE_OPTIONS.map((d) => (
+                                                    <option key={d} value={d}>
+                                                        {d}일마다{d === currentBundle.count ? ' (추천)' : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                    ) : null}
+                                </div>
+                            ) : null}
                         </div>
                     )}
                 </div>
@@ -218,9 +291,11 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                             </div>
                         ) : (
                             <div>
-                                <span className="oc-drawer__summary-lbl">{currentBundle.flavor} (무료배송)</span>
+                                <span className="oc-drawer__summary-lbl">
+                                    {currentBundle.flavor} (무료배송){isSubscribe ? ` · ${effectiveCycle}일마다` : ''}
+                                </span>
                                 <div className="oc-drawer__summary-price">
-                                    <strong>{totalBundlePrice.toLocaleString('ko-KR')}원</strong>
+                                    <strong>{(isSubscribe ? subUnit : totalBundlePrice).toLocaleString('ko-KR')}원</strong>
                                     <s>{currentBundle.listPrice.toLocaleString('ko-KR')}원</s>
                                 </div>
                             </div>
@@ -228,11 +303,15 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                     </div>
 
                     <div className="oc-drawer__actions">
+                        <button className="oc-cta-outline oc-drawer__cart-btn" onClick={handleAddToCart}>
+                            <ShoppingBag size={16} />
+                            <span>장바구니</span>
+                        </button>
                         <button
                             className="oc-cta-fill oc-drawer__checkout-btn"
                             onClick={handleCheckout}
                         >
-                            <span>바로 구매하기</span>
+                            <span>{isSubscribe ? '정기구독 시작' : '바로 구매하기'}</span>
                             <ArrowRight size={16} />
                         </button>
                     </div>

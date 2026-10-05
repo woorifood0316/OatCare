@@ -4,6 +4,9 @@ import React from 'react';
 import { X, ShoppingBag, Check, Star, Flame, Sparkles, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
 import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useRouter } from 'next/navigation';
+import { useCart } from './cart/CartProvider';
+import { findSkuByName } from '../lib/catalog';
 
 export interface ProductDetailItem {
     flavor: string;
@@ -31,6 +34,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
     const [quantity, setQuantity] = React.useState(1);
     const [activeTab, setActiveTab] = React.useState<'specs' | 'recipe' | 'reviews'>('specs');
     const [addedToast, setAddedToast] = React.useState(false);
+    const router = useRouter();
+    const { addLine } = useCart();
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,9 +51,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
     const totalPrice = product.price * quantity;
 
+    const addToCart = (): boolean => {
+        const sku = findSkuByName(product.flavor);
+        if (!sku) return false;
+        addLine({ sku, qty: quantity, mode: 'once', ...(sku.startsWith('bundle:') ? { mix: 'all' as const } : {}) });
+        return true;
+    };
+
     const handleAddToCart = () => {
+        if (!addToCart()) return;
         setAddedToast(true);
         setTimeout(() => setAddedToast(false), 2500);
+    };
+
+    const handleBuyNow = () => {
+        if (!addToCart()) return;
+        onClose();
+        router.push('/cart');
     };
 
     return (
@@ -222,7 +241,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                     <ShoppingBag size={18} />
                                     <span>장바구니 담기</span>
                                 </button>
-                                <button className="oc-cta-fill modal-buy-btn" onClick={() => alert(`[참오트케어 ${product.flavor}] ${quantity}개 주문 페이지로 이동합니다!`)}>
+                                <button className="oc-cta-fill modal-buy-btn" onClick={handleBuyNow}>
                                     <span>바로 구매하기</span>
                                     <ArrowRight size={18} />
                                 </button>
