@@ -8,6 +8,8 @@ create table if not exists users (
     terms_agreed_at   timestamptz not null,
     privacy_agreed_at timestamptz not null,
     marketing_agreed  boolean not null default false,
+    marketing_updated_at timestamptz,
+    role              text not null default 'user' check (role in ('user', 'admin')),
     created_at        timestamptz not null default now(),
     last_login_at     timestamptz not null default now()
 );
