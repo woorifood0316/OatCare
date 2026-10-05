@@ -73,7 +73,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                     <div className="oc-drawer__title">
                         <ShoppingBag size={20} className="oc-drawer__icon" />
                         <div>
-                            <h3>오트케어 간편 구매</h3>
+                            <h3>참오트케어 간편 구매</h3>
                             <span>취향에 맞게 단품 또는 할인 세트를 선택하세요</span>
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
                                             <div className="oc-drawer-item__info">
                                                 <div className="oc-drawer-item__title-row">
-                                                    <strong>오트케어 {p.flavor}</strong>
+                                                    <strong>참오트케어 {p.flavor}</strong>
                                                     <span className="oc-drawer-item__kcal">{p.calories}</span>
                                                 </div>
                                                 <p className="oc-drawer-item__desc">{p.tasteNote}</p>

@@ -45,13 +45,13 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     className="oc-nav__brand"
                     onClick={(e) => handleNavClick(e, 'hero')}
                 >
-                    <img src={getAssetUrl('/assets/oatcare-logo.png')} alt="오트케어 로고" className="oc-nav__logo-img" />
-                    <span>OatCare</span>
+                    <img src={getAssetUrl('/assets/oatcare-logo.png')} alt="참오트케어 로고" className="oc-nav__logo-img" />
+                    <span>chamoatcare</span>
                 </a>
 
                 <nav className="oc-nav__links">
                     <a className="oc-nav__link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
-                        WHY OATCARE
+                        WHY CHAMOATCARE
                     </a>
                     <a className="oc-nav__link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
                         맛 둘러보기
@@ -100,14 +100,14 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                 <div className="oc-mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}>
                     <div className="oc-mobile-menu-content" onClick={(e) => e.stopPropagation()}>
                         <div className="oc-mobile-menu-header">
-                            <span className="oc-mobile-menu-title">OatCare 메뉴</span>
+                            <span className="oc-mobile-menu-title">chamoatcare 메뉴</span>
                             <button className="oc-mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)}>
                                 <X size={24} />
                             </button>
                         </div>
                         <nav className="oc-mobile-menu-nav">
                             <a className="oc-mobile-menu-link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
-                                <span>WHY OATCARE</span>
+                                <span>WHY CHAMOATCARE</span>
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
@@ -214,7 +214,7 @@ export const BoldStatement: React.FC = () => {
             id="why-oatcare"
         >
             <div className="oc-apple-wrapper">
-                <span className="oc-apple-eyebrow">WHY OATCARE</span>
+                <span className="oc-apple-eyebrow">WHY CHAMOATCARE</span>
 
                 <h2 className="oc-apple-headline">
                     <span className="oc-apple-headline-line line-1">아침, 더 이상 굶지 마세요.</span>
@@ -286,7 +286,7 @@ export const Pillars: React.FC = () => {
             <section className="oc-section" id="pillars">
                 <div className="oc-section-header">
                     <span className="oc-eyebrow">3 Core Pillars</span>
-                    <h2>건강식 · 간편식 · 다이어트식<br /><span className="oc-highlight-maroon">오트케어</span>로 한 번에 해결하세요</h2>
+                    <h2>건강식 · 간편식 · 다이어트식<br /><span className="oc-highlight-maroon">참오트케어</span>로 한 번에 해결하세요</h2>
                 </div>
 
                 <div className="oc-pillars-grid">
@@ -371,7 +371,7 @@ export const QuickReviews: React.FC = () => {
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        12만+ 봉지로 검증된 오트케어 실제 구매자들의 생생한 리뷰입니다.
+                        12만+ 봉지로 검증된 참오트케어 실제 구매자들의 생생한 리뷰입니다.
                     </p>
                 </ScrollReveal>
             </div>
@@ -430,7 +430,7 @@ export const RICH_PRODUCTS: ProductItemDetailed[] = [
         desc: '각종 통곡물이 듬뿍 들어가 고소한 오곡라떼의 풍미! 호불호 없이 온 가족이 가장 좋아하는 시그니처 1위 맛.',
         tasteNote: '카페 오곡라떼처럼 진하고 부드러운 고소함',
         mood: '🌾 고소하고 든든한 아침이 필요할 때',
-        moodDesc: '9가지 곡물 블렌딩으로 속 편하게 채우는 오트케어 베스트셀러',
+        moodDesc: '9가지 곡물 블렌딩으로 속 편하게 채우는 참오트케어 베스트셀러',
         shakeColor: '#D97706',
     },
     {
@@ -549,13 +549,13 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                 {p.badge && <StampBadge text={p.badge} color={p.accentColor || '#7A2331'} />}
 
                 <div className="oc-grid-card-img-wrap" style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                    <img src={p.img} alt={`오트케어 ${p.flavor}`} />
+                    <img src={p.img} alt={`참오트케어 ${p.flavor}`} />
                 </div>
 
                 <div className="oc-grid-card-body">
                     <span className="oc-grid-tag">{p.tag}</span>
                     <h4 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                        {p.icon} 오트케어 {p.flavor}
+                        {p.icon} 참오트케어 {p.flavor}
                     </h4>
                     <p className="oc-grid-ingr">{p.ingredient}</p>
 
@@ -572,7 +572,7 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                         <button className="oc-cta-outline" onClick={() => onSelectProduct?.(p)}>
                             <span>상세보기</span>
                         </button>
-                        <button className="oc-cta-fill" onClick={() => alert(`[오트케어 ${p.flavor}] 장바구니에 담겼습니다!`)}>
+                        <button className="oc-cta-fill" onClick={() => alert(`[참오트케어 ${p.flavor}] 장바구니에 담겼습니다!`)}>
                             <ShoppingBag size={15} />
                             <span style={{ textAlign: 'center', lineHeight: '1.25', display: 'inline-block' }}>
                                 장바구니<br />담기
@@ -593,7 +593,7 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        매일 아침 기분에 따라 선택하세요. <span className="oc-highlight-maroon">오트케어 5종 라인업</span>입니다.
+                        매일 아침 기분에 따라 선택하세요. <span className="oc-highlight-maroon">참오트케어 5종 라인업</span>입니다.
                     </p>
                 </ScrollReveal>
             </div>
@@ -655,7 +655,7 @@ export const Nutrition: React.FC = () => {
                     {NUTRITION_STATS.map((n) => (
                         <div key={n.flavor} className="oc-nutrition-item">
                             <div className="oc-nutrition-item__head">
-                                <strong>오트케어 {n.flavor}</strong>
+                                <strong>참오트케어 {n.flavor}</strong>
                                 <span className="oc-num-badge">{n.kcal} kcal</span>
                             </div>
                             <p className="oc-nutrition-item__sub">{n.stat}</p>
@@ -669,7 +669,7 @@ export const Nutrition: React.FC = () => {
                     <div className="oc-comparison-bars">
                         <div className="oc-comparison-bar-item">
                             <div className="bar-info">
-                                <span>오트케어 (50g)</span>
+                                <span>참오트케어 (50g)</span>
                                 <strong>195 kcal</strong>
                             </div>
                             <div className="bar-track">
@@ -716,7 +716,7 @@ export const FamilyStory: React.FC = () => {
                     "지하철에서 물 부어 30초 만에 마시는데 진짜 고소해요. <span className="oc-highlight-text">점심시간까지 공복감이 싹 사라졌어요.</span>"
                 </>
             ),
-            tag: '오트케어 그레인 / 단백질 추천',
+            tag: '참오트케어 그레인 / 단백질 추천',
             icon: '👔',
         },
         {
@@ -726,7 +726,7 @@ export const FamilyStory: React.FC = () => {
                     "아이 챙기느라 정작 내 아침은 매번 놓쳤는데, <span className="oc-highlight-text">죄책감 없이 가볍고 든든하게</span> 챙겨 먹어요."
                 </>
             ),
-            tag: '오트케어 고구마 / 초코 추천',
+            tag: '참오트케어 고구마 / 초코 추천',
             icon: '🏡',
         },
         {
@@ -736,7 +736,7 @@ export const FamilyStory: React.FC = () => {
                     "아침에 밥 안 먹는 아이인데, 서리태 맛 우유에 타주면 <span className="oc-highlight-text">검은콩 두유 같아서 싹 비우고</span> 등교해요."
                 </>
             ),
-            tag: '오트케어 서리태 / 고구마 추천',
+            tag: '참오트케어 서리태 / 고구마 추천',
             icon: '🎒',
         },
         {
@@ -746,7 +746,7 @@ export const FamilyStory: React.FC = () => {
                     "아침마다 속이 더부룩해서 식사 못 하시던 부모님이 <span className="oc-highlight-text">속 편하다고 매일 아침 찾으십니다.</span>"
                 </>
             ),
-            tag: '오트케어 서리태 / 그레인 추천',
+            tag: '참오트케어 서리태 / 그레인 추천',
             icon: '❤️',
         },
     ];
@@ -808,7 +808,7 @@ export const BUNDLES: (ProductDetailItem & {
             ingredient: '그레인(2), 고구마(2), 단백질(2), 서리태(2), 초코(2) 각 2개씩 총 10포',
             calories: '평균 195 kcal / 1포',
             accentColor: '#C9963C',
-            desc: '오트케어 5가지 맛을 각 2개씩 총 10개 구성! 개당 1,200원(정가 1,250원 대비 할인)의 알뜰한 가격으로 온 가족 취향을 먼저 탐색해 보세요.',
+            desc: '참오트케어 5가지 맛을 각 2개씩 총 10개 구성! 개당 1,200원(정가 1,250원 대비 할인)의 알뜰한 가격으로 온 가족 취향을 먼저 탐색해 보세요.',
             tasteNote: '5가지 전 맛을 부담 없이 경험해보는 베스트 입문용 세트',
             mood: '🎁 5가지 맛 골고루 체험',
             shakeColor: '#D97706',
@@ -844,7 +844,7 @@ export const BUNDLES: (ProductDetailItem & {
             listPrice: 37500,
             unitPrice: 900,
             count: 30,
-            ingredient: '원하는 맛 자율 조합 (맛별 최소 5개) + 오트케어 전용 쉐이커 보틀 증정',
+            ingredient: '원하는 맛 자율 조합 (맛별 최소 5개) + 참오트케어 전용 쉐이커 보틀 증정',
             calories: '평균 195 kcal / 1포',
             accentColor: '#7A2331',
             desc: '정가 개당 1,250원에서 개당 900원 파격 최저가! 온 가족 대용량 세트로 전용 쉐이커 보틀까지 무료 증정합니다.',
@@ -984,7 +984,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
         tag: '#혈당케어 #아침건강',
         readTime: '3 min read',
         date: '2026.08.15',
-        author: '오트케어 영양 연구팀',
+        author: '참오트케어 영양 연구팀',
         img: '/assets/journal-healthy-morning.png',
         intro: '아침 출근길, 빵 한 조각이나 시리얼로 대충 떼운 뒤 점심시간 전 미친 듯이 쏟아지는 졸음과 허기짐을 느껴보셨나요? 이는 정제 탄수화물이 초래하는 대표적인 혈당 스파이크 현상입니다.',
         sections: [
@@ -995,26 +995,26 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
             },
             {
                 title: '2. 귀리의 수용성 식이섬유, 베타글루칸(Beta-Glucan)',
-                body: '오트케어의 핵심 원료인 귀리에는 젤 형태로 변해 섭취한 음식을 감싸는 베타글루칸이 풍부합니다. 이 성분이 당 흡수 속도를 늦추고 장내 유익균의 먹이가 되어 아침 편안함을 유지해 줍니다.',
+                body: '참오트케어의 핵심 원료인 귀리에는 젤 형태로 변해 섭취한 음식을 감싸는 베타글루칸이 풍부합니다. 이 성분이 당 흡수 속도를 늦추고 장내 유익균의 먹이가 되어 아침 편안함을 유지해 줍니다.',
             },
             {
                 title: '3. 바쁜 아침 30초면 완성되는 혈당 케어 루틴',
-                body: '따뜻한 물이나 저지방 우유 180ml에 오트케어 1포를 붓고 저어주기만 하면, 혈당 스파이크 부담 없는 완벽한 균형 한 끼가 완성됩니다.',
+                body: '따뜻한 물이나 저지방 우유 180ml에 참오트케어 1포를 붓고 저어주기만 하면, 혈당 스파이크 부담 없는 완벽한 균형 한 끼가 완성됩니다.',
             }
         ],
-        conclusion: '내 몸을 부드럽게 깨우는 아침 리추얼, 오트케어 한 포로 오늘 아침 혈당 밸런스를 지켜보세요.'
+        conclusion: '내 몸을 부드럽게 깨우는 아침 리추얼, 참오트케어 한 포로 오늘 아침 혈당 밸런스를 지켜보세요.'
     },
     {
         id: 'journal-2',
-        title: '우유 vs 두유 vs 아몬드유! 오트케어 맛별 환상 조합',
+        title: '우유 vs 두유 vs 아몬드유! 참오트케어 맛별 환상 조합',
         subtitle: '그레인, 고구마, 서리태, 초코, 단백질! 어떤 꿀조합이 나에게 맞을까?',
         category: '꿀조합 레시피',
         tag: '#꿀조합 #맛별레시피',
         readTime: '4 min read',
         date: '2026.08.12',
-        author: '오트케어 레시피 랩',
+        author: '참오트케어 레시피 랩',
         img: '/assets/journal-oat-recipe-mix.png',
-        intro: '오트케어의 5가지 맛은 붓는 음료에 따라 완전히 새로운 맛과 풍미를 선사합니다. 기분과 취향에 맞는 최고의 꿀조합을 소개합니다.',
+        intro: '참오트케어의 5가지 맛은 붓는 음료에 따라 완전히 새로운 맛과 풍미를 선사합니다. 기분과 취향에 맞는 최고의 꿀조합을 소개합니다.',
         sections: [
             {
                 title: '1. 시그니처 그레인 & 고구마 + 따뜻한 저지방 우유',
@@ -1027,10 +1027,10 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
             },
             {
                 title: '3. 리얼 초코 + 아몬드 브리즈 (길티프리 디저트)',
-                body: '달콤한 디저트가 당길 때, 칼로리 부담 없는 아몬드유에 초코 오트케어를 타면 리얼 코코아의 풍미를 100kcal 대에 건강하게 즐기실 수 있습니다.',
+                body: '달콤한 디저트가 당길 때, 칼로리 부담 없는 아몬드유에 초코 참오트케어를 타면 리얼 코코아의 풍미를 100kcal 대에 건강하게 즐기실 수 있습니다.',
             }
         ],
-        conclusion: '매일 아침 다른 베이스 음료로 나만의 최애 오트케어 조합을 찾아보세요!'
+        conclusion: '매일 아침 다른 베이스 음료로 나만의 최애 참오트케어 조합을 찾아보세요!'
     },
     {
         id: 'journal-3',
@@ -1040,13 +1040,13 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
         tag: '#직장인루틴 #오버나이트오트',
         readTime: '2 min read',
         date: '2026.08.10',
-        author: '오트케어 라이프스타일',
+        author: '참오트케어 라이프스타일',
         img: '/assets/journal-overnight-oats.png',
         intro: '아침 1분 1초가 시급해 아침을 건너뛰는 직장인과 수험생을 위한 스마트한 전날 밤 준비법, 바로 오버나이트 오트(Overnight Oats)입니다.',
         sections: [
             {
                 title: '1. 30초 만에 끝나는 전날 밤 준비 과정',
-                body: '밀폐 보틀에 오트케어 1포를 뜯고 우유나 우유 대체 음료 180ml를 부은 뒤 뚜껑을 닫고 냉장고에 넣어두기만 하면 끝입니다.',
+                body: '밀폐 보틀에 참오트케어 1포를 뜯고 우유나 우유 대체 음료 180ml를 부은 뒤 뚜껑을 닫고 냉장고에 넣어두기만 하면 끝입니다.',
                 tip: '🌙 팁: 밤새 곡물 파우더가 촉촉하게 음료를 머금어 다음 날 훨씬 더 부드럽고 묵직한 크림 타입 푸딩 질감이 완성됩니다.'
             },
             {
@@ -1117,7 +1117,7 @@ export const JournalArticleModal: React.FC<{
                         }}
                     >
                         <ShoppingBag size={18} />
-                        <span>가이드에 소개된 오트케어 세트 보러가기</span>
+                        <span>가이드에 소개된 참오트케어 세트 보러가기</span>
                     </button>
 
                     <div className="oc-journal-modal__blog-link">
@@ -1128,7 +1128,7 @@ export const JournalArticleModal: React.FC<{
                             className="oc-cta-link"
                             style={{ fontSize: '0.85rem' }}
                         >
-                            <span>오트케어 공식 블로그에서 전체 아티클 보기</span>
+                            <span>참오트케어 공식 블로그에서 전체 아티클 보기</span>
                             <ExternalLink size={14} />
                         </a>
                     </div>
@@ -1149,11 +1149,11 @@ export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle })
                 <div className="oc-section-header">
                     <ScrollReveal>
                         <span className="oc-eyebrow">From the Morning Journal</span>
-                        <h2>오트케어의 <span className="oc-highlight-maroon">아침 이야기</span></h2>
+                        <h2>참오트케어의 <span className="oc-highlight-maroon">아침 이야기</span></h2>
                     </ScrollReveal>
                     <ScrollReveal delay={0.15}>
                         <p className="oc-section-subhead">
-                            바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과 <span className="oc-highlight-maroon">오트케어 활용 레시피</span>를 전합니다.
+                            바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과 <span className="oc-highlight-maroon">참오트케어 활용 레시피</span>를 전합니다.
                         </p>
                     </ScrollReveal>
                 </div>
@@ -1230,7 +1230,7 @@ export const FinalCta: React.FC<FinalCtaProps> = ({ onOpenDrawer }) => {
                     </span>
                     <h2>
                         당신의 아침을,<br />
-                        <span className="oc-highlight-gold">오트케어</span>와 함께 시작하세요
+                        <span className="oc-highlight-gold">참오트케어</span>와 함께 시작하세요
                     </h2>
                     <p style={{ color: 'rgba(247,241,228,0.92)', fontSize: '1.1rem', marginBottom: '2rem' }}>
                         첫 구매 시 전용 쉐이커 전원 증정 & 무료 배송 혜택
@@ -1258,8 +1258,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
         <footer className="oc-footer">
             <div className="oc-footer__brand">
                 <div className="oc-footer__logo-header">
-                    <img src="/assets/oatcare-logo.png" alt="오트케어 로고" className="oc-footer__logo-img" />
-                    <strong>OatCare 오트케어</strong>
+                    <img src="/assets/oatcare-logo.png" alt="참오트케어 로고" className="oc-footer__logo-img" />
+                    <strong>참오트케어</strong>
                 </div>
 
                 <div className="oc-footer__legal-links">

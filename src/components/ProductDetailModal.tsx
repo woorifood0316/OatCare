@@ -63,7 +63,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                 {addedToast && (
                     <div className="oc-modal-toast">
                         <Check size={18} />
-                        <span>[오트케어 {product.flavor}] {quantity}개가 장바구니에 담겼습니다!</span>
+                        <span>[참오트케어 {product.flavor}] {quantity}개가 장바구니에 담겼습니다!</span>
                     </div>
                 )}
 
@@ -74,7 +74,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         {product.badge && <span className="oc-modal-badge">{product.badge}</span>}
 
                         <div className="oc-modal-img-wrap">
-                            <img src={getAssetUrl(product.img)} alt={`오트케어 ${product.flavor}`} className="oc-modal-pouch-img" />
+                            <img src={getAssetUrl(product.img)} alt={`참오트케어 ${product.flavor}`} className="oc-modal-pouch-img" />
                         </div>
 
                         <div className="oc-modal-flavor-pills">
@@ -88,7 +88,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     <div className="oc-modal-info-col">
                         <div className="oc-modal-header">
                             <span className="oc-modal-eyebrow">{product.tag}</span>
-                            <h2>{product.icon} 오트케어 {product.flavor}</h2>
+                            <h2>{product.icon} 참오트케어 {product.flavor}</h2>
                             <p className="oc-modal-taste-note">"{product.tasteNote}"</p>
                         </div>
 
@@ -222,7 +222,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                     <ShoppingBag size={18} />
                                     <span>장바구니 담기</span>
                                 </button>
-                                <button className="oc-cta-fill modal-buy-btn" onClick={() => alert(`[오트케어 ${product.flavor}] ${quantity}개 주문 페이지로 이동합니다!`)}>
+                                <button className="oc-cta-fill modal-buy-btn" onClick={() => alert(`[참오트케어 ${product.flavor}] ${quantity}개 주문 페이지로 이동합니다!`)}>
                                     <span>바로 구매하기</span>
                                     <ArrowRight size={18} />
                                 </button>

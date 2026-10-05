@@ -7,7 +7,7 @@ import { WithdrawButton } from '../../components/WithdrawButton';
 export const runtime = 'edge';
 
 export const metadata: Metadata = {
-    title: '마이페이지 | OatCare 오트케어',
+    title: '마이페이지 | 참오트케어',
     robots: { index: false, follow: false },
 };
 
@@ -36,8 +36,8 @@ export default async function MyPage() {
     return (
         <main className="oc-auth">
             <div className="oc-auth__card">
-                <a href="/" className="oc-auth__brand" aria-label="오트케어 홈">
-                    <span>OatCare</span>
+                <a href="/" className="oc-auth__brand" aria-label="참오트케어 홈">
+                    <span>chamoatcare</span>
                 </a>
                 <h1 className="oc-auth__title">마이페이지</h1>
 

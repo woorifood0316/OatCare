@@ -30,7 +30,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        document.title = isPrivacy ? '개인정보처리방침 | OatCare 오트케어' : '이용약관 | OatCare 오트케어';
+        document.title = isPrivacy ? '개인정보처리방침 | 참오트케어' : '이용약관 | 참오트케어';
         setIsMobile(window.innerWidth <= 768);
         setInAppBrowserName(detectInAppBrowser());
     }, [isPrivacy]);
@@ -41,7 +41,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
 
     const getShareData = () => ({
         title: document.title,
-        text: isPrivacy ? '오트케어 개인정보처리방침' : '오트케어 이용약관',
+        text: isPrivacy ? '참오트케어 개인정보처리방침' : '참오트케어 이용약관',
         url: window.location.href,
     });
 
@@ -101,8 +101,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                     </button>
 
                     <div className="oc-legal-page__brand">
-                        <img src="/assets/oatcare-logo.png" alt="OatCare Logo" style={{ height: '1.8rem', borderRadius: '4px' }} />
-                        <strong style={{ fontSize: '1.1rem', color: 'var(--oc-maroon)', fontWeight: 800 }}>OatCare 오트케어</strong>
+                        <img src="/assets/oatcare-logo.png" alt="chamoatcare Logo" style={{ height: '1.8rem', borderRadius: '4px' }} />
+                        <strong style={{ fontSize: '1.1rem', color: 'var(--oc-maroon)', fontWeight: 800 }}>참오트케어</strong>
                     </div>
 
                     {isMobile ? (
@@ -164,8 +164,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                 <div className="oc-legal-page__card">
                     <div className="oc-legal-page__title-area">
                         {isPrivacy ? <ShieldCheck size={32} color="var(--oc-maroon)" /> : <FileText size={32} color="var(--oc-maroon)" />}
-                        <h1>{isPrivacy ? '개인정보처리방침' : '오트케어 이용약관'}</h1>
-                        <p className="oc-legal-page__meta">시행일자: 2026년 1월 1일 | 우리종합식품 (OatCare)</p>
+                        <h1>{isPrivacy ? '개인정보처리방침' : '참오트케어 이용약관'}</h1>
+                        <p className="oc-legal-page__meta">시행일자: 2026년 1월 1일 | 우리종합식품 (chamoatcare)</p>
                     </div>
 
                     {isMobile && inAppBrowserName && (
@@ -181,7 +181,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                         <div className="oc-legal-content">
                             <p className="oc-legal-intro">
                                 우리종합식품(이하 '회사'라 함)은 이용자의 개인정보를 중요시하며, 「개인정보 보호법」 등 관련 법령을 준수하고 있습니다.
-                                본 방침은 회사가 제공하는 오트케어(OatCare) 서비스 이용 시 개인정보가 어떻게 수집, 이용, 보호되는지 안내합니다.
+                                본 방침은 회사가 제공하는 참오트케어(chamoatcare) 서비스 이용 시 개인정보가 어떻게 수집, 이용, 보호되는지 안내합니다.
                             </p>
 
                             <section className="oc-legal-section">
@@ -198,7 +198,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                             <section className="oc-legal-section">
                                 <h3>2. 개인정보의 수집 및 이용 목적</h3>
                                 <ul>
-                                    <li><strong>서비스 제공 및 이행:</strong> 오트케어 제품 주문 처리, 물품 배송, 구매 완료 안내</li>
+                                    <li><strong>서비스 제공 및 이행:</strong> 참오트케어 제품 주문 처리, 물품 배송, 구매 완료 안내</li>
                                     <li><strong>고객 관리:</strong> 본인 확인, 고객상담 및 민원 처리, 고지사항 전달</li>
                                     <li><strong>마케팅 및 서비스 개선:</strong> 신제품 안내 및 혜택 제공 (동의 시)</li>
                                 </ul>
@@ -240,7 +240,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                     ) : (
                         <div className="oc-legal-content">
                             <p className="oc-legal-intro">
-                                이 약관은 우리종합식품(전자상거래 사업자)이 운영하는 오트케어(OatCare) 온라인 쇼핑몰에서 제공하는 인터넷 관련 서비스(이하 '서비스')를 이용함에 있어 사이트와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
+                                이 약관은 우리종합식품(전자상거래 사업자)이 운영하는 참오트케어(chamoatcare) 온라인 쇼핑몰에서 제공하는 인터넷 관련 서비스(이하 '서비스')를 이용함에 있어 사이트와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
                             </p>
 
                             <section className="oc-legal-section">
@@ -287,7 +287,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                         >
                             확인 및 닫기
                         </button>
-                        <p>© 2026 우리종합식품 (OatCare). All rights reserved.</p>
+                        <p>© 2026 우리종합식품 (chamoatcare). All rights reserved.</p>
                     </div>
                 </div>
             </main>

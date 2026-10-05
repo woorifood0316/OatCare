@@ -86,9 +86,9 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     return (
         <main className="oc-auth">
             <div className="oc-auth__card">
-                <a href="/" className="oc-auth__brand" aria-label="오트케어 홈">
+                <a href="/" className="oc-auth__brand" aria-label="참오트케어 홈">
                     <img src={getAssetUrl('/assets/oatcare-logo.png')} alt="" />
-                    <span>OatCare</span>
+                    <span>chamoatcare</span>
                 </a>
 
                 <h1 className="oc-auth__title">{isSignup ? '3초 만에 시작하세요' : '다시 만나서 반가워요'}</h1>

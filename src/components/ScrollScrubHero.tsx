@@ -15,7 +15,7 @@ import { getAssetUrl } from '../utils/assets';
 const DEFAULT_POSTER = getAssetUrl('/assets/hero-poster-desktop.webp');
 
 /* ============================================================================
-   OatCare Scroll-Scrub Hero — scroll-world architecture
+   chamoatcare Scroll-Scrub Hero — scroll-world architecture
    ---------------------------------------------------------------------------
    Based on oso95/scroll-world scrub-engine.js:
    1. Direct visible <video> element with object-fit:cover (NO Canvas)
@@ -37,7 +37,7 @@ const SCENES: ScrollScene[] = [
         id: 'scene-01',
         chapter: 'Chapter 01',
         title: '"9가지 좋은 곡물"',
-        body: '귀리, 현미, 백태, 보리, 찰현미, 밀, 멥쌀, 흑미, 서리태.\n9가지 곡물이 오트케어 그레인 한 봉지에 모입니다.',
+        body: '귀리, 현미, 백태, 보리, 찰현미, 밀, 멥쌀, 흑미, 서리태.\n9가지 곡물이 참오트케어 그레인 한 봉지에 모입니다.',
         tag: '50g 한 봉지',
         align: 'left',
         startPercent: 15,
@@ -66,7 +66,7 @@ const SCENES: ScrollScene[] = [
     {
         id: 'scene-04',
         chapter: 'Chapter 04',
-        title: '완벽한 한 끼, 오트케어',
+        title: '완벽한 한 끼, 참오트케어',
         body: '골고루, 든든하게, 매일 다른 맛으로. 바쁜 일상에도 놓치지 않는 균형 잡힌 한 끼.',
         tag: '다섯 가지 맛',
         align: 'right',
@@ -399,7 +399,7 @@ export const ScrollScrubHero: React.FC = () => {
                     >
                         <img
                             src="/assets/oatcare-logo.png"
-                            alt="오트케어 로고"
+                            alt="참오트케어 로고"
                             style={{
                                 height: 'clamp(4.5rem, 9vw, 7rem)',
                                 width: 'auto',
@@ -419,7 +419,7 @@ export const ScrollScrubHero: React.FC = () => {
                                 lineHeight: 1.1,
                             }}
                         >
-                            OatCare 오트케어
+                            참오트케어
                         </h1>
                         <p
                             style={{
@@ -512,7 +512,7 @@ export const ScrollScrubHero: React.FC = () => {
                         </div>
 
                         <span className="oc-scroll-progress-title">
-                            {progressPct < 15 ? 'OatCare Intro' : currentScene.title}
+                            {progressPct < 15 ? 'chamoatcare Intro' : currentScene.title}
                         </span>
                     </div>
 
