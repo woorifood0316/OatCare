@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '../index.css';
+import { Providers } from '../components/Providers';
 
 const SITE_URL = 'https://chamoatcare.com';
 
@@ -43,7 +44,7 @@ export default function RootLayout({
                     rel="stylesheet"
                 />
             </head>
-            <body>{children}</body>
+            <body><Providers>{children}</Providers></body>
         </html>
     );
 }

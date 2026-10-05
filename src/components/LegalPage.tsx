@@ -188,6 +188,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                                 <h3>1. 수집하는 개인정보 항목 및 수집방법</h3>
                                 <p>회사는 주문 접수, 배송, CS 응대를 위해 아래와 같은 최소한의 개인정보를 수집합니다.</p>
                                 <ul>
+                                    <li><strong>회원가입(소셜 로그인) 시:</strong> 카카오 - 닉네임(필수), 이메일(선택) / 네이버 - 이름(필수), 이메일(선택) / 구글 - 이름, 이메일 / 마케팅 정보 수신 동의 여부(선택). 이용자가 직접 입력하는 항목은 없으며, 각 소셜 로그인 제공사의 동의 화면에서 동의한 정보만 전달받습니다.</li>
                                     <li><strong>주문/결제 시:</strong> 주문자 성명, 연락처(휴대전화번호), 이메일, 배송지 주소, 결제 정보</li>
                                     <li><strong>고객상담 시:</strong> 성명, 연락처, 상담내용</li>
                                     <li><strong>자동 수집 항목:</strong> 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP 정보</li>
@@ -221,6 +222,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type, onGoBack }) => {
                                 <p>회사는 이용자의 동의 없이 개인정보를 외부에 제공하지 않습니다. 단, 상품 배송을 위해 필수적인 경우에 한하여 아래와 같이 위탁하고 있습니다.</p>
                                 <ul>
                                     <li><strong>배송 위탁 업체:</strong> 택배사 (CJ대한통운, 롯데택배 등) - 물품 배송 업무</li>
+                                    <li><strong>회원정보 보관(DB):</strong> Neon, Inc. - 회원정보 저장 및 관리</li>
+                                    <li><strong>웹사이트 호스팅:</strong> Cloudflare, Inc. - 서비스 운영 및 접속 처리</li>
                                 </ul>
                             </section>
 
