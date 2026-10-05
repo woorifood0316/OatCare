@@ -1,7 +1,20 @@
 import type { Metadata } from 'next';
 import '../index.css';
 
+const SITE_URL = 'https://chamoatcare.com';
+
 export const metadata: Metadata = {
+    metadataBase: new URL(SITE_URL),
+    alternates: { canonical: '/' },
+    openGraph: {
+        type: 'website',
+        url: SITE_URL,
+        siteName: 'OatCare 오트케어',
+        locale: 'ko_KR',
+        title: 'OatCare 오트케어 — 바쁜 아침을 위한 5가지 맛 오트밀',
+        description: '한 봉지 50g, 물이나 우유를 붓고 30초면 완성되는 오트케어. 바쁜 아침을 든든하고 건강하게 체인지하세요.',
+        images: ['/assets/oatcare-logo.png'],
+    },
     title: 'OatCare 오트케어 — 바쁜 아침을 위한 5가지 맛 오트밀',
     description: '한 봉지 50g, 물이나 우유를 붓고 30초면 완성되는 오트케어. 바쁜 아침을 든든하고 건강하게 체인지하세요.',
     icons: {
