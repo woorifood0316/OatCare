@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useCart } from './cart/CartProvider';
+import { findSkuByName } from '../lib/catalog';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
@@ -546,6 +547,7 @@ export const StampBadge: React.FC<{ text: string; color?: string }> = ({ text, c
 
 // ❹ 5-Flavor Product Showcase: 2-Top + 3-Bottom Symmetrical Luxury Grid
 export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) => {
+    const { addLine } = useCart();
     const topProducts = RICH_PRODUCTS.slice(0, 2);
     const bottomProducts = RICH_PRODUCTS.slice(2, 5);
 
@@ -582,7 +584,13 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                         <button className="oc-cta-outline" onClick={() => onSelectProduct?.(p)}>
                             <span>상세보기</span>
                         </button>
-                        <button className="oc-cta-fill" onClick={() => alert(`[참오트케어 ${p.flavor}] 장바구니에 담겼습니다!`)}>
+                        <button
+                            className="oc-cta-fill"
+                            onClick={() => {
+                                const sku = findSkuByName(p.flavor);
+                                if (sku) addLine({ sku, qty: 1, mode: 'once' });
+                            }}
+                        >
                             <ShoppingBag size={15} />
                             <span style={{ textAlign: 'center', lineHeight: '1.25', display: 'inline-block' }}>
                                 장바구니<br />담기
@@ -866,6 +874,7 @@ export const BUNDLES: (ProductDetailItem & {
     ];
 
 export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
+    const { addLine } = useCart();
     const sectionRef = React.useRef<HTMLElement>(null);
     const [isVisible, setIsVisible] = React.useState(false);
 
@@ -952,7 +961,10 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
 
                                 <button
                                     className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
-                                    onClick={() => onSelectProduct?.(b)}
+                                    onClick={() => {
+                                        const sku = findSkuByName(b.flavor);
+                                        if (sku) addLine({ sku, qty: 1, mode: 'once', mix: 'all' });
+                                    }}
                                 >
                                     <ShoppingBag size={16} />
                                     <span>세트로 담기</span>
