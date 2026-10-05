@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://chamoatcare.com/sitemap.xml
