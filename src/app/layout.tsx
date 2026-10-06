@@ -14,14 +14,11 @@ export const metadata: Metadata = {
         siteName: '참오트케어',
         locale: 'ko_KR',
         title: '참오트케어 — 바쁜 아침을 위한 5가지 맛 오트밀',
-        description: '한 봉지 50g, 물이나 우유를 붓고 30초면 완성되는 참오트케어. 바쁜 아침을 든든하고 건강하게 체인지하세요.',
-        images: ['/assets/oatcare-logo.png'],
+        description: '물이나 우유를 붓고 30초면 완성되는 참오트케어 오트밀. 5가지 맛, 정기구독 시 5% 추가 할인과 첫 회 쉐이커 보틀 증정 (최소 2회 이용).',
+        images: ['/assets/og-logo-512.png'],
     },
     title: '참오트케어 — 바쁜 아침을 위한 5가지 맛 오트밀',
-    description: '한 봉지 50g, 물이나 우유를 붓고 30초면 완성되는 참오트케어. 바쁜 아침을 든든하고 건강하게 체인지하세요.',
-    icons: {
-        icon: '/assets/oatcare-logo.png',
-    },
+    description: '물이나 우유를 붓고 30초면 완성되는 참오트케어 오트밀. 5가지 맛, 정기구독 시 5% 추가 할인과 첫 회 쉐이커 보틀 증정 (최소 2회 이용).',
 };
 
 export default function RootLayout({
@@ -53,7 +50,21 @@ export default function RootLayout({
                     rel="stylesheet"
                 />
             </head>
-            <body><Providers>{children}</Providers></body>
+            <body>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            '@context': 'https://schema.org',
+                            '@type': 'WebSite',
+                            name: '참오트케어',
+                            alternateName: ['chamoatcare', '참오트케어 chamoatcare'],
+                            url: 'https://chamoatcare.com/',
+                        }),
+                    }}
+                />
+                <Providers>{children}</Providers>
+            </body>
         </html>
     );
 }
