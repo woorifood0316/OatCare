@@ -5042,3 +5042,12 @@ body {
   .pd-sticky .pd-actions { flex: 1; }
   .pd-sticky .pd-btn { height: 46px; font-size: .9rem; }
 }
+
+/* collapsed product detail (Coupang-style "더보기") */
+.pd-slices { position: relative; max-height: 900px; overflow: hidden; }
+.pd-slices.is-open { max-height: none; overflow: visible; }
+.pd-slices:not(.is-open)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 140px; background: linear-gradient(to bottom, rgba(255,255,255,0), #fff); pointer-events: none; }
+.pd-more { display: flex; justify-content: center; padding: 1.2rem 0 0; }
+.pd-more__btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-width: 270px; height: 54px; border: 1px solid var(--oc-maroon); background: #fff; color: var(--oc-maroon); border-radius: 6px; font-weight: 800; font-size: 1rem; cursor: pointer; }
+.pd-more__btn:hover { background: #fff8f8; }
+@media (max-width: 800px) { .pd-slices { max-height: 640px; } .pd-more__btn { width: 100%; } }

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import {
     FREE_SHIPPING_MIN,
@@ -38,6 +38,7 @@ export function ProductPage({ slug }: { slug: string }) {
     const [qty, setQty] = useState(5);
     const [tab, setTab] = useState<string>(TABS[0].id);
     const [added, setAdded] = useState(false);
+    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
         const onScroll = () => {
@@ -196,7 +197,7 @@ export function ProductPage({ slug }: { slug: string }) {
                 </div>
 
                 <section id="pd-detail" className="pd-sec pd-sec--detail">
-                    <div className="pd-slices">
+                    <div className={`pd-slices${expanded ? ' is-open' : ''}`}>
                         {SLICES.map((n, i) => {
                             const video = VIDEO_SLICES[n];
                             return video ? (
@@ -223,6 +224,20 @@ export function ProductPage({ slug }: { slug: string }) {
                                 />
                             );
                         })}
+                    </div>
+                    <div className="pd-more">
+                        <button
+                            type="button"
+                            className="pd-more__btn"
+                            aria-expanded={expanded}
+                            onClick={() => {
+                                if (expanded) goTab('pd-detail');
+                                setExpanded((v) => !v);
+                            }}
+                        >
+                            <span>{expanded ? '상품정보 접기' : '상품정보 더보기'}</span>
+                            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
                     </div>
                 </section>
 
