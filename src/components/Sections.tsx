@@ -49,7 +49,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     onClick={(e) => handleNavClick(e, 'hero')}
                 >
                     <img src={getAssetUrl('/assets/oatcare-logo.png')} alt="참오트케어 로고" className="oc-nav__logo-img" />
-                    <span>chamoatcare</span>
+                    <span>참오트케어</span>
                 </a>
 
                 <nav className="oc-nav__links">
@@ -107,7 +107,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                 <div className="oc-mobile-menu-overlay" onClick={() => setIsMobileMenuOpen(false)}>
                     <div className="oc-mobile-menu-content" onClick={(e) => e.stopPropagation()}>
                         <div className="oc-mobile-menu-header">
-                            <span className="oc-mobile-menu-title">chamoatcare 메뉴</span>
+                            <span className="oc-mobile-menu-title">참오트케어 메뉴</span>
                             <button className="oc-mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)}>
                                 <X size={24} />
                             </button>
