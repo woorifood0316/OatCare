@@ -10,6 +10,7 @@ import {
     SUBSCRIPTION_DISCOUNT_RATE,
     getItem,
     subscriptionUnitPrice,
+    type CartLine,
 } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -23,11 +24,17 @@ export function PurchaseChooser({
     sku,
     qty = 1,
     onAdded,
+    mixChoice,
+    blockedReason,
 }: {
     sku: string;
     /** Quantity used for the one-time option (the subscription starts at 1 and is edited in the cart). */
     qty?: number;
     onAdded?: () => void;
+    /** Flavour mix picked on a set page (defaults to the even split). */
+    mixChoice?: Pick<CartLine, 'mix' | 'mixDetail'>;
+    /** When set, both buttons are disabled and this text explains why. */
+    blockedReason?: string | null;
 }) {
     const router = useRouter();
     const { addLine } = useCart();
@@ -44,12 +51,15 @@ export function PurchaseChooser({
     const effectiveCycle = cycle ?? item.count;
     const panelId = `pc-panel-${sku.replace(/\W/g, '')}`;
 
+    const mixPart = mixChoice ?? { mix: 'all' as const };
     const addOnce = () => {
-        addLine({ sku, qty, mode: 'once', mix: 'all' });
+        if (blockedReason) return;
+        addLine({ sku, qty, mode: 'once', ...mixPart });
         onAdded?.();
     };
     const startSubscription = () => {
-        addLine({ sku, qty: 1, mode: 'subscribe', cycleDays: effectiveCycle, mix: 'all' });
+        if (blockedReason) return;
+        addLine({ sku, qty: 1, mode: 'subscribe', cycleDays: effectiveCycle, ...mixPart });
         onAdded?.();
         router.push('/cart');
     };
@@ -57,7 +67,7 @@ export function PurchaseChooser({
     return (
         <div className="pc2" role="group" aria-label="구매 방식 선택">
             <div className="pc2__row">
-                <button type="button" className="pc2__btn pc2__btn--once" onClick={addOnce}>
+                <button type="button" className="pc2__btn pc2__btn--once" onClick={addOnce} disabled={!!blockedReason}>
                     <ShoppingBag size={16} />
                     <span>장바구니 담기</span>
                 </button>
@@ -77,6 +87,7 @@ export function PurchaseChooser({
                 </button>
             </div>
 
+            {blockedReason ? <p className="pc2__hint" style={{ color: '#b3261e', fontWeight: 700 }}>{blockedReason}</p> : null}
             <p className="pc2__hint">정기구독은 최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건이에요</p>
 
             {open ? (
@@ -111,7 +122,7 @@ export function PurchaseChooser({
                             ))}
                         </select>
                     </label>
-                    <button type="button" className="pc2__start" onClick={startSubscription}>
+                    <button type="button" className="pc2__start" onClick={startSubscription} disabled={!!blockedReason}>
                         <Repeat size={16} />
                         <span>정기구독 시작하기</span>
                     </button>

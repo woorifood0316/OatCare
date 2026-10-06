@@ -10,8 +10,12 @@ import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import {
     FREE_SHIPPING_MIN,
     MIN_SUBSCRIPTION_CHARGES,
+    FLAVORS,
+    MIX_UNIT,
     SHIPPING_FEE,
+    evenMix,
     getItem,
+    mixError,
     type CartLine,
 } from '../../lib/catalog';
 import { PRODUCT_PAGES, SET_PAGES, getSetPage } from '../../lib/products';
@@ -35,6 +39,8 @@ export function SetPage({ count }: { count: number }) {
     const [qty, setQty] = useState(1);
     const [tab, setTab] = useState<string>(TABS[0].id);
     const [added, setAdded] = useState(false);
+    const [mixMode, setMixMode] = useState<'all' | 'custom'>('all');
+    const [detail, setDetail] = useState<Record<string, number>>(() => Object.fromEntries(FLAVORS.map((f) => [f, 0])));
 
     useEffect(() => {
         const onScroll = () => {
@@ -50,7 +56,14 @@ export function SetPage({ count }: { count: number }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const line: CartLine = { sku: page.sku, qty, mode: 'once', mix: 'all' };
+    const mixable = item.mixSelectable;
+    const mixChoice: Pick<CartLine, 'mix' | 'mixDetail'> =
+        mixable && mixMode === 'custom' ? { mix: 'custom', mixDetail: detail } : { mix: 'all' };
+    const mixTotal = FLAVORS.reduce((sum, f) => sum + (detail[f] ?? 0), 0);
+    const mixErr = mixable && mixMode === 'custom' ? mixError({ sku: page.sku, qty: 1, mode: 'once', ...mixChoice }) : null;
+    const changeMix = (flavor: string, delta: number) =>
+        setDetail((d) => ({ ...d, [flavor]: Math.max(0, (d[flavor] ?? 0) + delta * MIX_UNIT) }));
+    const line: CartLine = { sku: page.sku, qty, mode: 'once', ...mixChoice };
     const total = item.price * qty;
     const unit = Math.round(item.price / item.count);
     const pct = Math.round(((item.listPrice - item.price) / item.listPrice) * 100);
@@ -62,11 +75,13 @@ export function SetPage({ count }: { count: number }) {
         if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 112, behavior: 'smooth' });
     };
     const handleCart = () => {
+        if (mixErr) return;
         addLine(line);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };
     const handleBuy = async () => {
+        if (mixErr) return;
         const dest = await buyNow(line);
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
@@ -78,7 +93,7 @@ export function SetPage({ count }: { count: number }) {
 
     const actions = (
         <div className="pd-actions">
-            <button type="button" className="pd-btn pd-btn--cart" onClick={handleCart}>
+            <button type="button" className="pd-btn pd-btn--cart" onClick={handleCart} disabled={!!mixErr}>
                 <ShoppingBag size={17} />
                 <span>{added ? '담았어요 ✓' : '장바구니 담기'}</span>
             </button>
@@ -141,7 +156,7 @@ export function SetPage({ count }: { count: number }) {
                                 <li key={p}>{p}</li>
                             ))}
                             <li>
-                                배송비 {won(SHIPPING_FEE)} (세트 구매 시 무료 · {won(FREE_SHIPPING_MIN)} 이상 무료)
+                                배송비 무료 (세트 상품)
                             </li>
                         </ul>
 
@@ -167,8 +182,61 @@ export function SetPage({ count }: { count: number }) {
                             <em>{won(total)}</em>
                         </div>
 
+                        {mixable ? (
+                            <div className="cart-mix pd-mix">
+                                <b className="pd-mix__title">맛 구성</b>
+                                <div className="cart-mix__modes" role="group" aria-label="맛 구성">
+                                    <button type="button" className={mixMode === 'all' ? 'is-active' : ''} onClick={() => setMixMode('all')}>
+                                        5가지 골고루 (맛별 {item.count / FLAVORS.length}개씩)
+                                    </button>
+                                    <button type="button" className={mixMode === 'custom' ? 'is-active' : ''} onClick={() => setMixMode('custom')}>
+                                        맛 직접 고르기
+                                    </button>
+                                </div>
+                                {mixMode === 'custom' ? (
+                                    <div className="pd-pick">
+                                        <p className="pd-pick__guide">
+                                            맛을 눌러 {MIX_UNIT}개입씩 담아요 · <b>{mixTotal / MIX_UNIT}</b>/{item.count / MIX_UNIT} 선택
+                                        </p>
+                                        <div className="pd-pick__grid">
+                                            {FLAVORS.map((f) => {
+                                                const units = (detail[f] ?? 0) / MIX_UNIT;
+                                                const full = mixTotal >= item.count;
+                                                return (
+                                                    <div key={f} className={`pd-pick__item${units > 0 ? ' is-on' : ''}`}>
+                                                        <button
+                                                            type="button"
+                                                            className="pd-pick__main"
+                                                            disabled={full}
+                                                            onClick={() => changeMix(f, 1)}
+                                                            aria-label={`${f} ${MIX_UNIT}개입 추가`}
+                                                        >
+                                                            <b>{f}</b>
+                                                            <span>{MIX_UNIT}개입{units > 1 ? ` × ${units}` : ''}</span>
+                                                        </button>
+                                                        {units > 0 ? (
+                                                            <button type="button" className="pd-pick__minus" onClick={() => changeMix(f, -1)} aria-label={`${f} 빼기`}>
+                                                                <Minus size={14} />
+                                                            </button>
+                                                        ) : null}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className={`cart-mix__sum${mixErr ? ' is-error' : ' is-ok'}`}>
+                                            {mixErr ?? `총 ${mixTotal}개 · 맛 구성이 완료됐어요`}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="cart-mix__hint">
+                                        {FLAVORS.map((f) => `${f} ${evenMix(item.count)[f]}`).join(' · ')}
+                                    </p>
+                                )}
+                            </div>
+                        ) : null}
+
                         {subscribable ? (
-                            <PurchaseChooser sku={page.sku} qty={qty} />
+                            <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
                         ) : (
                             <>
                                 {actions}
@@ -258,8 +326,7 @@ export function SetPage({ count }: { count: number }) {
                     <dl className="pd-policy">
                         <dt>배송</dt>
                         <dd>
-                            결제 완료 후 순차 발송됩니다. 배송비 {won(SHIPPING_FEE)}이며 세트 구매 또는 {won(FREE_SHIPPING_MIN)} 이상 구매 시
-                            무료입니다.
+                            결제 완료 후 순차 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {won(FREE_SHIPPING_MIN)} 이상 무료)
                         </dd>
                         <dt>정기구독</dt>
                         <dd>
