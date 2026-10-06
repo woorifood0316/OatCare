@@ -31,6 +31,8 @@ interface CartContextValue {
     /** Turn a one-time 20/30-pack line into a subscription line. */
     convertToSubscription: (key: string) => void;
     clearMode: (mode: CartLine['mode']) => void;
+    /** Add a line and (when logged in) save the cart to the server at once. Resolves to where to go next. */
+    buyNow: (line: CartLine) => Promise<'checkout' | 'cart'>;
     /** Push the cart to the server right now (call before leaving for checkout). */
     flush: () => Promise<void>;
 }
@@ -228,6 +230,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    const buyNow = useCallback(
+        async (line: CartLine): Promise<'checkout' | 'cart'> => {
+            const next = addTo(linesRef.current, line);
+            linesRef.current = next;
+            setLines(next);
+            // Guests (or before the first sync) review the cart first; it merges into their account on login.
+            if (status !== 'authenticated' || !serverReady.current) return 'cart';
+            try {
+                const res = await fetch('/api/cart', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lines: next }),
+                });
+                return res.ok ? 'checkout' : 'cart';
+            } catch {
+                return 'cart';
+            }
+        },
+        [status],
+    );
+
     const value = useMemo<CartContextValue>(
         () => ({
             lines,
@@ -241,9 +264,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             removeLine,
             convertToSubscription,
             clearMode,
+            buyNow,
             flush,
         }),
-        [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, convertToSubscription, clearMode, flush],
+        [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, convertToSubscription, clearMode, buyNow, flush],
     );
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

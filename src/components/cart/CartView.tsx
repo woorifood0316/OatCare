@@ -184,7 +184,8 @@ function Section({
         if (going) return;
         const target = `/checkout?type=${mode}`;
         if (status !== 'authenticated') {
-            router.push(`/login?callbackUrl=${encodeURIComponent(target)}`);
+            // Back to the cart (not straight to checkout): the guest cart is merged into the account on arrival.
+            router.push(`/login?callbackUrl=${encodeURIComponent('/cart')}`);
             return;
         }
         setGoing(true);

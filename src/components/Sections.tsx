@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useCart } from './cart/CartProvider';
 import { findSkuByName, getItem } from '../lib/catalog';
 import { PurchaseChooser } from './purchase/PurchaseChooser';
+import { CardActions } from './purchase/CardActions';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
@@ -581,23 +582,10 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                         <span className="cal">{p.calories}</span>
                     </div>
 
-                    <div className="oc-grid-cta-row">
-                        <button className="oc-cta-outline" onClick={() => onSelectProduct?.(p)}>
-                            <span>상세보기</span>
-                        </button>
-                        <button
-                            className="oc-cta-fill"
-                            onClick={() => {
-                                const sku = findSkuByName(p.flavor);
-                                if (sku) addLine({ sku, qty: 1, mode: 'once' });
-                            }}
-                        >
-                            <ShoppingBag size={15} />
-                            <span style={{ textAlign: 'center', lineHeight: '1.25', display: 'inline-block' }}>
-                                장바구니<br />담기
-                            </span>
-                        </button>
-                    </div>
+                    {(() => {
+                        const sku = findSkuByName(p.flavor);
+                        return sku ? <CardActions sku={sku} onDetail={() => onSelectProduct?.(p)} /> : null;
+                    })()}
                 </div>
             </div>
         </ScrollReveal>
@@ -966,23 +954,10 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                                         </button>
                                     </>
                                 ) : (
-                                    <>
-                                        <div className="oc-bundle-btn-group">
-                                            <button className="oc-cta-outline oc-bundle-detail-btn" onClick={() => onSelectProduct?.(b)}>
-                                                <span>상세보기</span>
-                                            </button>
-                                            <button
-                                                className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
-                                                onClick={() => {
-                                                    if (sku) addLine({ sku, qty: 1, mode: 'once', mix: 'all' });
-                                                }}
-                                            >
-                                                <ShoppingBag size={16} />
-                                                <span>세트로 담기</span>
-                                            </button>
-                                        </div>
+                                    <div className="oc-bundle-plain">
+                                        {sku ? <CardActions sku={sku} onDetail={() => onSelectProduct?.(b)} /> : null}
                                         <p className="oc-bundle-card__subnote">정기구독은 20·30개입 세트에서 가능해요</p>
-                                    </>
+                                    </div>
                                 );
                             })()}
                         </div>

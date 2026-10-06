@@ -4914,29 +4914,42 @@ body {
 .oc-drawer__min-note { margin: 0.6rem 0 0; padding: 0.55rem 0.7rem; border-radius: 0.6rem; background: #fdf0d2; color: #6b4a00; font-size: 0.78rem; line-height: 1.55; }
 @media (min-width: 900px) { .my-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* Purchase chooser: one-time vs subscription */
-.pc { display: grid; grid-template-columns: 1fr; gap: 0.6rem; margin: 0.8rem 0 0.5rem; text-align: left; }
-.pc__opt { position: relative; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.85rem 0.9rem; border: 1px solid var(--oc-line); border-radius: 0.9rem; background: #fff; }
-.pc__opt--sub { border: 2px solid var(--oc-maroon); background: #fffaf0; padding-top: 1.5rem; }
-.pc__ribbon { position: absolute; top: -0.7rem; left: 0.8rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--oc-maroon); color: #fff7e8; font-size: 0.7rem; font-weight: 800; }
-.pc__label { color: rgba(59, 42, 32, 0.65); font-size: 0.78rem; font-weight: 800; }
-.pc__price-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.35rem; }
-.pc__price { color: var(--oc-brown); font-size: 1.3rem; font-weight: 800; }
-.pc__opt--sub .pc__price { color: var(--oc-maroon); }
-.pc__per { color: rgba(59, 42, 32, 0.6); font-size: 0.8rem; font-weight: 700; }
-.pc__was { color: rgba(59, 42, 32, 0.4); font-size: 0.8rem; }
-.pc__unit { color: rgba(59, 42, 32, 0.65); font-size: 0.78rem; }
-.pc__perks { margin: 0.2rem 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; font-weight: 700; color: var(--oc-brown); }
-.pc__perks li { display: flex; align-items: center; gap: 0.35rem; }
-.pc__perks svg { flex: none; color: #1f6f31; }
-.pc__cycle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; }
-.pc__cycle select { padding: 0.3rem 0.45rem; border: 1px solid var(--oc-line); border-radius: 0.55rem; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: 0.82rem; }
-.pc__btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.7rem; margin-top: 0.3rem; padding: 0.55rem 0.8rem; border-radius: 0.7rem; font-family: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; border: 1px solid transparent; }
-.pc__btn--once { background: #fff; border-color: var(--oc-line); color: var(--oc-brown); }
-.pc__btn--once:hover { background: var(--oc-cream); }
-.pc__btn--sub { background: var(--oc-maroon); color: #fff7e8; }
-.pc__btn--sub:hover { background: var(--oc-maroon-dark); }
-.pc__min { color: rgba(59, 42, 32, 0.62); font-size: 0.72rem; line-height: 1.5; }
+/* Purchase chooser (collapsed): two buttons; subscription details open on tap */
+.pc2 { margin-top: auto; padding-top: 0.9rem; text-align: left; }
+.pc2__row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.pc2__btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 3.3rem; padding: 0.55rem 0.6rem; border-radius: 0.8rem; font-family: inherit; font-size: 0.88rem; font-weight: 800; cursor: pointer; border: 1.5px solid transparent; transition: background 0.15s ease, border-color 0.15s ease; }
+.pc2__btn--once { background: #fff; border-color: var(--oc-line); color: var(--oc-brown); }
+.pc2__btn--once:hover { background: var(--oc-cream); }
+.pc2__btn--sub { background: var(--oc-maroon); color: #fff7e8; border-color: var(--oc-maroon); }
+.pc2__btn--sub:hover { background: var(--oc-maroon-dark); }
+.pc2__sub-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; text-align: left; }
+.pc2__sub-label b { font-size: 0.86rem; }
+.pc2__sub-label small { font-size: 0.7rem; font-weight: 600; opacity: 0.85; }
+.pc2__chev { flex: none; transition: transform 0.2s ease; }
+.pc2__btn--sub.is-open .pc2__chev { transform: rotate(180deg); }
+.pc2__badge { position: absolute; top: -0.55rem; right: 0.6rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--oc-gold); color: var(--oc-brown); font-size: 0.66rem; font-weight: 800; }
+.pc2__hint { margin: 0.45rem 0 0; color: rgba(59, 42, 32, 0.6); font-size: 0.74rem; text-align: center; }
+.pc2__panel { margin-top: 0.7rem; padding: 0.9rem; border: 2px solid var(--oc-maroon); border-radius: 0.9rem; background: #fffaf0; display: flex; flex-direction: column; gap: 0.35rem; animation: pc2-in 0.22s ease; }
+@keyframes pc2-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.pc2__ribbon { align-self: flex-start; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--oc-maroon); color: #fff7e8; font-size: 0.7rem; font-weight: 800; }
+.pc2__price-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.35rem; }
+.pc2__price-row strong { color: var(--oc-maroon); font-size: 1.35rem; font-weight: 800; }
+.pc2__price-row span { color: rgba(59, 42, 32, 0.6); font-size: 0.8rem; font-weight: 700; }
+.pc2__price-row s { color: rgba(59, 42, 32, 0.4); font-size: 0.8rem; }
+.pc2__unit { margin: 0; color: rgba(59, 42, 32, 0.68); font-size: 0.78rem; }
+.pc2__perks { margin: 0.2rem 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; font-weight: 700; color: var(--oc-brown); }
+.pc2__perks li { display: flex; align-items: center; gap: 0.35rem; }
+.pc2__perks svg { flex: none; color: #1f6f31; }
+.pc2__cycle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; }
+.pc2__cycle select { padding: 0.3rem 0.45rem; border: 1px solid var(--oc-line); border-radius: 0.55rem; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: 0.82rem; }
+.pc2__start { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.9rem; margin-top: 0.3rem; border: 0; border-radius: 0.75rem; background: var(--oc-maroon); color: #fff7e8; font-family: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
+.pc2__start:hover { background: var(--oc-maroon-dark); }
+.pc2__min { margin: 0.1rem 0 0; color: rgba(59, 42, 32, 0.62); font-size: 0.72rem; line-height: 1.5; }
+/* Set cards in the 3-column grid keep equal heights; the buttons sit at the bottom of every card.
+   While a subscription panel is open, only that card grows (the others keep their own height). */
+.oc-bundles-grid:has(.pc2__panel) { align-items: start; }
+.oc-bundles-grid > * { display: flex; }
+.oc-bundles-grid > * > .oc-bundle-card { flex: 1; width: 100%; }
 .oc-bundle-detail-btn--full { width: 100%; margin-top: 0.4rem; }
 .oc-bundle-card__subnote { margin: 0.5rem 0 0; color: rgba(59, 42, 32, 0.55); font-size: 0.78rem; text-align: center; }
 .oc-modal-chooser { margin: 0.8rem 0 0.2rem; }
@@ -4945,5 +4958,16 @@ body {
 .cart-upsell b { font-size: 0.82rem; }
 .cart-upsell span { color: rgba(59, 42, 32, 0.7); }
 .cart-upsell button { flex: none; padding: 0.45rem 0.7rem; border: 0; border-radius: 0.6rem; background: var(--oc-maroon); color: #fff7e8; font-family: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
-/* Narrow set cards stack the two options; the wide detail modal puts them side by side. */
-@media (min-width: 640px) { .oc-modal-chooser .pc { grid-template-columns: 1fr 1.25fr; } }
+
+/* Card actions: row 1 = [cart][buy], row 2 = [detail]; one gap value keeps both rows aligned edge to edge */
+.ca { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-top: auto; padding-top: 0.9rem; }
+.ca__btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 3rem; padding: 0.5rem 0.6rem; border-radius: 0.85rem; font-family: inherit; font-size: 0.9rem; font-weight: 800; white-space: nowrap; cursor: pointer; border: 1.5px solid transparent; transition: background 0.15s ease, transform 0.15s ease; }
+.ca__btn:active { transform: scale(0.98); }
+.ca__btn--cart { background: #fff; border-color: var(--oc-maroon); color: var(--oc-maroon); }
+.ca__btn--cart:hover { background: rgba(122, 35, 49, 0.06); }
+.ca__btn--buy { background: var(--oc-maroon); color: #fff7e8; }
+.ca__btn--buy:hover { background: var(--oc-maroon-dark); }
+.ca__btn--detail { grid-column: 1 / -1; background: transparent; border-color: var(--oc-line); color: var(--oc-brown); }
+.ca__btn--detail:hover { background: var(--oc-cream); }
+.oc-bundle-plain { margin-top: auto; }
+.oc-bundle-plain .ca { margin-top: 0; }
