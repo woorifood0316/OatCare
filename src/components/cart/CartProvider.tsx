@@ -1,15 +1,20 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import {
     CYCLE_OPTIONS,
     CartLine,
+    MixOption,
     getItem,
     lineKey,
     maxQty,
+    mergeCarts,
+    sanitizeLines,
 } from '../../lib/catalog';
 
 const STORAGE_KEY = 'oc_cart_v1';
+const OWNER_KEY = 'oc_cart_owner';
 
 interface CartContextValue {
     lines: CartLine[];
@@ -20,35 +25,16 @@ interface CartContextValue {
     addLine: (line: CartLine) => void;
     setQty: (key: string, qty: number) => void;
     setCycle: (key: string, cycleDays: number) => void;
+    setMix: (key: string, mix: MixOption, detail?: Record<string, number>) => void;
     removeLine: (key: string) => void;
     clearMode: (mode: CartLine['mode']) => void;
+    /** Push the cart to the server right now (call before leaving for checkout). */
+    flush: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function sanitize(raw: unknown): CartLine[] {
-    if (!Array.isArray(raw)) return [];
-    const out: CartLine[] = [];
-    for (const r of raw) {
-        if (!r || typeof r !== 'object') continue;
-        const { sku, qty, mode, cycleDays, mix } = r as Record<string, unknown>;
-        if (typeof sku !== 'string') continue;
-        const item = getItem(sku);
-        if (!item) continue;
-        if (mode !== 'once' && mode !== 'subscribe') continue;
-        if (mode === 'subscribe' && !item.subscribable) continue;
-        const q = Math.max(1, Math.min(maxQty(mode), Math.floor(Number(qty)) || 1));
-        const line: CartLine = { sku, qty: q, mode };
-        if (mode === 'subscribe') {
-            line.cycleDays = CYCLE_OPTIONS.includes(Number(cycleDays)) ? Number(cycleDays) : item.count;
-        }
-        if (item.kind === 'bundle') line.mix = mix === 'custom' ? 'custom' : 'all';
-        out.push(line);
-    }
-    return out;
-}
-
-function merge(lines: CartLine[], incoming: CartLine): CartLine[] {
+function addTo(lines: CartLine[], incoming: CartLine): CartLine[] {
     const key = lineKey(incoming);
     const found = lines.find((l) => lineKey(l) === key);
     if (!found) return [...lines, { ...incoming, qty: Math.min(incoming.qty, maxQty(incoming.mode)) }];
@@ -57,17 +43,33 @@ function merge(lines: CartLine[], incoming: CartLine): CartLine[] {
     );
 }
 
+/** Forget the browser copy of the cart (used on logout so the next person on a shared device starts empty). */
+export function clearLocalCart() {
+    try {
+        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(OWNER_KEY);
+    } catch {
+        /* ignore */
+    }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
+    const { data: session, status } = useSession();
+    const userId = session?.user?.id;
+
     const [lines, setLines] = useState<CartLine[]>([]);
     const [hydrated, setHydrated] = useState(false);
     const [toast, setToast] = useState('');
     const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const serverReady = useRef(false);
+    const linesRef = useRef<CartLine[]>([]);
+    linesRef.current = lines;
 
-    // Load once on the client (localStorage may be blocked, so always guard).
+    // Load the browser copy once (localStorage may be blocked, so always guard).
     useEffect(() => {
         try {
             const raw = window.localStorage.getItem(STORAGE_KEY);
-            if (raw) setLines(sanitize(JSON.parse(raw)));
+            if (raw) setLines(sanitizeLines(JSON.parse(raw)));
         } catch {
             /* ignore */
         }
@@ -76,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const onStorage = (e: StorageEvent) => {
             if (e.key !== STORAGE_KEY) return;
             try {
-                setLines(e.newValue ? sanitize(JSON.parse(e.newValue)) : []);
+                setLines(e.newValue ? sanitizeLines(JSON.parse(e.newValue)) : []);
             } catch {
                 /* ignore */
             }
@@ -94,6 +96,55 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
     }, [lines, hydrated]);
 
+    // Logged in: the server cart is the source of truth. A guest cart (no owner yet) is merged in once.
+    useEffect(() => {
+        if (!hydrated) return;
+        if (status === 'unauthenticated') {
+            serverReady.current = false;
+            return;
+        }
+        if (status !== 'authenticated' || !userId || serverReady.current) return;
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch('/api/cart', { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                const server = sanitizeLines(data.lines);
+                let owner: string | null = null;
+                try {
+                    owner = window.localStorage.getItem(OWNER_KEY);
+                    window.localStorage.setItem(OWNER_KEY, userId);
+                } catch {
+                    /* ignore */
+                }
+                const next = owner === userId ? server : mergeCarts(server, linesRef.current);
+                if (cancelled) return;
+                serverReady.current = true;
+                setLines(next);
+            } catch {
+                /* offline: keep the browser copy */
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [status, userId, hydrated]);
+
+    // Push changes to the server (debounced) once the first sync has happened.
+    useEffect(() => {
+        if (!serverReady.current) return;
+        const t = setTimeout(() => {
+            fetch('/api/cart', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lines }),
+            }).catch(() => undefined);
+        }, 500);
+        return () => clearTimeout(t);
+    }, [lines]);
+
     const showToast = useCallback((text: string) => {
         setToast(text);
         if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -102,7 +153,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const addLine = useCallback(
         (line: CartLine) => {
-            setLines((prev) => merge(prev, line));
+            setLines((prev) => addTo(prev, line));
             const name = getItem(line.sku)?.name ?? '상품';
             showToast(`${name}을(를) 장바구니에 담았어요`);
         },
@@ -121,9 +172,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setLines((prev) => {
             const target = prev.find((l) => lineKey(l) === key);
             if (!target || !CYCLE_OPTIONS.includes(cycleDays)) return prev;
-            // Changing the cycle can collide with an existing identical line, so rebuild via merge.
-            const rest = prev.filter((l) => lineKey(l) !== key);
-            return merge(rest, { ...target, cycleDays });
+            // Changing the cycle can collide with an identical line, so rebuild via addTo.
+            return addTo(
+                prev.filter((l) => lineKey(l) !== key),
+                { ...target, cycleDays },
+            );
+        });
+    }, []);
+
+    const setMix = useCallback((key: string, mix: MixOption, detail?: Record<string, number>) => {
+        setLines((prev) => {
+            const target = prev.find((l) => lineKey(l) === key);
+            if (!target) return prev;
+            const next: CartLine = { ...target, mix };
+            if (mix === 'custom') next.mixDetail = detail ?? target.mixDetail ?? undefined;
+            else delete next.mixDetail;
+            // Keep the line in place (don't merge) while the customer is still editing the mix.
+            return prev.map((l) => (lineKey(l) === key ? next : l));
         });
     }, []);
 
@@ -135,6 +200,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setLines((prev) => prev.filter((l) => l.mode !== mode));
     }, []);
 
+    const flush = useCallback(async () => {
+        if (!serverReady.current) return;
+        try {
+            await fetch('/api/cart', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lines: linesRef.current }),
+            });
+        } catch {
+            /* the debounced sync will retry */
+        }
+    }, []);
+
     const value = useMemo<CartContextValue>(
         () => ({
             lines,
@@ -144,10 +222,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             addLine,
             setQty,
             setCycle,
+            setMix,
             removeLine,
             clearMode,
+            flush,
         }),
-        [lines, hydrated, toast, addLine, setQty, setCycle, removeLine, clearMode],
+        [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, clearMode, flush],
     );
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

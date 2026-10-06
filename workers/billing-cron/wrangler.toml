@@ -1,0 +1,16 @@
+# Scheduler for the recurring billing job. Cloudflare Pages can't run cron triggers itself,
+# so this tiny Worker calls the site's protected endpoint on a schedule.
+#
+# Deploy (once):  cd workers/billing-cron && npx wrangler deploy
+# Secret:         npx wrangler secret put CRON_SECRET     (same value as the site's CRON_SECRET)
+name = "chamoatcare-billing-cron"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+SITE_URL = "https://chamoatcare.com"
+
+[triggers]
+# 00:00 UTC = 09:00 KST: charge due subscriptions + send reminders
+# every 10 minutes: deliver queued notifications
+crons = ["0 0 * * *", "*/10 * * * *"]

@@ -15,9 +15,9 @@ export type CurrentUser = {
 };
 
 // Deduplicated per request, so the layout and the page can both call it.
-export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+export const getCurrentUser = cache(async (callbackPath: string = '/mypage'): Promise<CurrentUser> => {
     const session = await auth();
-    if (!session?.user?.id) redirect('/login?callbackUrl=%2Fmypage');
+    if (!session?.user?.id) redirect(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
 
     const sql = getSql();
     const users = await sql`

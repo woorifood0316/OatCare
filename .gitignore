@@ -55,3 +55,6 @@ Thumbs.db
 
 .vercel/
 tsconfig.tsbuildinfo
+
+# local dev tools (never committed)
+/.devtools/

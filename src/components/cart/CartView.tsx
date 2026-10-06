@@ -2,20 +2,89 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useCart } from './CartProvider';
 import {
     CYCLE_OPTIONS,
     CartLine,
+    FLAVORS,
+    MIX_UNIT,
     SUBSCRIPTION_DISCOUNT_RATE,
+    evenMix,
     getItem,
     lineKey,
     maxQty,
+    mixError,
+    priceCart,
     unitPriceOf,
 } from '../../lib/catalog';
 import { getAssetUrl } from '../../utils/assets';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+
+function MixEditor({ line }: { line: CartLine }) {
+    const { setMix } = useCart();
+    const item = getItem(line.sku);
+    if (!item || !item.mixSelectable) return null;
+    const key = lineKey(line);
+    const custom = line.mix === 'custom';
+    const detail = line.mixDetail ?? {};
+    const total = FLAVORS.reduce((sum, f) => sum + (detail[f] ?? 0), 0);
+    const err = mixError(line);
+
+    const change = (flavor: string, delta: number) => {
+        const next = { ...detail };
+        for (const f of FLAVORS) next[f] = next[f] ?? 0;
+        next[flavor] = Math.max(0, (next[flavor] ?? 0) + delta * MIX_UNIT);
+        setMix(key, 'custom', next);
+    };
+
+    return (
+        <div className="cart-mix">
+            <div className="cart-mix__modes" role="group" aria-label="맛 구성">
+                <button type="button" className={!custom ? 'is-active' : ''} onClick={() => setMix(key, 'all')}>
+                    5가지 골고루
+                </button>
+                <button
+                    type="button"
+                    className={custom ? 'is-active' : ''}
+                    onClick={() => setMix(key, 'custom', line.mixDetail ?? Object.fromEntries(FLAVORS.map((f) => [f, 0])))}
+                >
+                    맛 직접 선택
+                </button>
+            </div>
+
+            {custom ? (
+                <div className="cart-mix__editor">
+                    {FLAVORS.map((f) => (
+                        <div key={f} className="cart-mix__row">
+                            <span>{f}</span>
+                            <div className="cart-qty">
+                                <button type="button" onClick={() => change(f, -1)} disabled={(detail[f] ?? 0) <= 0} aria-label={`${f} 감소`}>
+                                    <Minus size={14} />
+                                </button>
+                                <span>{detail[f] ?? 0}</span>
+                                <button type="button" onClick={() => change(f, 1)} disabled={total >= item.count} aria-label={`${f} 증가`}>
+                                    <Plus size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    <p className={`cart-mix__sum${err ? ' is-error' : ' is-ok'}`}>
+                        {err ?? `합계 ${total}/${item.count}개 · 맛 구성이 완료됐어요`}
+                    </p>
+                    <p className="cart-mix__hint">맛은 {MIX_UNIT}개 단위로 고를 수 있어요.</p>
+                </div>
+            ) : (
+                <p className="cart-mix__hint">
+                    {FLAVORS.map((f) => `${f} ${evenMix(item.count)[f]}`).join(' · ')}
+                </p>
+            )}
+        </div>
+    );
+}
 
 function LineRow({ line }: { line: CartLine }) {
     const { setQty, setCycle, removeLine } = useCart();
@@ -36,11 +105,9 @@ function LineRow({ line }: { line: CartLine }) {
                     </button>
                 </div>
 
-                {item.kind === 'bundle' ? (
-                    <span className="cart-line__meta">
-                        맛 구성: {line.mix === 'custom' ? '단일 맛 선택 (결제 시 선택)' : '5가지 맛 골고루'} · 무료 배송
-                    </span>
-                ) : null}
+                {item.kind === 'bundle' ? <span className="cart-line__meta">무료 배송</span> : null}
+
+                <MixEditor line={line} />
 
                 {isSub ? (
                     <label className="cart-line__cycle">
@@ -91,10 +158,26 @@ function Section({
     totalLabel: string;
     cta: string;
 }) {
-    const { clearMode } = useCart();
+    const { clearMode, flush } = useCart();
+    const router = useRouter();
+    const { status } = useSession();
+    const [going, setGoing] = React.useState(false);
     if (lines.length === 0) return null;
-    const total = lines.reduce((sum, l) => sum + unitPriceOf(l) * l.qty, 0);
+
+    const goCheckout = async () => {
+        if (going) return;
+        const target = `/checkout?type=${mode}`;
+        if (status !== 'authenticated') {
+            router.push(`/login?callbackUrl=${encodeURIComponent(target)}`);
+            return;
+        }
+        setGoing(true);
+        await flush();
+        router.push(target);
+    };
+    const priced = priceCart(lines, mode);
     const listTotal = lines.reduce((sum, l) => sum + (getItem(l.sku)?.listPrice ?? 0) * l.qty, 0);
+    const blocked = priced.error !== null;
 
     return (
         <section className="cart-section">
@@ -113,19 +196,34 @@ function Section({
                 ))}
             </ul>
             <div className="cart-summary">
-                <div className="cart-summary__row">
-                    <span>{totalLabel}</span>
-                    <strong>{won(total)}</strong>
+                <div className="cart-summary__row cart-summary__row--plain">
+                    <span>상품 금액</span>
+                    <span>{won(priced.subtotal)}</span>
                 </div>
-                {mode === 'once' && listTotal > total ? (
+                <div className="cart-summary__row cart-summary__row--plain">
+                    <span>배송비</span>
+                    <span>{priced.shipping === 0 ? '무료' : won(priced.shipping)}</span>
+                </div>
+                {mode === 'once' && listTotal > priced.subtotal ? (
                     <div className="cart-summary__row cart-summary__row--sub">
                         <span>할인 혜택</span>
-                        <span>-{won(listTotal - total)}</span>
+                        <span>-{won(listTotal - priced.subtotal)}</span>
                     </div>
                 ) : null}
-                <Link href={`/checkout?type=${mode}`} className="my-btn my-btn--primary cart-summary__cta">
-                    {cta}
-                </Link>
+                <div className="cart-summary__row">
+                    <span>{totalLabel}</span>
+                    <strong>{won(priced.total)}</strong>
+                </div>
+                {blocked ? <p className="cart-summary__error">{priced.error}</p> : null}
+                {blocked ? (
+                    <button type="button" className="my-btn my-btn--primary cart-summary__cta" disabled>
+                        {cta}
+                    </button>
+                ) : (
+                    <button type="button" className="my-btn my-btn--primary cart-summary__cta" onClick={goCheckout} disabled={going}>
+                        {going ? '이동 중...' : cta}
+                    </button>
+                )}
             </div>
         </section>
     );

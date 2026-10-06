@@ -235,7 +235,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                         className={bundleMixOption === 'custom' ? 'is-active' : ''}
                                         onClick={() => setBundleMixOption('custom')}
                                     >
-                                        🌾 단일 맛 선택
+                                        🌾 맛 직접 선택 (장바구니에서)
                                     </button>
                                 </div>
                             </div>

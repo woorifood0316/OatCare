@@ -12,7 +12,8 @@ const PROVIDERS = [
     { id: 'google', label: '구글' },
 ] as const;
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ withdraw?: string }> }) {
+    const { withdraw } = await searchParams;
     const user = await getCurrentUser();
     const joined = new Date(user.createdAt).toLocaleDateString('ko-KR', {
         year: 'numeric',
@@ -82,6 +83,11 @@ export default async function ProfilePage() {
 
             <section className="my-card my-card--danger">
                 <h2 className="my-card__title">계정 관리</h2>
+                {withdraw === 'blocked' ? (
+                    <p className="my-error">
+                        배송이 끝나지 않은 주문이 있어 지금은 탈퇴할 수 없어요. 배송 완료 후 다시 시도하거나 고객센터(031-998-7234)로 문의해 주세요.
+                    </p>
+                ) : null}
                 <WithdrawButton />
             </section>
         </>
