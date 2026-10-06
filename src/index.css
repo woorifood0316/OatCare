@@ -5091,3 +5091,9 @@ body {
 .pd-pick__ctl button:last-child:not(:disabled) { background: var(--oc-maroon); color: #fff; }
 .pd-pick__ctl button:disabled { opacity: .35; cursor: not-allowed; }
 .pd-pick__ctl em { min-width: 1.2rem; text-align: center; font-style: normal; font-weight: 800; }
+
+.pd-slices--set { max-width: 860px; }
+.pd-setintro { padding: 1.6rem 1rem; }
+.pd-ftabs { display: flex; gap: .4rem; flex-wrap: wrap; }
+.pd-ftabs button { padding: .5rem .9rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; font-weight: 700; color: #7b6a5b; cursor: pointer; }
+.pd-ftabs button.is-active { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }

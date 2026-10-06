@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, Minus, Plus, ShoppingBag, User, Zap } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import {
@@ -18,10 +18,14 @@ import {
     mixError,
     type CartLine,
 } from '../../lib/catalog';
-import { PRODUCT_PAGES, SET_PAGES, getSetPage } from '../../lib/products';
+import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+
+/** Slices shared by every flavour page (identical artwork), shown in this order on set pages. */
+const COMMON_SLUG = 'grain';
+const COMMON_SLICES = ['04.webp', '10.webp', 'review.mp4', 'rating.mp4', '05.webp', '08.webp', '11.webp'];
 
 const TABS = [
     { id: 'pd-detail', label: '상품상세' },
@@ -39,6 +43,8 @@ export function SetPage({ count }: { count: number }) {
     const [qty, setQty] = useState(1);
     const [tab, setTab] = useState<string>(TABS[0].id);
     const [added, setAdded] = useState(false);
+    const [expanded, setExpanded] = useState(false);
+    const [infoSlug, setInfoSlug] = useState(PRODUCT_PAGES[0].slug);
     const [mixMode, setMixMode] = useState<'all' | 'custom'>('all');
     const [detail, setDetail] = useState<Record<string, number>>(() => Object.fromEntries(FLAVORS.map((f) => [f, 0])));
 
@@ -262,52 +268,107 @@ export function SetPage({ count }: { count: number }) {
                     ))}
                 </div>
 
-                <section id="pd-detail" className="pd-sec">
-                    <h2>세트 구성</h2>
-                    <p className="pd-lead">
-                        {count === 10
-                            ? '5가지 맛을 각 2포씩, 총 10포로 구성됩니다.'
-                            : `5가지 맛 중 원하는 맛을 맛별 5포 단위로 골라 총 ${count}포를 채워요. 기본은 5가지 맛 균등 구성이고, 장바구니에서 직접 조합할 수 있어요.`}
-                    </p>
-                    <div className="pd-setflavors">
-                        {PRODUCT_PAGES.map((p) => (
-                            <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
-                                <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
-                                <b>{p.flavor}</b>
-                                <span>{p.ingredient}</span>
-                                <em>1포 {p.calories}</em>
-                            </Link>
-                        ))}
+                <section id="pd-detail" className="pd-sec pd-sec--detail">
+                    <div className={`pd-slices pd-slices--set${expanded ? ' is-open' : ''}`}>
+                        <div className="pd-setintro">
+                            <h2>세트 구성</h2>
+                            <p className="pd-lead">
+                                {count === 10
+                                    ? '5가지 맛을 각 2포씩, 총 10포로 구성됩니다.'
+                                    : `5가지 맛 중 원하는 맛을 5개입 묶음으로 골라 총 ${count}포를 채워요. 기본은 5가지 맛 균등 구성이고, 위에서 직접 조합할 수 있어요.`}
+                            </p>
+                            <div className="pd-setflavors">
+                                {PRODUCT_PAGES.map((p) => (
+                                    <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
+                                        <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
+                                        <b>{p.flavor}</b>
+                                        <span>{p.ingredient}</span>
+                                        <em>1포 {p.calories}</em>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
+                        {COMMON_SLICES.map((f, i) => {
+                            const video = f.endsWith('.mp4');
+                            return video ? (
+                                <video
+                                    key={f}
+                                    className="pd-slice"
+                                    src={detailUrl(COMMON_SLUG, f)}
+                                    poster={detailUrl(COMMON_SLUG, f === 'review.mp4' ? '02.webp' : '03.webp')}
+                                    autoPlay
+                                    muted
+                                    loop
+                                    playsInline
+                                    preload="metadata"
+                                />
+                            ) : (
+                                <img
+                                    key={f}
+                                    className="pd-slice"
+                                    src={detailUrl(COMMON_SLUG, f)}
+                                    alt="참오트케어 상세 이미지"
+                                    loading={i < 1 ? 'eager' : 'lazy'}
+                                    decoding="async"
+                                />
+                            );
+                        })}
+
+                        {subscribable ? (
+                            <div className="pd-setintro">
+                                <h2>정기구독 혜택</h2>
+                                <ul className="pd-benefits">
+                                    <li>구독 시 5% 추가 할인</li>
+                                    <li>첫 회 쉐이커 보틀 증정</li>
+                                    <li>결제일 기준으로 결제·발송 · 마이페이지에서 주기 변경·해지 예약</li>
+                                    <li>최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건</li>
+                                </ul>
+                            </div>
+                        ) : null}
+
+                        <img className="pd-slice" src={detailUrl(COMMON_SLUG, '12.webp')} alt="자주 묻는 질문" loading="lazy" decoding="async" />
+
+                        <div className="pd-setintro">
+                            <h2>제품 상세정보</h2>
+                            <div className="pd-ftabs" role="tablist">
+                                {PRODUCT_PAGES.map((p) => (
+                                    <button
+                                        key={p.slug}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={infoSlug === p.slug}
+                                        className={infoSlug === p.slug ? 'is-active' : ''}
+                                        onClick={() => setInfoSlug(p.slug)}
+                                    >
+                                        {p.flavor}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <img
+                            key={infoSlug}
+                            className="pd-slice"
+                            src={detailUrl(infoSlug, '13.webp')}
+                            alt="제품 상세정보"
+                            loading="lazy"
+                            decoding="async"
+                        />
                     </div>
-
-                    <h2 className="pd-h2-gap">이렇게 드세요</h2>
-                    <ol className="pd-steps">
-                        <li>
-                            <b>1</b> 쉐이커(또는 컵)에 참오트케어 1포를 넣어요
-                        </li>
-                        <li>
-                            <b>2</b> 물이나 우유를 붓고 흔들어 섞어요
-                        </li>
-                        <li>
-                            <b>3</b> 30초면 완성! 바쁜 아침도 든든하게
-                        </li>
-                    </ol>
-
-                    {subscribable ? (
-                        <>
-                            <h2 className="pd-h2-gap">정기구독 혜택</h2>
-                            <ul className="pd-benefits">
-                                <li>구독 시 5% 추가 할인</li>
-                                <li>첫 회 쉐이커 보틀 증정</li>
-                                <li>결제일 기준으로 결제·발송 · 마이페이지에서 주기 변경·해지 예약</li>
-                                <li>최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건</li>
-                            </ul>
-                        </>
-                    ) : null}
-
-                    <p className="pd-note">
-                        각 맛의 자세한 정보와 후기는 위 맛 카드를 눌러 상세 페이지에서 확인할 수 있어요.
-                    </p>
+                    <div className="pd-more">
+                        <button
+                            type="button"
+                            className="pd-more__btn"
+                            aria-expanded={expanded}
+                            onClick={() => {
+                                if (expanded) goTab('pd-detail');
+                                setExpanded((v) => !v);
+                            }}
+                        >
+                            <span>{expanded ? '상품정보 접기' : '상품정보 더보기'}</span>
+                            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                    </div>
                 </section>
 
                 <section id="pd-review" className="pd-sec">
