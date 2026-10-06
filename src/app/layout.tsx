@@ -19,6 +19,15 @@ export const metadata: Metadata = {
     },
     title: '참오트케어 — 바쁜 아침을 위한 5가지 맛 오트밀',
     description: '물이나 우유를 붓고 30초면 완성되는 참오트케어 오트밀. 5가지 맛, 정기구독 시 5% 추가 할인과 첫 회 쉐이커 보틀 증정 (최소 2회 이용).',
+    // Static files in /public (not app/icon.*): next-on-pages rejects metadata-file routes without an edge runtime.
+    // Google wants a square favicon whose size is a multiple of 48px.
+    icons: {
+        icon: [
+            { url: '/favicon.ico', sizes: '48x48' },
+            { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+        ],
+        apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
 };
 
 export default function RootLayout({
