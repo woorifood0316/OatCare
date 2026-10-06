@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { slugForFlavor } from '../lib/products';
 import { ScrollScrubHero } from '../components/ScrollScrubHero';
 import { ProductDetailModal, ProductDetailItem } from '../components/ProductDetailModal';
 import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
@@ -22,7 +24,14 @@ import {
 } from '../components/Sections';
 
 export default function Home() {
-    const [selectedProduct, setSelectedProduct] = useState<ProductDetailItem | null>(null);
+    const router = useRouter();
+    const [selectedProduct, setModalProduct] = useState<ProductDetailItem | null>(null);
+    // Single flavours open their own product page; sets keep the quick-view popup.
+    const setSelectedProduct = (p: ProductDetailItem | null) => {
+        const slug = p ? slugForFlavor(p.flavor) : undefined;
+        if (slug) router.push(`/products/${slug}`);
+        else setModalProduct(p);
+    };
     const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [drawerTab, setDrawerTab] = useState<'single' | 'bundle'>('single');

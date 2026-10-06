@@ -58,3 +58,4 @@ tsconfig.tsbuildinfo
 
 # local dev tools (never committed)
 /.devtools/
+/.detail-work/

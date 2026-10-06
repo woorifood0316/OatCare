@@ -4971,3 +4971,74 @@ body {
 .ca__btn--detail:hover { background: var(--oc-cream); }
 .oc-bundle-plain { margin-top: auto; }
 .oc-bundle-plain .ca { margin-top: 0; }
+
+/* ---- Product page (/products/[slug]) ---- */
+.pd { background: #fff; min-height: 100vh; padding-bottom: 2rem; }
+.pd-top { position: sticky; top: 0; z-index: 40; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--oc-line); backdrop-filter: blur(8px); }
+.pd-top__inner { max-width: 1100px; margin: 0 auto; padding: 0 1rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.pd-top__brand { display: inline-flex; align-items: center; gap: .4rem; font-weight: 800; color: var(--oc-maroon); text-decoration: none; }
+.pd-top__right { display: flex; align-items: center; gap: .5rem; }
+.pd-main { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+.pd-crumb { font-size: .8rem; color: #8a7a6a; padding: .9rem 0; }
+.pd-crumb a { color: inherit; text-decoration: none; }
+.pd-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; padding-bottom: 2rem; }
+.pd-gallery { background: var(--oc-cream); border-radius: 20px; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.pd-gallery img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.pd-buy__tag { color: var(--oc-gold-hover); font-weight: 700; font-size: .85rem; }
+.pd-buy__name { font-size: 1.7rem; font-weight: 800; margin: .3rem 0 .6rem; color: var(--oc-brown); }
+.pd-buy__desc { color: #5b4a3d; line-height: 1.6; font-size: .95rem; }
+.pd-price { display: flex; align-items: baseline; gap: .5rem; margin: 1.1rem 0 .8rem; flex-wrap: wrap; }
+.pd-price__pct { color: #d6332b; font-weight: 800; font-size: 1.3rem; }
+.pd-price s { color: #9a8c7e; }
+.pd-price strong { font-size: 1.7rem; font-weight: 800; color: var(--oc-brown); }
+.pd-price small { color: #8a7a6a; }
+.pd-facts { list-style: none; border-top: 1px solid var(--oc-line); border-bottom: 1px solid var(--oc-line); padding: .8rem 0; display: grid; gap: .45rem; font-size: .88rem; color: #5b4a3d; }
+.pd-facts b { display: inline-block; min-width: 3.6rem; color: var(--oc-brown); }
+.pd-qty { display: flex; align-items: center; gap: .8rem; margin: 1rem 0; }
+.pd-qty > span { font-weight: 700; }
+.pd-qty__ctl { display: inline-flex; border: 1px solid var(--oc-line); border-radius: 10px; overflow: hidden; }
+.pd-qty__ctl button { width: 38px; height: 38px; background: #fff; border: 0; cursor: pointer; display: grid; place-items: center; }
+.pd-qty__ctl input { width: 52px; text-align: center; border: 0; border-inline: 1px solid var(--oc-line); font-size: 1rem; font-weight: 700; -moz-appearance: textfield; }
+.pd-qty__ctl input::-webkit-outer-spin-button, .pd-qty__ctl input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pd-qty em { margin-left: auto; font-style: normal; font-size: 1.25rem; font-weight: 800; color: var(--oc-maroon); }
+.pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.pd-btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; height: 52px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; border: 1.5px solid var(--oc-maroon); }
+.pd-btn--cart { background: #fff; color: var(--oc-maroon); }
+.pd-btn--buy { background: var(--oc-maroon); color: #fff7e8; }
+.pd-sub { display: flex; gap: .7rem; margin-top: 1.1rem; padding: .9rem 1rem; background: #fff8e6; border: 1px solid #ecd9a3; border-radius: 12px; color: var(--oc-gold-hover); font-size: .85rem; }
+.pd-sub b { color: var(--oc-brown); display: block; margin-bottom: .2rem; }
+.pd-sub p { color: #6a5848; line-height: 1.5; }
+.pd-sub a { color: var(--oc-maroon); font-weight: 700; text-decoration: none; display: inline-block; margin-top: .3rem; }
+.pd-tabs { position: sticky; top: 56px; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border: 1px solid var(--oc-line); border-radius: 12px 12px 0 0; overflow: hidden; }
+.pd-tabs button { height: 52px; background: #fff; border: 0; border-bottom: 3px solid transparent; font-weight: 700; color: #7b6a5b; cursor: pointer; font-size: .95rem; }
+.pd-tabs button.is-active { color: var(--oc-maroon); border-bottom-color: var(--oc-maroon); background: #fff8f8; }
+.pd-sec { padding: 2.2rem 0; scroll-margin-top: 112px; }
+.pd-sec h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; color: var(--oc-brown); }
+.pd-sec--detail { padding: 0; }
+.pd-slices { max-width: 860px; margin: 0 auto; }
+.pd-slice { display: block; width: 100%; height: auto; }
+.pd-empty { padding: 1.5rem; background: var(--oc-cream); border-radius: 12px; color: #6a5848; line-height: 1.65; }
+.pd-policy { display: grid; grid-template-columns: 7rem 1fr; gap: .9rem 1rem; font-size: .92rem; line-height: 1.6; }
+.pd-policy dt { font-weight: 800; color: var(--oc-brown); }
+.pd-policy dd { color: #5b4a3d; }
+.pd-rec { border-top: 1px solid var(--oc-line); }
+.pd-rec__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.pd-rec__card { display: flex; flex-direction: column; gap: .3rem; text-decoration: none; color: var(--oc-brown); }
+.pd-rec__card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: var(--oc-cream); border-radius: 14px; padding: .8rem; }
+.pd-rec__card span { font-size: .78rem; color: #8a7a6a; }
+.pd-rec__card em { font-style: normal; font-weight: 800; color: var(--oc-maroon); }
+.pd-sticky { display: none; }
+@media (max-width: 800px) {
+  .pd { padding-bottom: 5.5rem; }
+  .pd-hero { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; }
+  .pd-buy__name { font-size: 1.4rem; }
+  .pd-tabs button { font-size: .8rem; }
+  .pd-policy { grid-template-columns: 1fr; gap: .2rem; }
+  .pd-policy dd { margin-bottom: .7rem; }
+  .pd-rec__grid { grid-template-columns: repeat(2, 1fr); }
+  .pd-sticky { display: flex; align-items: center; gap: .8rem; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--oc-line); box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+  .pd-sticky__sum { display: flex; flex-direction: column; font-size: .75rem; color: #8a7a6a; min-width: 4.5rem; }
+  .pd-sticky__sum b { font-size: 1rem; color: var(--oc-maroon); }
+  .pd-sticky .pd-actions { flex: 1; }
+  .pd-sticky .pd-btn { height: 46px; font-size: .9rem; }
+}
