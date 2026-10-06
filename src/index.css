@@ -5080,3 +5080,14 @@ body {
 .pd-pick__item.is-on .pd-pick__main { border-color: var(--oc-maroon); background: #fff4f4; }
 .pd-pick__item.is-on .pd-pick__main span { color: var(--oc-maroon); font-weight: 700; }
 .pd-pick__minus { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--oc-maroon); color: #fff; display: grid; place-items: center; cursor: pointer; }
+
+.pd-pick__remain { margin-bottom: .6rem; padding: .5rem .7rem; border-radius: 8px; background: #fff3d6; color: #8a5a00; font-size: .85rem; font-weight: 700; }
+.pd-pick__item { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .7rem .3rem; border: 1.5px solid var(--oc-line); border-radius: 10px; background: #fff; color: var(--oc-brown); }
+.pd-pick__item span { font-size: .72rem; color: #8a7a6a; }
+.pd-pick__item.is-on { border-color: var(--oc-maroon); background: #fff4f4; }
+.pd-pick__item.is-on span { color: var(--oc-maroon); font-weight: 700; }
+.pd-pick__ctl { display: flex; align-items: center; gap: .4rem; margin-top: .35rem; }
+.pd-pick__ctl button { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--oc-maroon); background: #fff; color: var(--oc-maroon); display: grid; place-items: center; cursor: pointer; }
+.pd-pick__ctl button:last-child:not(:disabled) { background: var(--oc-maroon); color: #fff; }
+.pd-pick__ctl button:disabled { opacity: .35; cursor: not-allowed; }
+.pd-pick__ctl em { min-width: 1.2rem; text-align: center; font-style: normal; font-weight: 800; }

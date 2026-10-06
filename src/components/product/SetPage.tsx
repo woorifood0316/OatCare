@@ -196,29 +196,30 @@ export function SetPage({ count }: { count: number }) {
                                 {mixMode === 'custom' ? (
                                     <div className="pd-pick">
                                         <p className="pd-pick__guide">
-                                            맛을 눌러 {MIX_UNIT}개입씩 담아요 · <b>{mixTotal / MIX_UNIT}</b>/{item.count / MIX_UNIT} 선택
+                                            맛마다 <b>+</b>를 눌러 {MIX_UNIT}개입을 담아요 · 총 {item.count / MIX_UNIT}묶음 중 <b>{mixTotal / MIX_UNIT}</b>묶음 선택
                                         </p>
+                                        {mixTotal < item.count ? (
+                                            <p className="pd-pick__remain">
+                                                {(item.count - mixTotal) / MIX_UNIT}묶음({item.count - mixTotal}개) 더 담아주세요 · 같은 맛을 또 담아도 돼요
+                                            </p>
+                                        ) : null}
                                         <div className="pd-pick__grid">
                                             {FLAVORS.map((f) => {
                                                 const units = (detail[f] ?? 0) / MIX_UNIT;
                                                 const full = mixTotal >= item.count;
                                                 return (
                                                     <div key={f} className={`pd-pick__item${units > 0 ? ' is-on' : ''}`}>
-                                                        <button
-                                                            type="button"
-                                                            className="pd-pick__main"
-                                                            disabled={full}
-                                                            onClick={() => changeMix(f, 1)}
-                                                            aria-label={`${f} ${MIX_UNIT}개입 추가`}
-                                                        >
-                                                            <b>{f}</b>
-                                                            <span>{MIX_UNIT}개입{units > 1 ? ` × ${units}` : ''}</span>
-                                                        </button>
-                                                        {units > 0 ? (
-                                                            <button type="button" className="pd-pick__minus" onClick={() => changeMix(f, -1)} aria-label={`${f} 빼기`}>
-                                                                <Minus size={14} />
+                                                        <b>{f}</b>
+                                                        <span>{units > 0 ? `${units * MIX_UNIT}개` : `${MIX_UNIT}개입 단위`}</span>
+                                                        <div className="pd-pick__ctl">
+                                                            <button type="button" onClick={() => changeMix(f, -1)} disabled={units <= 0} aria-label={`${f} ${MIX_UNIT}개 빼기`}>
+                                                                <Minus size={15} />
                                                             </button>
-                                                        ) : null}
+                                                            <em>{units}</em>
+                                                            <button type="button" onClick={() => changeMix(f, 1)} disabled={full} aria-label={`${f} ${MIX_UNIT}개 추가`}>
+                                                                <Plus size={15} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 );
                                             })}
