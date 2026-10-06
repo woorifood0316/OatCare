@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { slugForFlavor } from '../lib/products';
+import { slugForFlavor, slugForSetName } from '../lib/products';
 import { ScrollScrubHero } from '../components/ScrollScrubHero';
 import { ProductDetailModal, ProductDetailItem } from '../components/ProductDetailModal';
 import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
@@ -26,11 +26,17 @@ import {
 export default function Home() {
     const router = useRouter();
     const [selectedProduct, setModalProduct] = useState<ProductDetailItem | null>(null);
-    // Single flavours open their own product page; sets keep the quick-view popup.
+    // Flavours and sets open their own product pages.
     const setSelectedProduct = (p: ProductDetailItem | null) => {
         const slug = p ? slugForFlavor(p.flavor) : undefined;
-        if (slug) router.push(`/products/${slug}`);
-        else setModalProduct(p);
+        if (slug) {
+            try { sessionStorage.setItem('oc_return', 'product-lineup'); } catch {}
+            router.push(`/products/${slug}`);
+        }
+        else if (p && slugForSetName(p.flavor)) {
+            try { sessionStorage.setItem('oc_return', 'bundles'); } catch {}
+            router.push(`/sets/${slugForSetName(p.flavor)}`);
+        } else setModalProduct(p);
     };
     const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -38,6 +44,23 @@ export default function Home() {
     const [legalModalType, setLegalModalType] = useState<LegalModalType>(null);
     const [standaloneLegalRoute, setStandaloneLegalRoute] = useState<'privacy' | 'terms' | null>(null);
     const [savedScrollPos, setSavedScrollPos] = useState<number>(0);
+
+    // Coming back from a product page (back button or header link) lands on the flavour lineup, not the top.
+    useEffect(() => {
+        let target: string | null = null;
+        try {
+            target = sessionStorage.getItem('oc_return');
+            sessionStorage.removeItem('oc_return');
+        } catch {}
+        if (!target) return;
+        const go = () => {
+            const el = document.getElementById(target!);
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 75 });
+        };
+        const t1 = setTimeout(go, 150);
+        const t2 = setTimeout(go, 700);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    }, []);
 
     useEffect(() => {
         const checkRoute = () => {

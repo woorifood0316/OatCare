@@ -4,23 +4,20 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingBag, User, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
+import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import {
     FREE_SHIPPING_MIN,
     MIN_SUBSCRIPTION_CHARGES,
     SHIPPING_FEE,
-    SUBSCRIPTION_DISCOUNT_RATE,
     getItem,
     type CartLine,
 } from '../../lib/catalog';
-import { PRODUCT_PAGES, detailUrl, getProductPage } from '../../lib/products';
+import { PRODUCT_PAGES, SET_PAGES, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
-const SLICES = Array.from({ length: 13 }, (_, i) => String(i + 1).padStart(2, '0'));
-/** Slices shown as short looping videos (much lighter than the original GIFs). */
-const VIDEO_SLICES: Record<string, string> = { '02': 'review.mp4', '03': 'rating.mp4' };
 
 const TABS = [
     { id: 'pd-detail', label: '상품상세' },
@@ -29,16 +26,15 @@ const TABS = [
     { id: 'pd-ship', label: '배송·교환·반품' },
 ] as const;
 
-export function ProductPage({ slug }: { slug: string }) {
+export function SetPage({ count }: { count: number }) {
     const router = useRouter();
     const { status } = useSession();
-    const { addLine, buyNow, count, hydrated } = useCart();
-    const page = getProductPage(slug)!;
+    const { addLine, buyNow, count: cartCount, hydrated } = useCart();
+    const page = getSetPage(count)!;
     const item = getItem(page.sku)!;
-    const [qty, setQty] = useState(5);
+    const [qty, setQty] = useState(1);
     const [tab, setTab] = useState<string>(TABS[0].id);
     const [added, setAdded] = useState(false);
-    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
         const onScroll = () => {
@@ -54,11 +50,12 @@ export function ProductPage({ slug }: { slug: string }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const line: CartLine = { sku: page.sku, qty, mode: 'once' };
+    const line: CartLine = { sku: page.sku, qty, mode: 'once', mix: 'all' };
     const total = item.price * qty;
+    const unit = Math.round(item.price / item.count);
     const pct = Math.round(((item.listPrice - item.price) / item.listPrice) * 100);
-    const subPct = Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100);
     const clamp = (n: number) => Math.min(99, Math.max(1, n));
+    const subscribable = item.subscribable;
 
     const goTab = (id: string) => {
         const el = document.getElementById(id);
@@ -72,6 +69,11 @@ export function ProductPage({ slug }: { slug: string }) {
     const handleBuy = async () => {
         const dest = await buyNow(line);
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
+    };
+    const goBack = () => {
+        try {
+            sessionStorage.setItem('oc_return', 'bundles');
+        } catch {}
     };
 
     const actions = (
@@ -91,14 +93,14 @@ export function ProductPage({ slug }: { slug: string }) {
         <div className="pd">
             <header className="pd-top">
                 <div className="pd-top__inner">
-                    <Link href="/#product-lineup" className="pd-top__brand" onClick={() => { try { sessionStorage.setItem('oc_return', 'product-lineup'); } catch {} }}>
+                    <Link href="/#bundles" className="pd-top__brand" onClick={goBack}>
                         <ArrowLeft size={18} />
                         <span>참오트케어</span>
                     </Link>
                     <div className="pd-top__right">
                         <Link href="/cart" className="oc-nav__cart" aria-label="장바구니">
                             <ShoppingBag size={18} />
-                            {hydrated && count > 0 ? <span className="oc-nav__cart-badge">{count}</span> : null}
+                            {hydrated && cartCount > 0 ? <span className="oc-nav__cart-badge">{cartCount}</span> : null}
                         </Link>
                         {status !== 'loading' && (
                             <Link className="oc-nav__auth" href={status === 'authenticated' ? '/mypage' : '/login'}>
@@ -112,13 +114,15 @@ export function ProductPage({ slug }: { slug: string }) {
 
             <main className="pd-main">
                 <nav className="pd-crumb" aria-label="현재 위치">
-                    <Link href="/">홈</Link> <span>›</span> <Link href="/#product-lineup">맛 둘러보기</Link> <span>›</span>{' '}
-                    <b>{page.flavor}</b>
+                    <Link href="/#bundles" onClick={goBack}>
+                        세트 구성
+                    </Link>{' '}
+                    <span>›</span> <b>{item.name}</b>
                 </nav>
 
                 <section className="pd-hero">
                     <div className="pd-gallery">
-                        <img src={getAssetUrl(page.img)} alt={`참오트케어 ${page.flavor}`} />
+                        <img src={getAssetUrl(page.img)} alt={item.name} />
                     </div>
 
                     <div className="pd-buy">
@@ -130,17 +134,14 @@ export function ProductPage({ slug }: { slug: string }) {
                             <span className="pd-price__pct">{pct}%</span>
                             <s>{won(item.listPrice)}</s>
                             <strong>{won(item.price)}</strong>
-                            <small>/ 1포</small>
+                            <small>/ 개당 {won(unit)}</small>
                         </div>
                         <ul className="pd-facts">
+                            {page.points.map((p) => (
+                                <li key={p}>{p}</li>
+                            ))}
                             <li>
-                                <b>주원료</b> {page.ingredient}
-                            </li>
-                            <li>
-                                <b>열량</b> 1포 {page.calories}
-                            </li>
-                            <li>
-                                <b>배송비</b> {won(SHIPPING_FEE)} (세트 구매 또는 {won(FREE_SHIPPING_MIN)} 이상 무료)
+                                배송비 {won(SHIPPING_FEE)} (세트 구매 시 무료 · {won(FREE_SHIPPING_MIN)} 이상 무료)
                             </li>
                         </ul>
 
@@ -166,18 +167,14 @@ export function ProductPage({ slug }: { slug: string }) {
                             <em>{won(total)}</em>
                         </div>
 
-                        {actions}
-
-                        <div className="pd-sub">
-                            <Repeat size={18} />
-                            <div>
-                                <b>정기구독하면 {subPct}% 더 저렴해요</b>
-                                <p>
-                                    20·30개입 세트에서 정기구독 가능 · 첫 회 쉐이커 보틀 증정 · 최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건
-                                </p>
-                                <Link href="/#bundles">세트 구성 보러가기 →</Link>
-                            </div>
-                        </div>
+                        {subscribable ? (
+                            <PurchaseChooser sku={page.sku} qty={qty} />
+                        ) : (
+                            <>
+                                {actions}
+                                <p className="pd-note">정기구독은 20·30개입 세트에서 가능해요 (최소 {MIN_SUBSCRIPTION_CHARGES}회 이용)</p>
+                            </>
+                        )}
                     </div>
                 </section>
 
@@ -196,57 +193,57 @@ export function ProductPage({ slug }: { slug: string }) {
                     ))}
                 </div>
 
-                <section id="pd-detail" className="pd-sec pd-sec--detail">
-                    <div className={`pd-slices${expanded ? ' is-open' : ''}`}>
-                        {SLICES.map((n, i) => {
-                            const video = VIDEO_SLICES[n];
-                            return video ? (
-                                <video
-                                    key={n}
-                                    className="pd-slice"
-                                    src={detailUrl(slug, video)}
-                                    poster={detailUrl(slug, `${n}.webp`)}
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
-                                    preload="metadata"
-                                    aria-label={`${page.flavor} 상세 이미지 ${n}`}
-                                />
-                            ) : (
-                                <img
-                                    key={n}
-                                    className="pd-slice"
-                                    src={detailUrl(slug, `${n}.webp`)}
-                                    alt={`${page.flavor} 상세 이미지 ${n}`}
-                                    loading={i < 2 ? 'eager' : 'lazy'}
-                                    decoding="async"
-                                />
-                            );
-                        })}
+                <section id="pd-detail" className="pd-sec">
+                    <h2>세트 구성</h2>
+                    <p className="pd-lead">
+                        {count === 10
+                            ? '5가지 맛을 각 2포씩, 총 10포로 구성됩니다.'
+                            : `5가지 맛 중 원하는 맛을 맛별 5포 단위로 골라 총 ${count}포를 채워요. 기본은 5가지 맛 균등 구성이고, 장바구니에서 직접 조합할 수 있어요.`}
+                    </p>
+                    <div className="pd-setflavors">
+                        {PRODUCT_PAGES.map((p) => (
+                            <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
+                                <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
+                                <b>{p.flavor}</b>
+                                <span>{p.ingredient}</span>
+                                <em>1포 {p.calories}</em>
+                            </Link>
+                        ))}
                     </div>
-                    <div className="pd-more">
-                        <button
-                            type="button"
-                            className="pd-more__btn"
-                            aria-expanded={expanded}
-                            onClick={() => {
-                                if (expanded) goTab('pd-detail');
-                                setExpanded((v) => !v);
-                            }}
-                        >
-                            <span>{expanded ? '상품정보 접기' : '상품정보 더보기'}</span>
-                            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-                    </div>
+
+                    <h2 className="pd-h2-gap">이렇게 드세요</h2>
+                    <ol className="pd-steps">
+                        <li>
+                            <b>1</b> 쉐이커(또는 컵)에 참오트케어 1포를 넣어요
+                        </li>
+                        <li>
+                            <b>2</b> 물이나 우유를 붓고 흔들어 섞어요
+                        </li>
+                        <li>
+                            <b>3</b> 30초면 완성! 바쁜 아침도 든든하게
+                        </li>
+                    </ol>
+
+                    {subscribable ? (
+                        <>
+                            <h2 className="pd-h2-gap">정기구독 혜택</h2>
+                            <ul className="pd-benefits">
+                                <li>구독 시 5% 추가 할인</li>
+                                <li>첫 회 쉐이커 보틀 증정</li>
+                                <li>결제일 기준으로 결제·발송 · 마이페이지에서 주기 변경·해지 예약</li>
+                                <li>최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건</li>
+                            </ul>
+                        </>
+                    ) : null}
+
+                    <p className="pd-note">
+                        각 맛의 자세한 정보와 후기는 위 맛 카드를 눌러 상세 페이지에서 확인할 수 있어요.
+                    </p>
                 </section>
 
                 <section id="pd-review" className="pd-sec">
                     <h2>리뷰</h2>
-                    <p className="pd-empty">
-                        참오트케어 쇼핑몰에서 구매하신 고객님의 후기가 이곳에 모일 예정이에요. 상세 이미지 속 후기는 외부 판매처에서 작성된
-                        후기입니다.
-                    </p>
+                    <p className="pd-empty">참오트케어 쇼핑몰에서 구매하신 고객님의 후기가 이곳에 모일 예정이에요.</p>
                 </section>
 
                 <section id="pd-qna" className="pd-sec">
@@ -280,27 +277,32 @@ export function ProductPage({ slug }: { slug: string }) {
                 </section>
 
                 <section className="pd-sec pd-rec">
-                    <h2>다른 맛도 둘러보세요</h2>
-                    <div className="pd-rec__grid">
-                        {PRODUCT_PAGES.filter((p) => p.slug !== slug).map((p) => (
-                            <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
-                                <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
-                                <b>{p.flavor}</b>
-                                <span>{p.tagline}</span>
-                                <em>{won(getItem(p.sku)!.price)}</em>
-                            </Link>
-                        ))}
+                    <h2>다른 세트도 둘러보세요</h2>
+                    <div className="pd-rec__grid pd-rec__grid--3">
+                        {SET_PAGES.filter((s) => s.count !== count).map((s) => {
+                            const it = getItem(s.sku)!;
+                            return (
+                                <Link key={s.count} href={`/sets/${s.count}`} className="pd-rec__card">
+                                    <img src={getAssetUrl(s.img)} alt={it.name} loading="lazy" />
+                                    <b>{it.name}</b>
+                                    <span>{s.tagline}</span>
+                                    <em>{won(it.price)}</em>
+                                </Link>
+                            );
+                        })}
                     </div>
                 </section>
             </main>
 
-            <div className="pd-sticky">
-                <div className="pd-sticky__sum">
-                    <span>{qty}포</span>
-                    <b>{won(total)}</b>
+            {!subscribable ? (
+                <div className="pd-sticky">
+                    <div className="pd-sticky__sum">
+                        <span>{qty}세트</span>
+                        <b>{won(total)}</b>
+                    </div>
+                    {actions}
                 </div>
-                {actions}
-            </div>
+            ) : null}
         </div>
     );
 }
