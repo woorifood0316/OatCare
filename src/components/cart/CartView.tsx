@@ -264,7 +264,7 @@ export function CartView() {
                     />
                     <Section
                         title="정기구독"
-                        desc="선택한 주기마다 자동으로 결제되고 배송돼요. 언제든 마이페이지에서 변경·해지할 수 있어요."
+                        desc="선택한 주기의 결제일마다 자동 결제·발송돼요. 첫 회 쉐이커 보틀 증정! 단, 최소 2회 이용(결제) 후 해지할 수 있어요."
                         lines={subs}
                         mode="subscribe"
                         totalLabel="회당 결제 금액"

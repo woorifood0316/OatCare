@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Repeat } from 'lucide-react';
-import { CYCLE_OPTIONS, FLAVORS, MAX_QTY_SUBSCRIBE, priceCart } from '../../lib/catalog';
+import { CYCLE_OPTIONS, FLAVORS, MAX_QTY_SUBSCRIBE, MIN_SUBSCRIPTION_CHARGES, priceCart } from '../../lib/catalog';
 import { SUB_STATUS_LABEL, type Subscription } from '../../lib/subscription-types';
 import { ORDER_STATUS_LABEL, type OrderStatus } from '../../lib/order-status';
 import type { Address } from '../../lib/validate';
@@ -39,6 +39,8 @@ function Card({
     const [confirmCancel, setConfirmCancel] = useState(false);
     const priced = priceCart(sub.lines, 'subscribe');
     const canceled = sub.status === 'canceled';
+    const inMin = !canceled && sub.paidCount < MIN_SUBSCRIPTION_CHARGES;
+    const scheduled = !canceled && Boolean(sub.cancelRequestedAt);
 
     const act = async (body: Record<string, unknown>) => {
         if (busy) return;
@@ -73,6 +75,23 @@ function Card({
                 </h2>
                 <span className={`sub-status sub-status--${sub.status}`}>{SUB_STATUS_LABEL[sub.status]}</span>
             </div>
+
+            {inMin ? (
+                <p className="sub-min">
+                    <b>
+                        최소 이용 {sub.paidCount}/{MIN_SUBSCRIPTION_CHARGES}회 결제
+                    </b>{' '}
+                    · 최소 {MIN_SUBSCRIPTION_CHARGES}회 결제가 끝나기 전에는 일시정지·건너뛰기·즉시 해지를 할 수 없어요.
+                </p>
+            ) : null}
+            {scheduled ? (
+                <p className="sub-scheduled">
+                    해지가 예약됐어요. {MIN_SUBSCRIPTION_CHARGES}회차 결제({sub.nextBillingDate}) 후 자동으로 해지돼요.{' '}
+                    <button type="button" className="my-link-btn" onClick={() => act({ action: 'cancel_undo' })} disabled={busy}>
+                        해지 예약 취소
+                    </button>
+                </p>
+            ) : null}
 
             <ul className="sub-lines">
                 {sub.lines.map((l, i) => {
@@ -210,7 +229,7 @@ function Card({
 
             {!canceled ? (
                 <div className="sub-actions">
-                    {sub.status === 'active' ? (
+                    {sub.status === 'active' && !inMin ? (
                         <label className="sub-skip">
                             <input
                                 type="checkbox"
@@ -226,7 +245,7 @@ function Card({
                             {busy ? '결제 중...' : '지금 결제하기'}
                         </button>
                     ) : null}
-                    {sub.status === 'active' ? (
+                    {sub.status === 'active' && !inMin ? (
                         <button type="button" className="my-btn addr-btn addr-btn--ghost" onClick={() => act({ action: 'pause' })} disabled={busy}>
                             일시정지
                         </button>
@@ -236,15 +255,17 @@ function Card({
                             재개
                         </button>
                     ) : null}
-                    {!confirmCancel ? (
+                    {scheduled ? null : !confirmCancel ? (
                         <button type="button" className="my-withdraw-link" onClick={() => setConfirmCancel(true)}>
-                            구독 해지
+                            {inMin ? '해지 예약' : '구독 해지'}
                         </button>
                     ) : (
                         <span className="sub-confirm">
-                            해지하면 이후 결제와 배송이 중단돼요.
+                            {inMin
+                                ? `최소 이용기간(${MIN_SUBSCRIPTION_CHARGES}회) 때문에 지금 해지되지 않고, ${MIN_SUBSCRIPTION_CHARGES}회차 결제(${sub.nextBillingDate})가 진행된 뒤 해지돼요.`
+                                : '해지하면 이후 결제와 배송이 중단돼요.'}
                             <button type="button" className="my-btn my-btn--primary" onClick={() => act({ action: 'cancel' })} disabled={busy}>
-                                해지하기
+                                {inMin ? '해지 예약하기' : '해지하기'}
                             </button>
                             <button type="button" className="my-withdraw-link" onClick={() => setConfirmCancel(false)}>
                                 닫기

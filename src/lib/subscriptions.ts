@@ -1,10 +1,11 @@
 import { getSql } from './db';
-import { CartLine, orderNameOf, priceCart, sanitizeLines } from './catalog';
+import { CartLine, MIN_SUBSCRIPTION_CHARGES, giftItem, orderNameOf, priceCart, sanitizeLines } from './catalog';
 import { chargeBilling, paymentLabel } from './toss';
 import { getBillingKey } from './payment-methods';
 import { getOrCreateCustomerKey, mapOrder, newOrderNo, type Order } from './orders';
 import { addDays, todayKst } from './dates';
 import { enqueue } from './notify';
+import { markCouponUsed, reserveCoupon } from './coupons';
 import type { Address } from './validate';
 import { MAX_FAILS, RETRY_DAYS, type SubStatus, type Subscription } from './subscription-types';
 
@@ -30,6 +31,8 @@ export function mapSubscription(r: Record<string, unknown>): Subscription {
         nextBillingDate: dateOnly(r.next_billing_date),
         skipNext: Boolean(r.skip_next),
         failCount: (r.fail_count as number) ?? 0,
+        paidCount: (r.paid_count as number) ?? 0,
+        cancelRequestedAt: iso(r.cancel_requested_at),
         paymentMethodId: (r.payment_method_id as string | null) ?? null,
         shipName: (r.ship_name as string | null) ?? null,
         shipPhone: (r.ship_phone as string | null) ?? null,
@@ -63,8 +66,16 @@ export type ChargeResult =
     | { ok: true; order: Order }
     | { ok: false; code: string; message: string; order?: Order };
 
+export interface ChargeExtras {
+    /** First-order only: coupon discount (won) and the coupon being used. */
+    discount?: number;
+    couponId?: string | null;
+    /** First-order only: include the free shaker bottle. */
+    gift?: boolean;
+}
+
 /** Create the order row and charge the saved card. Does NOT touch the subscription's schedule. */
-export async function chargeSubscription(sub: Subscription): Promise<ChargeResult> {
+export async function chargeSubscription(sub: Subscription, extras: ChargeExtras = {}): Promise<ChargeResult> {
     const sql = getSql();
     const priced = priceCart(sub.lines, 'subscribe');
     if (priced.error) return { ok: false, code: 'INVALID_ITEMS', message: priced.error };
@@ -74,24 +85,37 @@ export async function chargeSubscription(sub: Subscription): Promise<ChargeResul
     const billingKey = await getBillingKey(sub.userId, sub.paymentMethodId);
     if (!billingKey) return { ok: false, code: 'NO_PAYMENT_METHOD', message: '등록된 결제수단을 찾을 수 없어요' };
 
+    const discount = Math.max(0, extras.discount ?? 0);
+    const amount = priced.total - discount;
+    const items = extras.gift ? [...priced.items, giftItem()] : priced.items;
+
     const customerKey = await getOrCreateCustomerKey(sub.userId);
     const user = await sql`select name, email from users where id = ${sub.userId}`;
     const orderNo = newOrderNo();
 
     const inserted = await sql`
         insert into orders (order_no, user_id, kind, subscription_id, status, items, subtotal, shipping_fee, amount,
-            ship_name, ship_phone, ship_zip, ship_address1, ship_address2)
-        values (${orderNo}, ${sub.userId}, 'subscription', ${sub.id}, 'pending', ${JSON.stringify(priced.items)}::jsonb,
-            ${priced.subtotal}, ${priced.shipping}, ${priced.total},
+            discount_amount, ship_name, ship_phone, ship_zip, ship_address1, ship_address2)
+        values (${orderNo}, ${sub.userId}, 'subscription', ${sub.id}, 'pending', ${JSON.stringify(items)}::jsonb,
+            ${priced.subtotal}, ${priced.shipping}, ${amount}, ${discount},
             ${sub.shipName}, ${sub.shipPhone}, ${sub.shipZip}, ${sub.shipAddress1}, ${sub.shipAddress2})
         returning *
     `;
     const order = mapOrder(inserted[0]);
 
+    if (extras.couponId) {
+        const held = await reserveCoupon(sub.userId, extras.couponId, order.id);
+        if (!held) {
+            await sql`update orders set status = 'failed', fail_reason = '쿠폰을 사용할 수 없어요', updated_at = now() where id = ${order.id}`;
+            return { ok: false, code: 'COUPON_UNAVAILABLE', message: '쿠폰을 사용할 수 없어요. 쿠폰 없이 다시 시도해 주세요.', order };
+        }
+        await sql`update orders set coupon_id = ${extras.couponId} where id = ${order.id}`;
+    }
+
     const res = await chargeBilling({
         billingKey,
         customerKey,
-        amount: priced.total,
+        amount,
         orderId: orderNo,
         orderName: orderNameOf(priced.items),
         customerEmail: (user[0]?.email as string | null) ?? null,
@@ -100,6 +124,7 @@ export async function chargeSubscription(sub: Subscription): Promise<ChargeResul
 
     if (!res.ok) {
         const reason = `${res.code}: ${res.message}`.slice(0, 300);
+        // A failed order frees its coupon automatically (see coupons.ts).
         await sql`update orders set status = 'failed', fail_reason = ${reason}, updated_at = now() where id = ${order.id}`;
         await sql`insert into billing_attempts (subscription_id, order_id, ok, error_code, error_message)
                   values (${sub.id}, ${order.id}, false, ${res.code}, ${res.message.slice(0, 300)})`;
@@ -112,16 +137,37 @@ export async function chargeSubscription(sub: Subscription): Promise<ChargeResul
         where id = ${order.id} returning *
     `;
     await sql`insert into billing_attempts (subscription_id, order_id, ok) values (${sub.id}, ${order.id}, true)`;
+    if (extras.couponId) await markCouponUsed(order.id);
+    if (extras.gift) await sql`update users set shaker_gifted_at = now() where id = ${sub.userId} and shaker_gifted_at is null`;
     return { ok: true, order: mapOrder(paid[0]) };
 }
 
-/** Schedule bookkeeping after a successful charge. */
-export async function markCharged(sub: Subscription): Promise<void> {
-    await getSql()`
-        update subscriptions set last_billed_at = now(), fail_count = 0, status = 'active', skip_next = false,
-            next_billing_date = ${addDays(todayKst(), sub.cycleDays)}, processing_at = null, updated_at = now()
+/**
+ * Schedule bookkeeping after a successful charge: counts the payment and, if the customer had asked to cancel
+ * during the minimum period, ends the subscription now that the minimum has been paid.
+ */
+export async function markCharged(sub: Subscription): Promise<{ status: SubStatus; endedNow: boolean }> {
+    const rows = await getSql()`
+        update subscriptions set
+            last_billed_at = now(), fail_count = 0, skip_next = false, processing_at = null,
+            paid_count = paid_count + 1,
+            next_billing_date = ${addDays(todayKst(), sub.cycleDays)},
+            status = case when cancel_requested_at is not null and paid_count + 1 >= ${MIN_SUBSCRIPTION_CHARGES}
+                          then 'canceled' else 'active' end,
+            canceled_at = case when cancel_requested_at is not null and paid_count + 1 >= ${MIN_SUBSCRIPTION_CHARGES}
+                               then now() else canceled_at end,
+            cancel_reason = case when cancel_requested_at is not null and paid_count + 1 >= ${MIN_SUBSCRIPTION_CHARGES}
+                                 then coalesce(cancel_reason, '고객 해지 (최소 이용기간 종료)') else cancel_reason end,
+            updated_at = now()
         where id = ${sub.id}
+        returning status
     `;
+    const status = (rows[0]?.status as SubStatus) ?? 'active';
+    const endedNow = status === 'canceled';
+    if (endedNow) {
+        await enqueue('subscription_canceled', { subscriptionId: sub.id, reason: '최소 이용기간(2회) 종료 후 해지' }, { userId: sub.userId });
+    }
+    return { status, endedNow };
 }
 
 export interface FirstChargeInput {
@@ -130,6 +176,9 @@ export interface FirstChargeInput {
     cycleDays: number;
     address: Address;
     paymentMethodId: string;
+    discount?: number;
+    couponId?: string | null;
+    gift?: boolean;
 }
 
 /** New subscription + first charge. On failure the subscription is cancelled (nothing is left half-open). */
@@ -145,7 +194,7 @@ export async function startSubscription(input: FirstChargeInput): Promise<Charge
         returning *
     `;
     const sub = mapSubscription(created[0]);
-    const result = await chargeSubscription(sub);
+    const result = await chargeSubscription(sub, { discount: input.discount, couponId: input.couponId, gift: input.gift });
 
     if (!result.ok) {
         await sql`update subscriptions set status = 'canceled', canceled_at = now(), cancel_reason = '첫 결제 실패', updated_at = now()
@@ -223,4 +272,9 @@ export async function dueSubscriptionIds(limit = 20): Promise<string[]> {
         order by next_billing_date asc limit ${limit}
     `;
     return rows.map((r) => r.id as string);
+}
+
+/** Subscriptions that must still be paid to reach the minimum period (blocks pausing, skipping, withdrawal). */
+export function inMinimumPeriod(sub: Pick<Subscription, 'status' | 'paidCount'>): boolean {
+    return sub.status !== 'canceled' && sub.paidCount < MIN_SUBSCRIPTION_CHARGES;
 }

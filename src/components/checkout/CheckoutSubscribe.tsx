@@ -2,10 +2,11 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddressPicker, CheckoutShell, OrderSummary, won } from './Parts';
+import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
 import { cardText } from '../mypage/PaymentMethodManager';
-import type { PricedCart } from '../../lib/catalog';
+import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, type PricedCart } from '../../lib/catalog';
+import type { Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
 
@@ -18,11 +19,15 @@ export function CheckoutSubscribe({
     priced,
     addresses,
     methods,
+    coupons,
+    giftEligible,
     user,
 }: {
     priced: PricedCart;
     addresses: Address[];
     methods: PaymentMethod[];
+    coupons: Coupon[];
+    giftEligible: boolean;
     customerKey: string;
     user: { name: string | null; email: string | null };
 }) {
@@ -30,6 +35,8 @@ export function CheckoutSubscribe({
     const [addressId, setAddressId] = useState<string | null>(addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null);
     const [methodId, setMethodId] = useState<string | null>(methods.find((m) => m.isDefault)?.id ?? methods[0]?.id ?? null);
     const [agreed, setAgreed] = useState(false);
+    const [agreedMin, setAgreedMin] = useState(false);
+    const [couponId, setCouponId] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [partial, setPartial] = useState<string[]>([]);
@@ -43,11 +50,19 @@ export function CheckoutSubscribe({
         return [...map.entries()].sort((a, b) => a[0] - b[0]);
     }, [priced.items]);
 
+    // The coupon and the bottle go on the first (shortest-cycle) subscription's first order.
+    const firstCycle = cycles[0]?.[0];
+    const firstGroup = priced.items.filter((i) => (i.cycleDays ?? 30) === firstCycle).reduce((sum, i) => sum + i.amount, 0);
+    const selected = coupons.find((c) => c.id === couponId) ?? null;
+    const discount = selected ? couponDiscount(selected, firstGroup, firstGroup) : 0;
+    const payable = priced.total - discount;
+
     const start = async () => {
         if (busy) return;
         if (!addressId) return setError('배송지를 선택해 주세요');
         if (!methodId) return setError('결제 카드를 등록해 주세요');
         if (!agreed) return setError('정기결제 이용 안내에 동의해 주세요');
+        if (!agreedMin) return setError(`최소 이용기간(${MIN_SUBSCRIPTION_CHARGES}회) 안내에 동의해 주세요`);
         setBusy(true);
         setError('');
         setPartial([]);
@@ -55,7 +70,7 @@ export function CheckoutSubscribe({
             const res = await fetch('/api/checkout/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId, paymentMethodId: methodId, expectedAmount: priced.total, agreed: true }),
+                body: JSON.stringify({ addressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -79,7 +94,15 @@ export function CheckoutSubscribe({
 
     return (
         <CheckoutShell title="정기구독 시작">
-            <OrderSummary priced={priced} mode="subscribe" />
+            <OrderSummary priced={priced} mode="subscribe" discount={discount} gift={giftEligible} />
+            <CouponPicker
+                coupons={coupons}
+                selectedId={couponId}
+                onSelect={setCouponId}
+                subtotal={firstGroup}
+                total={firstGroup}
+                note="쿠폰은 첫 회 결제에만 적용돼요."
+            />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} />
 
             <section className="cart-section">
@@ -118,6 +141,11 @@ export function CheckoutSubscribe({
                             <b>{c}일 주기</b> · 첫 결제 {won(amount)} · 다음 결제일 {addDaysLabel(c)}
                         </li>
                     ))}
+                    <li>결제일에 결제가 되고, 그날부터 발송을 준비해요. (도착일 기준이 아니에요)</li>
+                    <li>
+                        <b>최소 이용기간은 {MIN_SUBSCRIPTION_CHARGES}회예요.</b> 첫 결제를 포함해 {MIN_SUBSCRIPTION_CHARGES}회 결제가 끝나기 전에는 일시정지·건너뛰기·즉시 해지를 할 수 없어요.
+                        1회 결제 후 해지하셔도 {MIN_SUBSCRIPTION_CHARGES}회차는 결제되고, 그 뒤에 해지돼요. (청약철회 등 법에 따른 권리는 그대로예요)
+                    </li>
                     <li>가격이 바뀌는 경우 결제 전에 미리 안내해 드려요.</li>
                     <li>마이페이지에서 언제든 주기 변경, 건너뛰기, 일시정지, 해지를 할 수 있어요. 해지하면 이후 결제는 중단돼요.</li>
                     <li>결제에 3회 연속 실패하면 구독이 일시정지되고 안내해 드려요.</li>
@@ -125,6 +153,12 @@ export function CheckoutSubscribe({
                 <label className="addr-check">
                     <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
                     <span>위 정기결제 이용 안내를 확인했으며 동의합니다. (필수)</span>
+                </label>
+                <label className="addr-check">
+                    <input type="checkbox" checked={agreedMin} onChange={(e) => setAgreedMin(e.target.checked)} />
+                    <span>
+                        <b>최소 {MIN_SUBSCRIPTION_CHARGES}회 이용</b> 조건을 확인했으며 동의합니다. (필수)
+                    </span>
                 </label>
             </section>
 
@@ -143,7 +177,7 @@ export function CheckoutSubscribe({
             ) : null}
 
             <button type="button" className="my-btn my-btn--primary co-pay" onClick={start} disabled={busy}>
-                {busy ? '결제 진행 중...' : `${won(priced.total)} 결제하고 정기구독 시작`}
+                {busy ? '결제 진행 중...' : `${won(payable)} 결제하고 정기구독 시작`}
             </button>
             <p className="cart-note">구독자: {user.name ?? '회원'}{user.email ? ` · ${user.email}` : ''}</p>
         </CheckoutShell>

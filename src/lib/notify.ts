@@ -9,6 +9,7 @@ export type NotifyEvent =
     | 'subscription_charge_failed'
     | 'subscription_paused'
     | 'subscription_canceled'
+    | 'subscription_cancel_requested'
     | 'billing_upcoming';
 
 /**

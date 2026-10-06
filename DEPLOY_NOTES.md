@@ -86,3 +86,21 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
 
 ## 9. 아직 없는 것
 - 토스 웹훅 수신, 카카오 알림톡 발송기, 상품·가격 관리 화면, 후기, 쿠폰/적립금, 부분 환불
+
+## 10. 쿠폰 · 첫 회 증정 · 최소 이용기간 (추가)
+**DB:** `db/commerce.sql` 맨 아래(쿠폰, 최소 이용기간 컬럼)는 공유 Neon DB에 **이미 적용돼 있어요.**
+
+| 규칙 | 동작 | 코드 위치 |
+|---|---|---|
+| 가입 쿠폰 | 신규 가입(소셜 로그인으로 처음 계정 생성) 시 5,000원 · 60일 · 10,000원 이상 주문 · 1인 1장 | `catalog.ts` `WELCOME_COUPON_*`, 발급: `src/auth.ts` |
+| 쿠폰 사용 | 주문 1건에 1장. 결제 전 보류 → 결제 성공 시 사용 처리. 실패·취소·30분 방치 시 자동 복원, 환불 시 기간이 남았으면 복원 | `src/lib/coupons.ts` |
+| 정기구독 쿠폰 | **첫 결제(가장 짧은 주기 구독의 첫 주문)에만** 적용 | `api/checkout/subscribe` |
+| 쉐이커 보틀 | 회원 **1인 1회**, 첫 구독 첫 주문에 0원 사은품 라인으로 포함(주문·관리자 화면에 표시). 그 주문을 환불하면 다시 받을 수 있음 | `catalog.ts` `GIFT_SHAKER_NAME`, `users.shaker_gifted_at` |
+| 최소 이용기간 | **2회 결제 전**에는 일시정지·건너뛰기·즉시 해지·회원 탈퇴 불가. 해지 신청 시 **해지 예약**되고 2회차 결제 후 자동 해지 | `catalog.ts` `MIN_SUBSCRIPTION_CHARGES` |
+| 법정 권리 | 발송 전 주문 취소(환불) 시 그 회차는 이용 횟수에서 빠지고, 첫 회차를 환불하면 구독도 종료 | `src/lib/payments.ts` |
+| 관리자 | 운영자는 최소 이용기간과 상관없이 구독을 즉시 해지할 수 있음 | `/admin/subscriptions` |
+
+- **기존 회원(3명)에게는 가입 쿠폰이 없습니다.** 필요하면 SQL로 지급하세요:
+  `insert into coupons (user_id, source, name, amount, min_order, expires_at) select id, 'welcome', '신규 가입 쿠폰', 5000, 10000, now() + interval '60 days' from users where id not in (select user_id from coupons);`
+- 정기구독 할인율(5%)은 `SUBSCRIPTION_DISCOUNT_RATE`, 쿠폰 최소 주문금액(10,000원)은 `WELCOME_COUPON_MIN_ORDER`에서 바꿉니다.
+- 이용약관 제4조(정기구독: 최소 이용기간, 결제일 기준, 증정품)와 제6조(쿠폰)에 같은 내용이 들어 있습니다. 법률 검토를 받으세요.

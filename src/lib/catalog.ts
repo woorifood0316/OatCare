@@ -94,6 +94,17 @@ export const MIX_UNIT = 5;
 export const SHIPPING_FEE = 3000;
 export const FREE_SHIPPING_MIN = 30000;
 
+/** Subscriptions must be paid at least this many times (cancelling earlier only schedules the end). */
+export const MIN_SUBSCRIPTION_CHARGES = 2;
+/** Welcome coupon issued at sign-up. */
+export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
+export const WELCOME_COUPON_AMOUNT = 5000;
+export const WELCOME_COUPON_DAYS = 60;
+export const WELCOME_COUPON_MIN_ORDER = 10000;
+/** Toss rejects payments below this. */
+export const MIN_PAYABLE = 100;
+export const GIFT_SHAKER_NAME = '참오트케어 쉐이커 보틀 (정기구독 첫 회 증정)';
+
 export type PurchaseMode = 'once' | 'subscribe';
 export type MixOption = 'all' | 'custom';
 
@@ -235,6 +246,8 @@ export interface PricedItem {
     mix?: MixOption;
     mixBreakdown?: Record<string, number>;
     count: number;
+    /** Free gift line (0원). */
+    gift?: boolean;
 }
 
 export interface PricedCart {
@@ -284,4 +297,18 @@ export function orderNameOf(items: PricedItem[]): string {
     if (items.length === 0) return '참오트케어';
     const first = items[0].name;
     return items.length === 1 ? first : `${first} 외 ${items.length - 1}건`;
+}
+
+/** The free first-order gift for new subscribers. */
+export function giftItem(): PricedItem {
+    return { sku: 'gift:shaker', name: GIFT_SHAKER_NAME, qty: 1, unitPrice: 0, amount: 0, mode: 'subscribe', count: 1, gift: true };
+}
+
+/**
+ * Coupon discount for an order. `subtotal` is checked against the coupon's minimum order,
+ * and the customer always pays at least MIN_PAYABLE.
+ */
+export function couponDiscount(coupon: { amount: number; minOrder: number }, subtotal: number, total: number): number {
+    if (subtotal < coupon.minOrder) return 0;
+    return Math.max(0, Math.min(coupon.amount, total - MIN_PAYABLE));
 }

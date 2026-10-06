@@ -22,13 +22,19 @@ export function customerMessage(event: NotifyEvent, p: P): Message | null {
         case 'order_shipped':
             return { subject: `[참오트케어] 상품이 출발했어요 (${p.orderNo})`, text: `상품이 발송됐어요.\n\n택배사: ${p.carrier}\n운송장 번호: ${p.trackingNo}\n\n주문 내역: ${order}` };
         case 'subscription_started':
-            return { subject: '[참오트케어] 정기구독이 시작됐어요', text: `${p.cycleDays}일마다 자동 결제·배송돼요. 첫 회차 결제 금액은 ${won(p.amount)}이에요.\n\n구독 관리(주기 변경·건너뛰기·해지): ${sub}` };
+            return { subject: '[참오트케어] 정기구독이 시작됐어요', text: `${p.cycleDays}일마다 자동 결제·배송돼요. 첫 회차 결제 금액은 ${won(p.amount)}이에요.
+※ 정기구독은 최소 2회 이용(결제) 후 해지할 수 있어요.\n\n구독 관리(주기 변경·건너뛰기·해지): ${sub}` };
         case 'subscription_charged':
             return { subject: `[참오트케어] 정기구독 결제가 완료됐어요 (${p.orderNo})`, text: `정기구독 ${won(p.amount)}이 결제됐어요.\n\n주문 내역: ${order}\n구독 관리: ${sub}` };
         case 'subscription_charge_failed':
             return { subject: '[참오트케어] 정기구독 결제에 실패했어요', text: `카드 결제에 실패했어요. (${p.reason})\n${p.retryInDays}일 뒤에 다시 시도하며, 지금 카드를 확인하거나 바로 결제할 수 있어요.\n\n구독 관리: ${sub}` };
         case 'subscription_paused':
             return { subject: '[참오트케어] 정기구독이 일시정지됐어요', text: `결제가 반복해서 실패해 정기구독이 멈췄어요. 카드를 확인한 뒤 구독 관리에서 다시 결제해 주세요.\n\n${sub}` };
+        case 'subscription_cancel_requested':
+            return { subject: '[참오트케어] 정기구독 해지가 예약됐어요', text: `정기구독은 최소 2회 이용 후 해지할 수 있어요. 2회차 결제(${p.nextDate ?? '다음 결제일'})까지 진행된 뒤 자동으로 해지돼요.
+마음이 바뀌면 해지 예약을 취소할 수 있어요.
+
+구독 관리: ${sub}` };
         case 'subscription_canceled':
             return { subject: '[참오트케어] 정기구독이 해지됐어요', text: `정기구독이 해지되어 이후 결제와 배송이 중단돼요. 언제든 다시 시작할 수 있어요.\n\n${SITE()}` };
         case 'billing_upcoming':
@@ -55,6 +61,8 @@ export function adminMessage(event: NotifyEvent, p: P): string {
             return `⚠️ 정기결제 실패 (${p.failCount}회) · ${p.reason}`;
         case 'subscription_paused':
             return `⛔ 정기구독 정지 · ${p.reason}`;
+        case 'subscription_cancel_requested':
+            return `📝 정기구독 해지 예약 (최소 이용기간 중) · 다음 결제 ${p.nextDate ?? ''}`;
         case 'subscription_canceled':
             return `🛑 정기구독 해지 · ${p.reason ?? ''}`;
         case 'billing_upcoming':

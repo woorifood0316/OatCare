@@ -1,6 +1,6 @@
 import { searchSubscriptions } from '../../../lib/admin-data';
 import { SUB_STATUS_LABEL } from '../../../lib/subscription-types';
-import { priceCart } from '../../../lib/catalog';
+import { MIN_SUBSCRIPTION_CHARGES, priceCart } from '../../../lib/catalog';
 import { AdminSubActions } from '../../../components/admin/AdminActions';
 import { dt, won } from '../../../components/admin/format';
 
@@ -62,6 +62,13 @@ export default async function AdminSubscriptions({ searchParams }: { searchParam
                                     <dd>
                                         {s.nextBillingDate}
                                         {s.skipNext ? ' (건너뛰기 예정)' : ''}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>결제 횟수</dt>
+                                    <dd>
+                                        {s.paidCount}회 (최소 {MIN_SUBSCRIPTION_CHARGES}회)
+                                        {s.cancelRequestedAt && s.status !== 'canceled' ? ' · 해지 예약됨' : ''}
                                     </dd>
                                 </div>
                                 <div>

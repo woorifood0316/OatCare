@@ -4894,3 +4894,22 @@ body {
   .adm-cols { grid-template-columns: 1fr 1fr; }
   .adm-dl--inline { grid-template-columns: repeat(2, 1fr); column-gap: 2rem; }
 }
+
+/* Coupons, gift, minimum period */
+.cpn-list { margin: 0 0 0.6rem; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+.cpn { display: flex; align-items: center; gap: 0.9rem; padding: 0.9rem 1rem; background: #fffdf8; border: 1px dashed var(--oc-gold); border-radius: 1rem; }
+.cpn.is-done { opacity: 0.55; border-color: var(--oc-line); }
+.cpn__amount { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 5.2rem; padding-right: 0.9rem; border-right: 1px dashed var(--oc-line); }
+.cpn__amount strong { color: var(--oc-maroon); font-size: 1.15rem; font-weight: 800; }
+.cpn__amount span { color: rgba(59, 42, 32, 0.6); font-size: 0.72rem; }
+.cpn__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.82rem; }
+.cpn__body span { color: rgba(59, 42, 32, 0.62); }
+.cpn__cta { flex: none; padding: 0.45rem 0.8rem; border-radius: 0.6rem; background: var(--oc-gold); color: var(--oc-brown); font-size: 0.8rem; font-weight: 800; text-decoration: none; }
+.co-item--gift { background: #fff6dc; margin: 0.3rem -0.5rem; padding: 0.7rem 0.5rem; border-radius: 0.7rem; border-bottom: 0; }
+.co-item__gift-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 3.4rem; height: 3.4rem; font-size: 1.7rem; }
+.co-addr__item.is-disabled { opacity: 0.5; cursor: not-allowed; }
+.sub-min { margin: 0.2rem 0 0.6rem; padding: 0.6rem 0.8rem; border-radius: 0.7rem; background: #fdf0d2; color: #6b4a00; font-size: 0.8rem; line-height: 1.55; }
+.sub-scheduled { margin: 0.2rem 0 0.6rem; padding: 0.6rem 0.8rem; border-radius: 0.7rem; background: #fdecea; color: #8a1f17; font-size: 0.82rem; line-height: 1.6; font-weight: 700; }
+.oc-auth__perk { margin: 0 0 1rem; padding: 0.65rem 0.8rem; border-radius: 0.8rem; background: #fff6dc; color: var(--oc-brown); font-size: 0.88rem; }
+.oc-drawer__min-note { margin: 0.6rem 0 0; padding: 0.55rem 0.7rem; border-radius: 0.6rem; background: #fdf0d2; color: #6b4a00; font-size: 0.78rem; line-height: 1.55; }
+@media (min-width: 900px) { .my-grid { grid-template-columns: repeat(2, 1fr); } }

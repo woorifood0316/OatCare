@@ -23,6 +23,10 @@ export interface Subscription {
     nextBillingDate: string;
     skipNext: boolean;
     failCount: number;
+    /** Number of successful charges so far. */
+    paidCount: number;
+    /** Set when the customer asked to cancel before the minimum period ended. */
+    cancelRequestedAt: string | null;
     paymentMethodId: string | null;
     shipName: string | null;
     shipPhone: string | null;

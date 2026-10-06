@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck } from 'lucide-react';
+import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck, Ticket } from 'lucide-react';
 import { LogoutButton } from '../LogoutButton';
 
 const NAV = [
@@ -53,6 +53,10 @@ export function MyShell({
                             <span>{label}</span>
                         </Link>
                     ))}
+                    <Link href="/mypage/coupons" className={`my-side__link${pathname.startsWith('/mypage/coupons') ? ' is-active' : ''}`}>
+                        <Ticket size={18} />
+                        <span>쿠폰</span>
+                    </Link>
                     {isAdmin ? (
                         <Link href="/admin" className="my-side__link">
                             <ShieldCheck size={18} />

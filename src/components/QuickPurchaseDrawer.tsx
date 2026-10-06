@@ -254,7 +254,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                             className={purchaseMode === 'subscribe' ? 'is-active' : ''}
                                             onClick={() => setPurchaseMode('subscribe')}
                                         >
-                                            🔁 정기구독 ({Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인)
+                                            🔁 정기구독 ({Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인 · 첫 회 쉐이커 보틀 증정)
                                         </button>
                                     </div>
                                     {purchaseMode === 'subscribe' ? (
@@ -271,6 +271,11 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 ))}
                                             </select>
                                         </label>
+                                    ) : null}
+                                    {purchaseMode === 'subscribe' ? (
+                                        <p className="oc-drawer__min-note">
+                                            ※ 정기구독은 <b>최소 2회 이용(결제)</b> 후 해지할 수 있어요. 결제일 기준으로 결제·발송돼요.
+                                        </p>
                                     ) : null}
                                 </div>
                             ) : null}

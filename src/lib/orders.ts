@@ -13,6 +13,8 @@ export interface Order {
     subtotal: number;
     shippingFee: number;
     amount: number;
+    discountAmount: number;
+    couponId: string | null;
     shipName: string | null;
     shipPhone: string | null;
     shipZip: string | null;
@@ -46,6 +48,8 @@ export function mapOrder(r: Record<string, unknown>): Order {
         subtotal: r.subtotal as number,
         shippingFee: r.shipping_fee as number,
         amount: r.amount as number,
+        discountAmount: (r.discount_amount as number) ?? 0,
+        couponId: (r.coupon_id as string | null) ?? null,
         shipName: (r.ship_name as string | null) ?? null,
         shipPhone: (r.ship_phone as string | null) ?? null,
         shipZip: (r.ship_zip as string | null) ?? null,

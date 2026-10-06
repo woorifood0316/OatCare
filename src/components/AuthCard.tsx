@@ -98,6 +98,10 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         : '가입할 때 사용한 소셜 계정으로 로그인해 주세요.'}
                 </p>
 
+                {isSignup ? (
+                    <p className="oc-auth__perk">🎟️ 가입하면 <b>5,000원 쿠폰</b>을 바로 드려요 (60일 이내 사용)</p>
+                ) : null}
+
                 {message && (
                     <p className={`oc-auth__msg oc-auth__msg--${message.tone}`} role="alert">
                         {message.text}

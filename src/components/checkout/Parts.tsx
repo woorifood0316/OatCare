@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { AddressForm } from '../address/AddressForm';
 import { getAssetUrl } from '../../utils/assets';
-import { getItem, FLAVORS, type PricedCart } from '../../lib/catalog';
+import { getItem, FLAVORS, GIFT_SHAKER_NAME, couponDiscount, type PricedCart } from '../../lib/catalog';
+import type { Coupon } from '../../lib/coupons';
 import type { Address, AddressInput } from '../../lib/validate';
 
 export const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -25,7 +26,17 @@ export function CheckoutShell({ title, children }: { title: string; children: Re
     );
 }
 
-export function OrderSummary({ priced, mode }: { priced: PricedCart; mode: 'once' | 'subscribe' }) {
+export function OrderSummary({
+    priced,
+    mode,
+    discount = 0,
+    gift = false,
+}: {
+    priced: PricedCart;
+    mode: 'once' | 'subscribe';
+    discount?: number;
+    gift?: boolean;
+}) {
     return (
         <section className="cart-section">
             <h2 className="co-h2">주문 상품</h2>
@@ -52,6 +63,18 @@ export function OrderSummary({ priced, mode }: { priced: PricedCart; mode: 'once
                         </li>
                     );
                 })}
+                {gift ? (
+                    <li className="co-item co-item--gift">
+                        <div className="co-item__gift-icon" aria-hidden>
+                            🎁
+                        </div>
+                        <div>
+                            <strong>{GIFT_SHAKER_NAME}</strong>
+                            <span>첫 회 주문에 함께 보내드려요</span>
+                        </div>
+                        <b>0원</b>
+                    </li>
+                ) : null}
             </ul>
             <div className="cart-summary">
                 <div className="cart-summary__row cart-summary__row--plain">
@@ -62,11 +85,80 @@ export function OrderSummary({ priced, mode }: { priced: PricedCart; mode: 'once
                     <span>배송비</span>
                     <span>{priced.shipping === 0 ? '무료' : won(priced.shipping)}</span>
                 </div>
+                {discount > 0 ? (
+                    <div className="cart-summary__row cart-summary__row--sub">
+                        <span>쿠폰 할인</span>
+                        <span>-{won(discount)}</span>
+                    </div>
+                ) : null}
                 <div className="cart-summary__row">
                     <span>{mode === 'subscribe' ? '첫 결제 금액' : '총 결제 금액'}</span>
-                    <strong>{won(priced.total)}</strong>
+                    <strong>{won(priced.total - discount)}</strong>
                 </div>
             </div>
+        </section>
+    );
+}
+
+/** Choose one of the customer's usable coupons (or none). */
+export function CouponPicker({
+    coupons,
+    selectedId,
+    onSelect,
+    subtotal,
+    total,
+    note,
+}: {
+    coupons: Coupon[];
+    selectedId: string | null;
+    onSelect: (id: string | null) => void;
+    subtotal: number;
+    total: number;
+    note?: string;
+}) {
+    const usable = coupons.filter((c) => c.available);
+    if (usable.length === 0) return null;
+    const exp = (iso: string) => {
+        const d = new Date(iso);
+        return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}까지`;
+    };
+    return (
+        <section className="cart-section">
+            <h2 className="co-h2">쿠폰</h2>
+            <ul className="co-addr">
+                <li>
+                    <label className={`co-addr__item${selectedId === null ? ' is-active' : ''}`}>
+                        <input type="radio" name="coupon" checked={selectedId === null} onChange={() => onSelect(null)} />
+                        <div>
+                            <strong>쿠폰 사용 안 함</strong>
+                        </div>
+                    </label>
+                </li>
+                {usable.map((c) => {
+                    const ok = couponDiscount(c, subtotal, total) > 0;
+                    return (
+                        <li key={c.id}>
+                            <label className={`co-addr__item${selectedId === c.id ? ' is-active' : ''}${ok ? '' : ' is-disabled'}`}>
+                                <input type="radio" name="coupon" disabled={!ok} checked={selectedId === c.id} onChange={() => onSelect(c.id)} />
+                                <div>
+                                    <strong>
+                                        {c.name} · {won(c.amount)} 할인
+                                    </strong>
+                                    <span>
+                                        {exp(c.expiresAt)} · {won(c.minOrder)} 이상 주문 시 사용
+                                        {ok ? '' : ' (현재 주문은 사용할 수 없어요)'}
+                                    </span>
+                                </div>
+                            </label>
+                        </li>
+                    );
+                })}
+            </ul>
+            {note ? (
+                <p className="cart-note" style={{ textAlign: 'left' }}>
+                    {note}
+                </p>
+            ) : null}
         </section>
     );
 }

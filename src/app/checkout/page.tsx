@@ -8,6 +8,7 @@ import { getOrCreateCustomerKey } from '../../lib/orders';
 import { CheckoutOnce } from '../../components/checkout/CheckoutOnce';
 import { CheckoutSubscribe } from '../../components/checkout/CheckoutSubscribe';
 import { listPaymentMethods } from '../../lib/payment-methods';
+import { listCoupons } from '../../lib/coupons';
 
 export const runtime = 'edge';
 
@@ -40,14 +41,18 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
     const addresses = await listAddresses(user.id);
     const customerKey = await getOrCreateCustomerKey(user.id);
+    const coupons = (await listCoupons(user.id)).filter((c) => c.available);
 
     if (mode === 'subscribe') {
         const methods = await listPaymentMethods(user.id);
+        const gifted = await sql`select shaker_gifted_at from users where id = ${user.id}`;
         return (
             <CheckoutSubscribe
                 priced={priced}
                 addresses={addresses}
                 methods={methods}
+                coupons={coupons}
+                giftEligible={!gifted[0]?.shaker_gifted_at}
                 customerKey={customerKey}
                 user={{ name: user.name, email: user.email }}
             />
@@ -58,6 +63,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         <CheckoutOnce
             priced={priced}
             addresses={addresses}
+            coupons={coupons}
             customerKey={customerKey}
             user={{ name: user.name, email: user.email }}
         />

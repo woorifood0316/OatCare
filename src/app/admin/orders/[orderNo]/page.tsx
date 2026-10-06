@@ -48,7 +48,8 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
                                                 .join(' · ')}
                                         </span>
                                     ) : null}
-                                    {it.cycleDays ? <span>{it.cycleDays}일 주기 정기배송</span> : null}
+                                    {it.cycleDays && !it.gift ? <span>{it.cycleDays}일 주기 정기배송</span> : null}
+                                    {it.gift ? <span>🎁 사은품 (함께 포장해 주세요)</span> : null}
                                 </div>
                                 <b>{won(it.amount)}</b>
                             </li>
@@ -63,6 +64,12 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
                             <dt>배송비</dt>
                             <dd>{order.shippingFee === 0 ? '무료' : won(order.shippingFee)}</dd>
                         </div>
+                        {order.discountAmount > 0 ? (
+                            <div>
+                                <dt>쿠폰 할인</dt>
+                                <dd>-{won(order.discountAmount)}</dd>
+                            </div>
+                        ) : null}
                         <div>
                             <dt>결제 금액</dt>
                             <dd>

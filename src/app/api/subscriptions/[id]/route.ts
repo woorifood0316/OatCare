@@ -1,8 +1,8 @@
 import { getSql } from '../../../../lib/db';
 import { addDays, isUuid, jsonError, sameOrigin, sessionUserId, todayKst } from '../../../../lib/api';
-import { CYCLE_OPTIONS, MAX_QTY_SUBSCRIBE } from '../../../../lib/catalog';
+import { CYCLE_OPTIONS, MAX_QTY_SUBSCRIBE, MIN_SUBSCRIPTION_CHARGES } from '../../../../lib/catalog';
 import { getAddress } from '../../../../lib/addresses';
-import { chargeSubscription, getSubscription, listSubscriptions, markCharged } from '../../../../lib/subscriptions';
+import { chargeSubscription, getSubscription, inMinimumPeriod, listSubscriptions, markCharged } from '../../../../lib/subscriptions';
 import { enqueue } from '../../../../lib/notify';
 
 export const runtime = 'edge';
@@ -28,11 +28,14 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
     const sql = getSql();
     const tomorrow = todayKst(1);
+    const inMin = inMinimumPeriod(sub);
+    const minMsg = `최소 이용기간(${MIN_SUBSCRIPTION_CHARGES}회 결제) 중에는 할 수 없어요. 지금까지 ${sub.paidCount}회 결제됐어요.`;
     const done = async (extra: Record<string, unknown> = {}) =>
         Response.json({ subscriptions: await listSubscriptions(userId), ...extra });
 
     switch (body.action) {
         case 'pause': {
+            if (inMin) return jsonError(`일시정지는 ${minMsg}`, 409);
             if (sub.status !== 'active') return jsonError('이용 중인 구독만 일시정지할 수 있어요', 409);
             await sql`update subscriptions set status = 'paused', updated_at = now() where id = ${id}`;
             await enqueue('subscription_paused', { subscriptionId: id, reason: '고객 요청' }, { userId, customer: false });
@@ -45,12 +48,26 @@ export async function PATCH(request: Request, ctx: Ctx) {
             return done();
         }
         case 'cancel': {
+            if (inMin) {
+                // Minimum period: the cancellation is booked and takes effect once the minimum has been paid.
+                if (!sub.cancelRequestedAt) {
+                    await sql`update subscriptions set cancel_requested_at = now(), cancel_reason = '고객 해지 예약 (최소 이용기간)', updated_at = now() where id = ${id}`;
+                    await enqueue('subscription_cancel_requested', { subscriptionId: id, nextDate: sub.nextBillingDate }, { userId });
+                }
+                return done({ scheduled: true });
+            }
             const reason = typeof body.reason === 'string' ? body.reason.slice(0, 200) : '고객 해지';
             await sql`update subscriptions set status = 'canceled', canceled_at = now(), cancel_reason = ${reason}, updated_at = now() where id = ${id}`;
             await enqueue('subscription_canceled', { subscriptionId: id, reason }, { userId });
             return done();
         }
+        case 'cancel_undo': {
+            if (!sub.cancelRequestedAt) return jsonError('예약된 해지가 없어요', 409);
+            await sql`update subscriptions set cancel_requested_at = null, cancel_reason = null, updated_at = now() where id = ${id}`;
+            return done();
+        }
         case 'skip': {
+            if (body.value !== false && inMin) return jsonError(`건너뛰기는 ${minMsg}`, 409);
             if (sub.status !== 'active') return jsonError('이용 중인 구독만 건너뛸 수 있어요', 409);
             await sql`update subscriptions set skip_next = ${body.value !== false}, updated_at = now() where id = ${id}`;
             return done();

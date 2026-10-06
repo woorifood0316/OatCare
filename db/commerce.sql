@@ -127,3 +127,25 @@ create index if not exists notifications_status_idx on notifications(status, cre
 alter table subscriptions add column if not exists processing_at timestamptz;
 
 alter table subscriptions add column if not exists reminded_for date;
+
+-- ---- Coupons, first-order gift, minimum subscription period ----
+create table if not exists coupons (
+    id         uuid primary key default gen_random_uuid(),
+    user_id    uuid not null references users(id) on delete cascade,
+    source     text not null default 'welcome',
+    name       text not null,
+    amount     int not null,
+    min_order  int not null default 0,
+    expires_at timestamptz not null,
+    used_at    timestamptz,
+    order_id   uuid,
+    created_at timestamptz not null default now()
+);
+create index if not exists coupons_user_idx on coupons(user_id);
+create unique index if not exists coupons_one_welcome_per_user on coupons(user_id) where source = 'welcome';
+
+alter table orders add column if not exists discount_amount int not null default 0;
+alter table orders add column if not exists coupon_id uuid references coupons(id) on delete set null;
+alter table users add column if not exists shaker_gifted_at timestamptz;
+alter table subscriptions add column if not exists paid_count int not null default 0;
+alter table subscriptions add column if not exists cancel_requested_at timestamptz;

@@ -36,6 +36,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
             break;
         }
         case 'cancel': {
+            // The operator can end a subscription at once (e.g. for a refund), regardless of the minimum period.
             const reason = typeof body.reason === 'string' && body.reason.trim() ? body.reason.trim().slice(0, 200) : '관리자 해지';
             await sql`update subscriptions set status = 'canceled', canceled_at = now(), cancel_reason = ${reason}, updated_at = now() where id = ${id}`;
             await enqueue('subscription_canceled', { subscriptionId: id, reason }, { userId: sub.userId });

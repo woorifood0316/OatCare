@@ -4,6 +4,7 @@ import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
 import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
+import { issueWelcomeCoupon } from './lib/coupons';
 
 export const CONSENT_COOKIE = 'oc_consent';
 export const MARKETING_COOKIE = 'oc_mkt';
@@ -77,6 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 insert into accounts (user_id, provider, provider_account_id)
                 values (${userId}, ${provider}, ${providerAccountId})
             `;
+            await issueWelcomeCoupon(userId);
             user.id = userId;
             return true;
         },

@@ -2,6 +2,7 @@ import { getSql } from './db';
 import { cancelPayment, confirmPayment, paymentLabel } from './toss';
 import { clearCartMode, getOrderByNo, type Order } from './orders';
 import { enqueue } from './notify';
+import { markCouponUsed, restoreCouponForOrder } from './coupons';
 
 type Result = { ok: true; order: Order } | { ok: false; message: string; order?: Order | null };
 
@@ -41,6 +42,7 @@ export async function finalizeWidgetPayment(
         returning id
     `;
     if (updated.length > 0) {
+        await markCouponUsed(order.id);
         await clearCartMode(userId, 'once');
         await enqueue('order_paid', { orderNo: order.orderNo, amount: order.amount, items: order.items }, { userId });
     }
@@ -69,10 +71,31 @@ export async function cancelPaidOrder(order: Order, reason: string): Promise<Res
     // Toss answers ALREADY_CANCELED_PAYMENT if we retry after a partial failure: treat as done.
     if (!res.ok && res.code !== 'ALREADY_CANCELED_PAYMENT') return { ok: false, message: res.message, order };
 
-    await getSql()`
+    const sql = getSql();
+    const changed = await sql`
         update orders set status = 'canceled', canceled_at = now(), cancel_reason = ${reason.slice(0, 200)}, updated_at = now()
-        where id = ${order.id} and status <> 'canceled'
+        where id = ${order.id} and status <> 'canceled' returning id
     `;
+    if (changed.length > 0) {
+        // The coupon goes back to the customer, and a refunded gift means the bottle was never sent.
+        await restoreCouponForOrder(order.id);
+        if (order.userId && order.items.some((i) => i.gift)) {
+            await sql`update users set shaker_gifted_at = null where id = ${order.userId}`;
+        }
+        // A refunded subscription charge no longer counts toward the minimum period; with no paid cycle left
+        // the subscription itself ends.
+        if (order.kind === 'subscription' && order.subscriptionId) {
+            await sql`
+                update subscriptions set
+                    paid_count = greatest(paid_count - 1, 0),
+                    status = case when paid_count - 1 <= 0 then 'canceled' else status end,
+                    canceled_at = case when paid_count - 1 <= 0 then now() else canceled_at end,
+                    cancel_reason = case when paid_count - 1 <= 0 then '첫 회차 주문 취소' else cancel_reason end,
+                    updated_at = now()
+                where id = ${order.subscriptionId} and status <> 'canceled'
+            `;
+        }
+    }
     await enqueue('order_canceled', { orderNo: order.orderNo, amount: order.amount, reason }, { userId: order.userId });
     const fresh = await getOrderByNo(order.orderNo);
     return { ok: true, order: fresh ?? order };

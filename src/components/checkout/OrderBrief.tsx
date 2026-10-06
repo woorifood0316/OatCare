@@ -28,6 +28,12 @@ export function OrderBrief({ order }: { order: Order }) {
                     <dt>결제 일시</dt>
                     <dd>{dt(order.paidAt)}</dd>
                 </div>
+                {order.discountAmount > 0 ? (
+                    <div>
+                        <dt>쿠폰 할인</dt>
+                        <dd>-{won(order.discountAmount)}</dd>
+                    </div>
+                ) : null}
                 <div>
                     <dt>결제 금액</dt>
                     <dd>{won(order.amount)}</dd>

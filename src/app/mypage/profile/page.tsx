@@ -88,6 +88,11 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                         배송이 끝나지 않은 주문이 있어 지금은 탈퇴할 수 없어요. 배송 완료 후 다시 시도하거나 고객센터(031-998-7234)로 문의해 주세요.
                     </p>
                 ) : null}
+                {withdraw === 'min_period' ? (
+                    <p className="my-error">
+                        최소 이용기간(2회 결제)이 끝나지 않은 정기구독이 있어 탈퇴할 수 없어요. 구독 해지를 예약하면 2회차 결제 후 자동으로 해지되고, 그 뒤에 탈퇴할 수 있어요.
+                    </p>
+                ) : null}
                 <WithdrawButton />
             </section>
         </>
