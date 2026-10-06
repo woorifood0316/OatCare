@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useCart } from './cart/CartProvider';
-import { findSkuByName } from '../lib/catalog';
+import { findSkuByName, getItem } from '../lib/catalog';
+import { PurchaseChooser } from './purchase/PurchaseChooser';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 import { ProductDetailItem } from './ProductDetailModal';
@@ -951,25 +952,39 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                                 </span>
                             </div>
 
-                            <div className="oc-bundle-btn-group">
-                                <button
-                                    className="oc-cta-outline oc-bundle-detail-btn"
-                                    onClick={() => onSelectProduct?.(b)}
-                                >
-                                    <span>상세보기</span>
-                                </button>
-
-                                <button
-                                    className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
-                                    onClick={() => {
-                                        const sku = findSkuByName(b.flavor);
-                                        if (sku) addLine({ sku, qty: 1, mode: 'once', mix: 'all' });
-                                    }}
-                                >
-                                    <ShoppingBag size={16} />
-                                    <span>세트로 담기</span>
-                                </button>
-                            </div>
+                            {(() => {
+                                const sku = findSkuByName(b.flavor);
+                                const subscribable = Boolean(sku && getItem(sku)?.subscribable);
+                                return subscribable && sku ? (
+                                    <>
+                                        <PurchaseChooser sku={sku} />
+                                        <button
+                                            className="oc-cta-outline oc-bundle-detail-btn oc-bundle-detail-btn--full"
+                                            onClick={() => onSelectProduct?.(b)}
+                                        >
+                                            <span>상세보기</span>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="oc-bundle-btn-group">
+                                            <button className="oc-cta-outline oc-bundle-detail-btn" onClick={() => onSelectProduct?.(b)}>
+                                                <span>상세보기</span>
+                                            </button>
+                                            <button
+                                                className={`oc-cta-fill ${b.highlight ? 'oc-cta-fill--gold' : ''}`}
+                                                onClick={() => {
+                                                    if (sku) addLine({ sku, qty: 1, mode: 'once', mix: 'all' });
+                                                }}
+                                            >
+                                                <ShoppingBag size={16} />
+                                                <span>세트로 담기</span>
+                                            </button>
+                                        </div>
+                                        <p className="oc-bundle-card__subnote">정기구독은 20·30개입 세트에서 가능해요</p>
+                                    </>
+                                );
+                            })()}
                         </div>
                     </ScrollReveal>
                 ))}

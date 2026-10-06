@@ -6,7 +6,8 @@ import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useRouter } from 'next/navigation';
 import { useCart } from './cart/CartProvider';
-import { findSkuByName } from '../lib/catalog';
+import { findSkuByName, getItem } from '../lib/catalog';
+import { PurchaseChooser } from './purchase/PurchaseChooser';
 
 export interface ProductDetailItem {
     flavor: string;
@@ -50,6 +51,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
     if (!product) return null;
 
     const totalPrice = product.price * quantity;
+    const detailSku = findSkuByName(product.flavor);
+    const subscribable = Boolean(detailSku && getItem(detailSku)?.subscribable);
 
     const addToCart = (): boolean => {
         const sku = findSkuByName(product.flavor);
@@ -222,7 +225,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
                         {/* Quantity Selector */}
                         <div className="oc-modal-qty-row">
-                            <span className="label">구매 수량 선택</span>
+                            <span className="label">{subscribable ? '한 번만 구매할 때 수량' : '구매 수량 선택'}</span>
                             <div className="qty-picker">
                                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
                                 <span>{quantity}</span>
@@ -230,7 +233,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                             </div>
                         </div>
 
+                        {subscribable && detailSku ? (
+                            <div className="oc-modal-chooser">
+                                <PurchaseChooser sku={detailSku} qty={quantity} onAdded={() => { setAddedToast(true); setTimeout(() => setAddedToast(false), 2500); }} />
+                            </div>
+                        ) : null}
+
                         {/* Total Price & Action Buttons */}
+                        {subscribable ? null : (
                         <div className="oc-modal-action-bar">
                             <div className="total-wrap">
                                 <span className="total-lbl">총 결제 금액</span>
@@ -247,6 +257,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                 </button>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             </div>

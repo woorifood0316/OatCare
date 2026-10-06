@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import {
     CYCLE_OPTIONS,
     CartLine,
+    MAX_QTY_SUBSCRIBE,
     MixOption,
     getItem,
     lineKey,
@@ -27,6 +28,8 @@ interface CartContextValue {
     setCycle: (key: string, cycleDays: number) => void;
     setMix: (key: string, mix: MixOption, detail?: Record<string, number>) => void;
     removeLine: (key: string) => void;
+    /** Turn a one-time 20/30-pack line into a subscription line. */
+    convertToSubscription: (key: string) => void;
     clearMode: (mode: CartLine['mode']) => void;
     /** Push the cart to the server right now (call before leaving for checkout). */
     flush: () => Promise<void>;
@@ -192,6 +195,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
     }, []);
 
+    const convertToSubscription = useCallback((key: string) => {
+        setLines((prev) => {
+            const target = prev.find((l) => lineKey(l) === key);
+            const item = target ? getItem(target.sku) : undefined;
+            if (!target || target.mode !== 'once' || !item?.subscribable) return prev;
+            return addTo(
+                prev.filter((l) => lineKey(l) !== key),
+                { ...target, mode: 'subscribe', qty: Math.min(target.qty, MAX_QTY_SUBSCRIBE), cycleDays: item.count },
+            );
+        });
+    }, []);
+
     const removeLine = useCallback((key: string) => {
         setLines((prev) => prev.filter((l) => lineKey(l) !== key));
     }, []);
@@ -224,10 +239,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             setCycle,
             setMix,
             removeLine,
+            convertToSubscription,
             clearMode,
             flush,
         }),
-        [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, clearMode, flush],
+        [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, convertToSubscription, clearMode, flush],
     );
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

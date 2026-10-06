@@ -11,8 +11,10 @@ import {
     CartLine,
     FLAVORS,
     MIX_UNIT,
+    MIN_SUBSCRIPTION_CHARGES,
     SUBSCRIPTION_DISCOUNT_RATE,
     evenMix,
+    subscriptionUnitPrice,
     getItem,
     lineKey,
     maxQty,
@@ -87,7 +89,7 @@ function MixEditor({ line }: { line: CartLine }) {
 }
 
 function LineRow({ line }: { line: CartLine }) {
-    const { setQty, setCycle, removeLine } = useCart();
+    const { setQty, setCycle, removeLine, convertToSubscription } = useCart();
     const item = getItem(line.sku);
     if (!item) return null;
     const key = lineKey(line);
@@ -106,6 +108,20 @@ function LineRow({ line }: { line: CartLine }) {
                 </div>
 
                 {item.kind === 'bundle' ? <span className="cart-line__meta">무료 배송</span> : null}
+
+                {!isSub && item.subscribable ? (
+                    <div className="cart-upsell">
+                        <div>
+                            <b>정기구독으로 바꾸면 더 경제적이에요</b>
+                            <span>
+                                매회 {won((item.price - subscriptionUnitPrice(item)) * 1)} 절약 · 첫 회 쉐이커 보틀 증정 · 최소 {MIN_SUBSCRIPTION_CHARGES}회 이용
+                            </span>
+                        </div>
+                        <button type="button" onClick={() => convertToSubscription(key)}>
+                            정기구독으로 바꾸기
+                        </button>
+                    </div>
+                ) : null}
 
                 <MixEditor line={line} />
 
