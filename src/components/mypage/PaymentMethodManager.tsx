@@ -1,5 +1,6 @@
 'use client';
 
+import { useConfirm } from '../ui/ConfirmDialog';
 import React, { useState } from 'react';
 import { CreditCard, Trash2 } from 'lucide-react';
 import { CardRegistrar } from '../billing/CardRegistrar';
@@ -10,6 +11,7 @@ export function cardText(m: Pick<PaymentMethod, 'cardCompany' | 'cardNumber'>) {
 }
 
 export function PaymentMethodManager({ initial }: { initial: PaymentMethod[] }) {
+    const { confirm, dialog } = useConfirm();
     const [list, setList] = useState(initial);
     const [notice, setNotice] = useState('');
 
@@ -27,6 +29,7 @@ export function PaymentMethodManager({ initial }: { initial: PaymentMethod[] }) 
 
     return (
         <section className="my-card">
+            {dialog}
             <div className="my-card__head">
                 <h2 className="my-card__title">결제수단 (정기결제 카드)</h2>
                 <CardRegistrar next="/mypage/payment" />
@@ -55,8 +58,8 @@ export function PaymentMethodManager({ initial }: { initial: PaymentMethod[] }) 
                                 ) : null}
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        if (window.confirm('이 카드를 삭제할까요?')) call('DELETE', m.id);
+                                    onClick={async () => {
+                                        if (await confirm({ title: '이 카드를 삭제할까요?', body: '등록된 카드 정보가 지워져요. 정기구독에 쓰는 카드라면 다른 카드를 먼저 등록해 주세요.', icon: '💳', confirmLabel: '삭제', danger: true })) call('DELETE', m.id);
                                     }}
                                 >
                                     <Trash2 size={14} /> 삭제

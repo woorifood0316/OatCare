@@ -5109,3 +5109,21 @@ body {
 .oc-auth__modal-actions .is-primary { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
 
 .oc-drawer-item__more { display: inline-block; margin-top: .25rem; font-size: .75rem; color: var(--oc-maroon); font-weight: 700; text-decoration: none; }
+
+/* friendly notice dialog (replaces window.alert) */
+.oc-notice { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: 1.2rem; background: rgba(40, 24, 16, .45); backdrop-filter: blur(2px); animation: ocNoticeFade .18s ease-out; }
+.oc-notice__card { width: 100%; max-width: 320px; background: #fffdf8; border-radius: 22px; padding: 1.7rem 1.4rem 1.3rem; text-align: center; display: grid; gap: .55rem; box-shadow: 0 20px 50px rgba(59, 42, 32, .3); animation: ocNoticePop .28s cubic-bezier(.16, 1, .3, 1); }
+.oc-notice__icon { width: 64px; height: 64px; margin: 0 auto .2rem; border-radius: 50%; background: var(--oc-cream-2); display: grid; place-items: center; font-size: 1.9rem; }
+.oc-notice__card strong { font-size: 1.12rem; color: var(--oc-brown); }
+.oc-notice__card p { color: #6a5848; font-size: .92rem; line-height: 1.55; word-break: keep-all; }
+.oc-notice__card button { margin-top: .6rem; height: 48px; border: 0; border-radius: 14px; background: var(--oc-maroon); color: #fff7e8; font-weight: 800; font-size: 1rem; cursor: pointer; }
+.oc-notice__card button:hover { background: var(--oc-maroon-dark); }
+@keyframes ocNoticeFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ocNoticePop { from { opacity: 0; transform: translateY(12px) scale(.94); } to { opacity: 1; transform: none; } }
+
+.oc-notice__actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .5rem; margin-top: .6rem; }
+.oc-notice__actions button { margin-top: 0; }
+.oc-notice__card .is-ghost { background: #fff; color: var(--oc-brown); border: 1.5px solid var(--oc-line); }
+.oc-notice__card .is-ghost:hover { background: var(--oc-cream); }
+.oc-notice__card .is-danger { background: #c0392b; }
+.oc-notice__card .is-danger:hover { background: #a93226; }

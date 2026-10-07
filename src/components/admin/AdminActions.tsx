@@ -1,5 +1,6 @@
 'use client';
 
+import { useConfirm } from '../ui/ConfirmDialog';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CARRIERS, NEXT_STATUSES, type OrderStatus } from '../../lib/order-status';
@@ -106,6 +107,7 @@ export function AdminOrderActions({
 }
 
 export function AdminSubActions({ id, status, failCount, nextDate }: { id: string; status: string; failCount: number; nextDate: string }) {
+    const { confirm, dialog } = useConfirm();
     const router = useRouter();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -113,7 +115,7 @@ export function AdminSubActions({ id, status, failCount, nextDate }: { id: strin
 
     const run = async (body: Record<string, unknown>, confirmText?: string) => {
         if (busy) return;
-        if (confirmText && !window.confirm(confirmText)) return;
+        if (confirmText && !(await confirm({ title: '확인해 주세요', body: confirmText, icon: '⚠️', confirmLabel: '실행', danger: true }))) return;
         setBusy(true);
         setError('');
         const err = await patch(`/api/admin/subscriptions/${id}`, body);
@@ -125,6 +127,7 @@ export function AdminSubActions({ id, status, failCount, nextDate }: { id: strin
     if (status === 'canceled') return <span className="adm-muted">해지됨</span>;
     return (
         <div className="adm-actions">
+            {dialog}
             <div className="adm-row">
                 {status === 'active' ? (
                     <button type="button" className="adm-btn" disabled={busy} onClick={() => run({ action: 'pause' })}>
@@ -166,13 +169,14 @@ export function AdminSubActions({ id, status, failCount, nextDate }: { id: strin
 }
 
 export function AdminCronButtons() {
+    const { confirm, dialog } = useConfirm();
     const router = useRouter();
     const [busy, setBusy] = useState('');
     const [result, setResult] = useState('');
 
     const run = async (job: 'billing' | 'notify', confirmText?: string) => {
         if (busy) return;
-        if (confirmText && !window.confirm(confirmText)) return;
+        if (confirmText && !(await confirm({ title: '확인해 주세요', body: confirmText, icon: '⚠️', confirmLabel: '실행', danger: true }))) return;
         setBusy(job);
         setResult('');
         try {
@@ -188,6 +192,7 @@ export function AdminCronButtons() {
 
     return (
         <section className="adm-card">
+            {dialog}
             <h2>수동 실행</h2>
             <p className="adm-muted">스케줄러가 매일 자동으로 하는 일을 지금 바로 실행해요.</p>
             <div className="adm-row">

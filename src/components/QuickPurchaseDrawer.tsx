@@ -49,6 +49,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
     const router = useRouter();
     const { addLine, buyNow } = useCart();
+    const [notice, setNotice] = useState<{ icon: string; title: string; body: string } | null>(null);
     const mix = useMixChoice(`bundle:${selectedBundleId}`);
 
     useBodyScrollLock(isOpen);
@@ -86,7 +87,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
     const buildLines = (): CartLine[] | null => {
         if (activeTab === 'single') {
             if (totalSingleCount === 0) {
-                alert('최소 1개 이상의 상품 수량을 선택해 주세요.');
+                setNotice({ icon: '🥣', title: '맛을 선택해 주세요', body: '담고 싶은 맛의 + 버튼을 눌러 수량을 골라 주세요.' });
                 return null;
             }
             return Object.entries(singleQty)
@@ -94,7 +95,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                 .map(([flavor, qty]) => ({ sku: `single:${flavor}`, qty, mode: 'once' as const }));
         }
         if (mix.mixErr) {
-            alert(mix.mixErr);
+            setNotice({ icon: '🌾', title: '맛 구성을 완성해 주세요', body: mix.mixErr });
             return null;
         }
         if (isSubscribe) {
@@ -337,6 +338,26 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                     </div>
                 </div>
             </div>
+            {notice ? (
+                <div
+                    className="oc-notice"
+                    role="alertdialog"
+                    aria-modal="true"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setNotice(null);
+                    }}
+                >
+                    <div className="oc-notice__card" onClick={(e) => e.stopPropagation()}>
+                        <span className="oc-notice__icon" aria-hidden="true">{notice.icon}</span>
+                        <strong>{notice.title}</strong>
+                        <p>{notice.body}</p>
+                        <button type="button" autoFocus onClick={() => setNotice(null)}>
+                            확인
+                        </button>
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 };

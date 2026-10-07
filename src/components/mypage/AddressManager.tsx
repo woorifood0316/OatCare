@@ -1,5 +1,6 @@
 'use client';
 
+import { useConfirm } from '../ui/ConfirmDialog';
 import React, { useState } from 'react';
 import { MapPin, Pencil, Trash2 } from 'lucide-react';
 import { AddressForm } from '../address/AddressForm';
@@ -21,6 +22,7 @@ async function call(method: string, url: string, body?: unknown): Promise<{ ok: 
 }
 
 export function AddressManager({ initial }: { initial: Address[] }) {
+    const { confirm, dialog } = useConfirm();
     const [list, setList] = useState<Address[]>(initial);
     const [mode, setMode] = useState<'idle' | 'add' | { editId: string }>('idle');
     const [notice, setNotice] = useState('');
@@ -51,7 +53,7 @@ export function AddressManager({ initial }: { initial: Address[] }) {
     };
 
     const remove = async (id: string) => {
-        if (!window.confirm('이 배송지를 삭제할까요?')) return;
+        if (!(await confirm({ title: '이 배송지를 삭제할까요?', body: '삭제한 배송지는 되돌릴 수 없어요.', icon: '📍', confirmLabel: '삭제', danger: true }))) return;
         setNotice('');
         const r = await call('DELETE', `/api/addresses/${id}`);
         if (r.ok) apply(r.data);
@@ -60,6 +62,7 @@ export function AddressManager({ initial }: { initial: Address[] }) {
 
     return (
         <section className="my-card">
+            {dialog}
             <div className="my-card__head">
                 <h2 className="my-card__title">배송지</h2>
                 {mode === 'idle' ? (
