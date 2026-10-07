@@ -4998,7 +4998,7 @@ body {
 .pd-qty > span { font-weight: 700; }
 .pd-qty__ctl { display: inline-flex; border: 1px solid var(--oc-line); border-radius: 10px; overflow: hidden; }
 .pd-qty__ctl button { width: 38px; height: 38px; background: #fff; border: 0; cursor: pointer; display: grid; place-items: center; }
-.pd-qty__ctl input { width: 52px; text-align: center; border: 0; border-inline: 1px solid var(--oc-line); font-size: 1rem; font-weight: 700; -moz-appearance: textfield; }
+.pd-qty__ctl input { width: 52px; text-align: center; border: 0; border-inline: 1px solid var(--oc-line); font-size: 1rem; font-weight: 700; -moz-appearance: textfield; appearance: textfield; }
 .pd-qty__ctl input::-webkit-outer-spin-button, .pd-qty__ctl input::-webkit-inner-spin-button { -webkit-appearance: none; }
 .pd-qty em { margin-left: auto; font-style: normal; font-size: 1.25rem; font-weight: 800; color: var(--oc-maroon); }
 .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
@@ -5097,3 +5097,13 @@ body {
 .pd-ftabs { display: flex; gap: .4rem; flex-wrap: wrap; }
 .pd-ftabs button { padding: .5rem .9rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; font-weight: 700; color: #7b6a5b; cursor: pointer; }
 .pd-ftabs button.is-active { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
+
+.oc-auth__btn--review { margin-top: .6rem; width: 100%; background: #fff; color: #5b4a3d; border: 1.5px dashed #b9a98f; }
+
+.oc-auth__modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.45); display: grid; place-items: center; padding: 1rem; }
+.oc-auth__modal-card { width: 100%; max-width: 340px; background: #fff; border-radius: 16px; padding: 1.4rem; display: grid; gap: .7rem; }
+.oc-auth__modal-info { background: var(--oc-cream); border-radius: 10px; padding: .8rem; font-size: .9rem; line-height: 1.7; }
+.oc-auth__modal-card input { height: 44px; border: 1px solid var(--oc-line); border-radius: 10px; padding: 0 .8rem; font-size: 1rem; }
+.oc-auth__modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.oc-auth__modal-actions button { height: 44px; border-radius: 10px; border: 1px solid var(--oc-line); background: #fff; font-weight: 700; cursor: pointer; }
+.oc-auth__modal-actions .is-primary { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }

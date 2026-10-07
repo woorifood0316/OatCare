@@ -57,6 +57,10 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const callbackUrl = safeCallbackPath(params.get('callbackUrl'));
     const [marketing, setMarketing] = useState(false);
     const [pending, setPending] = useState<Provider | null>(null);
+    const [testOpen, setTestOpen] = useState(false);
+    const [testId, setTestId] = useState('');
+    const [testPw, setTestPw] = useState('');
+    const [testError, setTestError] = useState<string | null>(null);
 
     const isSignup = mode === 'signup';
     const errorCode = params.get('error');
@@ -128,6 +132,38 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         </button>
                     ))}
                 </div>
+
+                {!isSignup ? (
+                    <>
+                        <button type="button" className="oc-auth__btn oc-auth__btn--review" onClick={() => setTestOpen(true)}>
+                            <span>테스트 로그인</span>
+                        </button>
+                        {testOpen ? (
+                            <div className="oc-auth__modal" role="dialog" aria-modal="true" onClick={() => setTestOpen(false)}>
+                                <form
+                                    className="oc-auth__modal-card"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        setTestError(null);
+                                        const res = await signIn('review', { loginId: testId, password: testPw, redirect: false });
+                                        if (res?.error || !res?.ok) setTestError('아이디 또는 비밀번호가 올바르지 않아요.');
+                                        else window.location.href = callbackUrl;
+                                    }}
+                                >
+                                    <strong>테스트 로그인</strong>
+                                    <input value={testId} onChange={(e) => setTestId(e.target.value)} placeholder="테스트 아이디" autoComplete="off" />
+                                    <input type="password" value={testPw} onChange={(e) => setTestPw(e.target.value)} placeholder="테스트 비밀번호" autoComplete="off" />
+                                    {testError ? <p className="oc-auth__msg oc-auth__msg--error">{testError}</p> : null}
+                                    <div className="oc-auth__modal-actions">
+                                        <button type="button" onClick={() => setTestOpen(false)}>닫기</button>
+                                        <button type="submit" className="is-primary">로그인</button>
+                                    </div>
+                                </form>
+                            </div>
+                        ) : null}
+                    </>
+                ) : null}
 
                 {isSignup && (
                     <div className="oc-auth__collect">
