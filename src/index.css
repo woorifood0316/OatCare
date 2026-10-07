@@ -5107,3 +5107,5 @@ body {
 .oc-auth__modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .oc-auth__modal-actions button { height: 44px; border-radius: 10px; border: 1px solid var(--oc-line); background: #fff; font-weight: 700; cursor: pointer; }
 .oc-auth__modal-actions .is-primary { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
+
+.oc-drawer-item__more { display: inline-block; margin-top: .25rem; font-size: .75rem; color: var(--oc-maroon); font-weight: 700; text-decoration: none; }

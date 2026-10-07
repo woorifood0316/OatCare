@@ -2,10 +2,21 @@
 
 import React, { useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RICH_PRODUCTS, BUNDLES } from './Sections';
 import { useCart } from './cart/CartProvider';
-import { CYCLE_OPTIONS, SUBSCRIPTION_DISCOUNT_RATE, getItem, subscriptionUnitPrice } from '../lib/catalog';
+import {
+    CATALOG,
+    CYCLE_OPTIONS,
+    MIN_SUBSCRIPTION_CHARGES,
+    SUBSCRIPTION_DISCOUNT_RATE,
+    getItem,
+    subscriptionUnitPrice,
+    type CartLine,
+} from '../lib/catalog';
+import { slugForFlavor } from '../lib/products';
+import { useMixChoice } from './purchase/MixPicker';
 import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
@@ -33,12 +44,12 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
     // Bundle selection state
     const [selectedBundleId, setSelectedBundleId] = useState<number>(20); // Default 20-pack BEST
-    const [bundleMixOption, setBundleMixOption] = useState<'all' | 'custom'>('all');
     const [purchaseMode, setPurchaseMode] = useState<'once' | 'subscribe'>('once');
     const [cycleDays, setCycleDays] = useState<number | null>(null);
 
     const router = useRouter();
-    const { addLine } = useCart();
+    const { addLine, buyNow } = useCart();
+    const mix = useMixChoice(`bundle:${selectedBundleId}`);
 
     useBodyScrollLock(isOpen);
 
@@ -46,8 +57,13 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
     // Single item calculation
     const totalSingleCount = Object.values(singleQty).reduce((acc, q) => acc + q, 0);
-    const totalSinglePrice = totalSingleCount * 1100;
-    const totalSingleListPrice = totalSingleCount * 1250;
+    const single = getItem('single:그레인')!;
+    const totalSinglePrice = totalSingleCount * single.price;
+    const totalSingleListPrice = totalSingleCount * single.listPrice;
+    const singlePct = Math.round((1 - single.price / single.listPrice) * 100);
+    const bundleItems = CATALOG.filter((i) => i.kind === 'bundle');
+    const maxBundlePct = Math.max(...bundleItems.map((i) => Math.round((1 - i.price / i.listPrice) * 100)));
+    const minUnit = Math.min(...bundleItems.map((i) => Math.round(i.price / i.count)));
 
     // Bundle calculation
     const currentBundle = BUNDLES.find((b) => b.count === selectedBundleId) || BUNDLES[1];
@@ -66,41 +82,47 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
     const effectiveCycle = cycleDays ?? currentBundle.count;
     const subUnit = bundleItem ? subscriptionUnitPrice(bundleItem) : currentBundle.price;
 
-    // Returns true when something was added to the cart.
-    const addToCart = (): boolean => {
+    const sku = `bundle:${currentBundle.count}`;
+    const buildLines = (): CartLine[] | null => {
         if (activeTab === 'single') {
             if (totalSingleCount === 0) {
                 alert('최소 1개 이상의 상품 수량을 선택해 주세요.');
-                return false;
+                return null;
             }
-            Object.entries(singleQty).forEach(([flavor, qty]) => {
-                if (qty > 0) addLine({ sku: `single:${flavor}`, qty, mode: 'once' });
-            });
-            return true;
+            return Object.entries(singleQty)
+                .filter(([, qty]) => qty > 0)
+                .map(([flavor, qty]) => ({ sku: `single:${flavor}`, qty, mode: 'once' as const }));
+        }
+        if (mix.mixErr) {
+            alert(mix.mixErr);
+            return null;
         }
         if (isSubscribe) {
-            addLine({
-                sku: `bundle:${currentBundle.count}`,
-                qty: 1,
-                mode: 'subscribe',
-                cycleDays: effectiveCycle,
-                mix: bundleMixOption,
-            });
-        } else {
-            addLine({ sku: `bundle:${currentBundle.count}`, qty: 1, mode: 'once', mix: bundleMixOption });
+            return [{ sku, qty: 1, mode: 'subscribe', cycleDays: effectiveCycle, ...mix.mixChoice }];
         }
-        return true;
+        return [{ sku, qty: 1, mode: 'once', ...mix.mixChoice }];
     };
 
     const handleAddToCart = () => {
-        if (addToCart()) onClose();
+        const lines = buildLines();
+        if (!lines) return;
+        lines.forEach((l) => addLine(l));
+        onClose();
     };
 
-    const handleCheckout = () => {
-        if (addToCart()) {
+    const handleCheckout = async () => {
+        const lines = buildLines();
+        if (!lines) return;
+        if (isSubscribe) {
+            // Subscriptions are reviewed in the cart (cycle, minimum-period notice) before payment.
+            lines.forEach((l) => addLine(l));
             onClose();
             router.push('/cart');
+            return;
         }
+        const dest = await buyNow(lines);
+        onClose();
+        router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
 
     return (
@@ -126,14 +148,14 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                         className={`oc-drawer__tab ${activeTab === 'single' ? 'is-active' : ''}`}
                         onClick={() => setActiveTab('single')}
                     >
-                        <span>🥛 1개입 단품 (1,100원)</span>
+                        <span>🥛 1개입 단품 ({single.price.toLocaleString('ko-KR')}원)</span>
                     </button>
                     <button
                         className={`oc-drawer__tab ${activeTab === 'bundle' ? 'is-active' : ''}`}
                         onClick={() => setActiveTab('bundle')}
                     >
-                        <span className="oc-drawer__tab-badge">최대 28% OFF</span>
-                        <span>🎁 알뜰 세트 (900원~)</span>
+                        <span className="oc-drawer__tab-badge">최대 {maxBundlePct}% OFF</span>
+                        <span>🎁 알뜰 세트 ({minUnit.toLocaleString('ko-KR')}원~)</span>
                     </button>
                 </div>
 
@@ -142,7 +164,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                     {activeTab === 'single' ? (
                         <div className="oc-drawer__single-view">
                             <div className="oc-drawer__banner">
-                                💡 <strong>단품 특가 1,100원</strong> (정가 1,250원 대비 12% 할인)
+                                💡 <strong>단품 특가 {single.price.toLocaleString('ko-KR')}원</strong> (정가 {single.listPrice.toLocaleString('ko-KR')}원 대비 {singlePct}% 할인)
                             </div>
 
                             <div className="oc-drawer__items-list">
@@ -159,9 +181,18 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 </div>
                                                 <p className="oc-drawer-item__desc">{p.tasteNote}</p>
                                                 <div className="oc-drawer-item__price-row">
-                                                    <strong>1,100원</strong>
-                                                    <s>1,250원</s>
+                                                    <strong>{single.price.toLocaleString('ko-KR')}원</strong>
+                                                    <s>{single.listPrice.toLocaleString('ko-KR')}원</s>
                                                 </div>
+                                                {slugForFlavor(p.flavor) ? (
+                                                    <Link
+                                                        href={`/products/${slugForFlavor(p.flavor)}`}
+                                                        className="oc-drawer-item__more"
+                                                        onClick={onClose}
+                                                    >
+                                                        상세보기 →
+                                                    </Link>
+                                                ) : null}
                                             </div>
 
                                             <div className="oc-drawer-item__counter">
@@ -184,7 +215,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                     ) : (
                         <div className="oc-drawer__bundle-view">
                             <div className="oc-drawer__banner oc-drawer__banner--gold">
-                                ⚡ <strong>세트 구매 시 전 수량 무료 배송 + 최대 28% 할인!</strong>
+                                ⚡ <strong>세트 구매 시 전 수량 무료 배송 + 최대 {maxBundlePct}% 할인!</strong>
                             </div>
 
                             <div className="oc-drawer__bundle-cards">
@@ -209,7 +240,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 </div>
                                                 <p>{b.desc}</p>
                                                 <div className="oc-drawer-bundle-card__unit">
-                                                    개당 <strong>{b.unitPrice.toLocaleString('ko-KR')}원</strong> (정가 1,250원)
+                                                    개당 <strong>{b.unitPrice.toLocaleString('ko-KR')}원</strong> (정가 {single.listPrice.toLocaleString('ko-KR')}원)
                                                 </div>
                                             </div>
 
@@ -222,23 +253,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                 })}
                             </div>
 
-                            <div className="oc-drawer__mix-option">
-                                <span>맛 구성 선택</span>
-                                <div className="oc-drawer__mix-btns">
-                                    <button
-                                        className={bundleMixOption === 'all' ? 'is-active' : ''}
-                                        onClick={() => setBundleMixOption('all')}
-                                    >
-                                        ✨ 5가지 맛 골고루 혼합
-                                    </button>
-                                    <button
-                                        className={bundleMixOption === 'custom' ? 'is-active' : ''}
-                                        onClick={() => setBundleMixOption('custom')}
-                                    >
-                                        🌾 맛 직접 선택 (장바구니에서)
-                                    </button>
-                                </div>
-                            </div>
+                            {mix.picker}
 
                             {canSubscribe ? (
                                 <div className="oc-drawer__mix-option">
@@ -274,7 +289,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                     ) : null}
                                     {purchaseMode === 'subscribe' ? (
                                         <p className="oc-drawer__min-note">
-                                            ※ 정기구독은 <b>최소 2회 이용(결제)</b> 후 해지할 수 있어요. 결제일 기준으로 결제·발송돼요.
+                                            ※ 정기구독은 <b>최소 {MIN_SUBSCRIPTION_CHARGES}회 이용(결제)</b> 후 해지할 수 있어요. 결제일 기준으로 결제·발송돼요.
                                         </p>
                                     ) : null}
                                 </div>

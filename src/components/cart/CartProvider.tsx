@@ -32,7 +32,7 @@ interface CartContextValue {
     convertToSubscription: (key: string) => void;
     clearMode: (mode: CartLine['mode']) => void;
     /** Add a line and (when logged in) save the cart to the server at once. Resolves to where to go next. */
-    buyNow: (line: CartLine) => Promise<'checkout' | 'cart'>;
+    buyNow: (line: CartLine | CartLine[]) => Promise<'checkout' | 'cart'>;
     /** Push the cart to the server right now (call before leaving for checkout). */
     flush: () => Promise<void>;
 }
@@ -231,8 +231,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const buyNow = useCallback(
-        async (line: CartLine): Promise<'checkout' | 'cart'> => {
-            const next = addTo(linesRef.current, line);
+        async (input: CartLine | CartLine[]): Promise<'checkout' | 'cart'> => {
+            const next = (Array.isArray(input) ? input : [input]).reduce(addTo, linesRef.current);
             linesRef.current = next;
             setLines(next);
             // Guests (or before the first sync) review the cart first; it merges into their account on login.

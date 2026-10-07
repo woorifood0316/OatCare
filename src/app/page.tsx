@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { slugForFlavor, slugForSetName } from '../lib/products';
 import { ScrollScrubHero } from '../components/ScrollScrubHero';
-import { ProductDetailModal, ProductDetailItem } from '../components/ProductDetailModal';
 import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
 import { LegalModal, LegalModalType } from '../components/LegalModal';
 import { LegalPage } from '../components/LegalPage';
@@ -25,18 +24,17 @@ import {
 
 export default function Home() {
     const router = useRouter();
-    const [selectedProduct, setModalProduct] = useState<ProductDetailItem | null>(null);
     // Flavours and sets open their own product pages.
-    const setSelectedProduct = (p: ProductDetailItem | null) => {
-        const slug = p ? slugForFlavor(p.flavor) : undefined;
+    const setSelectedProduct = (p: { flavor: string }) => {
+        const slug = slugForFlavor(p.flavor);
+        const setCount = slugForSetName(p.flavor);
         if (slug) {
             try { sessionStorage.setItem('oc_return', 'product-lineup'); } catch {}
             router.push(`/products/${slug}`);
-        }
-        else if (p && slugForSetName(p.flavor)) {
+        } else if (setCount) {
             try { sessionStorage.setItem('oc_return', 'bundles'); } catch {}
-            router.push(`/sets/${slugForSetName(p.flavor)}`);
-        } else setModalProduct(p);
+            router.push(`/sets/${setCount}`);
+        }
     };
     const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -131,8 +129,6 @@ export default function Home() {
             <ScrollReveal className="oc-band oc-band--cream">
                 <ProductGrid onSelectProduct={setSelectedProduct} />
             </ScrollReveal>
-
-            <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
 
             <QuickPurchaseDrawer
                 isOpen={isDrawerOpen}

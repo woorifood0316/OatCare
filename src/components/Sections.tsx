@@ -9,7 +9,23 @@ import { PurchaseChooser } from './purchase/PurchaseChooser';
 import { CardActions } from './purchase/CardActions';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
-import { ProductDetailItem } from './ProductDetailModal';
+
+export interface ProductDetailItem {
+    flavor: string;
+    icon: string;
+    badge?: string;
+    tag: string;
+    img: string;
+    price: number;
+    listPrice: number;
+    ingredient: string;
+    calories: string;
+    accentColor: string;
+    desc: string;
+    tasteNote: string;
+    mood: string;
+    shakeColor: string;
+}
 import { getAssetUrl } from '../utils/assets';
 import { ScrollReveal } from './ScrollReveal';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';

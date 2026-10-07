@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
+import { useMixChoice } from '../purchase/MixPicker';
 import {
     FREE_SHIPPING_MIN,
     MIN_SUBSCRIPTION_CHARGES,
@@ -45,8 +46,6 @@ export function SetPage({ count }: { count: number }) {
     const [added, setAdded] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const [infoSlug, setInfoSlug] = useState(PRODUCT_PAGES[0].slug);
-    const [mixMode, setMixMode] = useState<'all' | 'custom'>('all');
-    const [detail, setDetail] = useState<Record<string, number>>(() => Object.fromEntries(FLAVORS.map((f) => [f, 0])));
 
     useEffect(() => {
         const onScroll = () => {
@@ -62,13 +61,7 @@ export function SetPage({ count }: { count: number }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const mixable = item.mixSelectable;
-    const mixChoice: Pick<CartLine, 'mix' | 'mixDetail'> =
-        mixable && mixMode === 'custom' ? { mix: 'custom', mixDetail: detail } : { mix: 'all' };
-    const mixTotal = FLAVORS.reduce((sum, f) => sum + (detail[f] ?? 0), 0);
-    const mixErr = mixable && mixMode === 'custom' ? mixError({ sku: page.sku, qty: 1, mode: 'once', ...mixChoice }) : null;
-    const changeMix = (flavor: string, delta: number) =>
-        setDetail((d) => ({ ...d, [flavor]: Math.max(0, (d[flavor] ?? 0) + delta * MIX_UNIT) }));
+    const { mixChoice, mixErr, picker } = useMixChoice(page.sku);
     const line: CartLine = { sku: page.sku, qty, mode: 'once', ...mixChoice };
     const total = item.price * qty;
     const unit = Math.round(item.price / item.count);
@@ -188,59 +181,7 @@ export function SetPage({ count }: { count: number }) {
                             <em>{won(total)}</em>
                         </div>
 
-                        {mixable ? (
-                            <div className="cart-mix pd-mix">
-                                <b className="pd-mix__title">맛 구성</b>
-                                <div className="cart-mix__modes" role="group" aria-label="맛 구성">
-                                    <button type="button" className={mixMode === 'all' ? 'is-active' : ''} onClick={() => setMixMode('all')}>
-                                        5가지 골고루 (맛별 {item.count / FLAVORS.length}개씩)
-                                    </button>
-                                    <button type="button" className={mixMode === 'custom' ? 'is-active' : ''} onClick={() => setMixMode('custom')}>
-                                        맛 직접 고르기
-                                    </button>
-                                </div>
-                                {mixMode === 'custom' ? (
-                                    <div className="pd-pick">
-                                        <p className="pd-pick__guide">
-                                            맛마다 <b>+</b>를 눌러 {MIX_UNIT}개입을 담아요 · 총 {item.count / MIX_UNIT}묶음 중 <b>{mixTotal / MIX_UNIT}</b>묶음 선택
-                                        </p>
-                                        {mixTotal < item.count ? (
-                                            <p className="pd-pick__remain">
-                                                {(item.count - mixTotal) / MIX_UNIT}묶음({item.count - mixTotal}개) 더 담아주세요 · 같은 맛을 또 담아도 돼요
-                                            </p>
-                                        ) : null}
-                                        <div className="pd-pick__grid">
-                                            {FLAVORS.map((f) => {
-                                                const units = (detail[f] ?? 0) / MIX_UNIT;
-                                                const full = mixTotal >= item.count;
-                                                return (
-                                                    <div key={f} className={`pd-pick__item${units > 0 ? ' is-on' : ''}`}>
-                                                        <b>{f}</b>
-                                                        <span>{units > 0 ? `${units * MIX_UNIT}개` : `${MIX_UNIT}개입 단위`}</span>
-                                                        <div className="pd-pick__ctl">
-                                                            <button type="button" onClick={() => changeMix(f, -1)} disabled={units <= 0} aria-label={`${f} ${MIX_UNIT}개 빼기`}>
-                                                                <Minus size={15} />
-                                                            </button>
-                                                            <em>{units}</em>
-                                                            <button type="button" onClick={() => changeMix(f, 1)} disabled={full} aria-label={`${f} ${MIX_UNIT}개 추가`}>
-                                                                <Plus size={15} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className={`cart-mix__sum${mixErr ? ' is-error' : ' is-ok'}`}>
-                                            {mixErr ?? `총 ${mixTotal}개 · 맛 구성이 완료됐어요`}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p className="cart-mix__hint">
-                                        {FLAVORS.map((f) => `${f} ${evenMix(item.count)[f]}`).join(' · ')}
-                                    </p>
-                                )}
-                            </div>
-                        ) : null}
+                        {picker}
 
                         {subscribable ? (
                             <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
