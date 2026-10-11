@@ -54,6 +54,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
     ],
+    // Print the real cause of sign-in failures (the browser only shows "Configuration"). No secrets are logged.
+    logger: {
+        error(error) {
+            const cause = (error as { cause?: { err?: unknown } }).cause?.err ?? (error as { cause?: unknown }).cause;
+            console.error('[auth]', error.name, error.message, cause instanceof Error ? `${cause.name}: ${cause.message}` : (cause ?? ''));
+        },
+    },
     session: { strategy: 'jwt' },
     trustHost: true,
     pages: { signIn: '/login', error: '/login' },
