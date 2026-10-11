@@ -38,7 +38,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 };
             },
         }),
-        Naver,
+        // Naver: 이름(필수), 이메일(선택). The stock provider only reads the nickname, so name stayed empty.
+        Naver({
+            profile(p) {
+                const r = (p as { response?: { id: string; name?: string; nickname?: string; email?: string } }).response;
+                return {
+                    id: r?.id ?? '',
+                    name: r?.name || r?.nickname || null,
+                    email: r?.email ?? null,
+                    image: null,
+                };
+            },
+        }),
         Google,
         // TEMPORARY: test id/password login for the payment-provider review (see lib/test-login.ts).
         Credentials({
@@ -79,7 +90,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
             if (existing.length > 0) {
                 const userId = existing[0].user_id as string;
-                await sql`update users set last_login_at = now() where id = ${userId}`;
+                // Fill a missing name from the provider; never overwrite one that is already set.
+                await sql`
+                    update users
+                    set last_login_at = now(), name = coalesce(nullif(name, ''), ${user.name ?? null})
+                    where id = ${userId}
+                `;
                 user.id = userId;
                 return true;
             }
