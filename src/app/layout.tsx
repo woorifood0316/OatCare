@@ -7,6 +7,8 @@ const SITE_URL = 'https://chamoatcare.com';
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
+    // Naver Search Advisor site ownership.
+    other: { 'naver-site-verification': '600cf31f6440f693c1beba2c3b5003e266177e07' },
     alternates: { canonical: '/' },
     openGraph: {
         type: 'website',
