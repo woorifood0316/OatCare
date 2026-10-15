@@ -3,6 +3,7 @@ import { getCurrentUser } from '../../../lib/current-user';
 import { PageHead } from '../../../components/mypage/ComingSoon';
 import { MarketingToggle } from '../../../components/mypage/MarketingToggle';
 import { WithdrawButton } from '../../../components/WithdrawButton';
+import { LogoutButton } from '../../../components/LogoutButton';
 
 export const runtime = 'edge';
 
@@ -93,6 +94,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                         최소 이용기간(2회 결제)이 끝나지 않은 정기구독이 있어 탈퇴할 수 없어요. 구독 해지를 예약하면 2회차 결제 후 자동으로 해지되고, 그 뒤에 탈퇴할 수 있어요.
                     </p>
                 ) : null}
+                <div className="my-profile-logout">
+                    <LogoutButton className="my-btn addr-btn addr-btn--ghost" />
+                </div>
                 <WithdrawButton />
             </section>
         </>

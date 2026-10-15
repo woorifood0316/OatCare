@@ -44,18 +44,19 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
 
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
+        const wasOpen = isMobileMenuOpen;
         setIsMobileMenuOpen(false);
-        const element = document.getElementById(targetId);
-        if (element) {
+        const scrollToTarget = () => {
+            const element = document.getElementById(targetId);
+            if (!element) return;
             const headerOffset = 75;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-        }
+            const offsetPosition = element.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        };
+        // While the mobile menu is open the page is scroll-locked (body fixed); closing it restores the old
+        // scroll position, which would cancel an immediate scroll. Wait for the unlock, then scroll.
+        if (wasOpen) setTimeout(scrollToTarget, 80);
+        else scrollToTarget();
     };
 
     return (

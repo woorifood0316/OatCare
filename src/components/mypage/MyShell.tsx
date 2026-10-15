@@ -80,9 +80,12 @@ export function MyShell({
                         <img src="/assets/oatcare-logo.png" alt="" />
                         <span>참오트케어</span>
                     </Link>
-                    <Link href="/" className="my-topbar__home">
-                        쇼핑하러 가기
-                    </Link>
+                    <div className="my-topbar__right">
+                        <Link href="/" className="my-topbar__home">
+                            쇼핑하러 가기
+                        </Link>
+                        <LogoutButton className="my-topbar__logout" />
+                    </div>
                 </header>
 
                 <main className="my-content">{children}</main>

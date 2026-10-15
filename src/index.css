@@ -5127,3 +5127,9 @@ body {
 .oc-notice__card .is-ghost:hover { background: var(--oc-cream); }
 .oc-notice__card .is-danger { background: #c0392b; }
 .oc-notice__card .is-danger:hover { background: #a93226; }
+
+.my-topbar__right { display: flex; align-items: center; gap: .7rem; }
+.my-topbar__logout { padding: .3rem .7rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.my-profile-logout { margin-top: 1rem; }
+.my-profile-logout .addr-btn { width: 100%; }
+@media (min-width: 900px) { .my-profile-logout { display: none; } }
