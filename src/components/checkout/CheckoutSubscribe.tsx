@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
@@ -33,6 +33,7 @@ export function CheckoutSubscribe({
 }) {
     const router = useRouter();
     const [addressId, setAddressId] = useState<string | null>(addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null);
+    const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
     const [methodId, setMethodId] = useState<string | null>(methods.find((m) => m.isDefault)?.id ?? methods[0]?.id ?? null);
     const [agreed, setAgreed] = useState(false);
     const [agreedMin, setAgreedMin] = useState(false);
@@ -59,18 +60,25 @@ export function CheckoutSubscribe({
 
     const start = async () => {
         if (busy) return;
-        if (!addressId) return setError('배송지를 선택해 주세요');
         if (!methodId) return setError('결제 카드를 등록해 주세요');
         if (!agreed) return setError('정기결제 이용 안내에 동의해 주세요');
         if (!agreedMin) return setError(`최소 이용기간(${MIN_SUBSCRIPTION_CHARGES}회) 안내에 동의해 주세요`);
         setBusy(true);
         setError('');
         setPartial([]);
+        // A first-time customer has typed an address but not pressed the form's own button: save it for them.
+        const resolved = (await ensureAddress.current?.()) ?? { id: addressId };
+        const useAddressId = resolved.id ?? addressId;
+        if (!useAddressId) {
+            setError(resolved.error ?? '배송지를 선택해 주세요');
+            setBusy(false);
+            return;
+        }
         try {
             const res = await fetch('/api/checkout/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId }),
+                body: JSON.stringify({ addressId: useAddressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -103,7 +111,7 @@ export function CheckoutSubscribe({
                 total={firstGroup}
                 note="쿠폰은 첫 회 결제에만 적용돼요."
             />
-            <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} />
+            <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">
                 <div className="cart-section__head">

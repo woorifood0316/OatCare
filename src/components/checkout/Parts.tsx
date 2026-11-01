@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { AddressForm } from '../address/AddressForm';
@@ -168,13 +168,36 @@ export function AddressPicker({
     initial,
     selectedId,
     onSelect,
+    ensureRef,
 }: {
     initial: Address[];
     selectedId: string | null;
     onSelect: (id: string | null) => void;
+    /** Filled by the picker: resolves to the address id to pay with (saving a filled-in form first), or null + a message. */
+    ensureRef?: React.MutableRefObject<(() => Promise<{ id: string | null; error?: string }>) | null>;
 }) {
     const [list, setList] = useState(initial);
     const [adding, setAdding] = useState(initial.length === 0);
+    const formSubmit = useRef<(() => Promise<string | null>) | null>(null);
+    const addedId = useRef<string | null>(null);
+    const sectionRef = useRef<HTMLElement>(null);
+    const selectedRef = useRef(selectedId);
+    selectedRef.current = selectedId;
+
+    if (ensureRef) {
+        ensureRef.current = async () => {
+            if (!adding && selectedRef.current) return { id: selectedRef.current };
+            if (adding && formSubmit.current) {
+                addedId.current = null;
+                const err = await formSubmit.current();
+                sectionRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                if (err) return { id: null, error: err };
+                return { id: addedId.current };
+            }
+            sectionRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            return { id: null, error: '배송지를 선택해 주세요' };
+        };
+    }
 
     const add = async (input: AddressInput) => {
         const res = await fetch('/api/addresses', {
@@ -185,13 +208,14 @@ export function AddressPicker({
         const data = await res.json().catch(() => ({}));
         if (!res.ok) return (data.error as string) ?? '저장하지 못했어요';
         setList(data.addresses as Address[]);
+        addedId.current = data.id as string;
         onSelect(data.id as string);
         setAdding(false);
         return null;
     };
 
     return (
-        <section className="cart-section">
+        <section className="cart-section" ref={sectionRef}>
             <div className="cart-section__head">
                 <h2 className="co-h2">배송지</h2>
                 {!adding ? (
@@ -229,6 +253,7 @@ export function AddressPicker({
                 <AddressForm
                     submitLabel="배송지 추가"
                     onSubmit={add}
+                    submitRef={formSubmit}
                     onCancel={list.length > 0 ? () => setAdding(false) : undefined}
                 />
             ) : null}

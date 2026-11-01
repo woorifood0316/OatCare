@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
+import { startKakaoLogin } from '../lib/kakao-sdk';
 
 type Mode = 'login' | 'signup';
 type Provider = 'kakao' | 'naver' | 'google';
@@ -81,6 +82,13 @@ function AuthCardInner({ mode }: { mode: Mode }) {
             const secure = window.location.protocol === 'https:' ? '; Secure' : '';
             document.cookie = `oc_consent=1; path=/; max-age=600; SameSite=Lax${secure}`;
             document.cookie = `oc_mkt=${marketing ? 1 : 0}; path=/; max-age=600; SameSite=Lax${secure}`;
+        }
+        if (provider === 'kakao') {
+            // KakaoTalk app "간편로그인" (no id/password). If the SDK cannot start, use the regular web login.
+            startKakaoLogin(callbackUrl)
+                .then(() => setTimeout(() => setPending(null), 4000)) // the app switch may bring the visitor back to this page
+                .catch(() => signIn('kakao', { redirectTo: callbackUrl }));
+            return;
         }
         signIn(provider, { redirectTo: callbackUrl });
     };

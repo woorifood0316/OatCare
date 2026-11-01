@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
 import { verifyTestLogin } from './lib/test-login';
+import { exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 
 export const CONSENT_COOKIE = 'oc_consent';
 export const MARKETING_COOKIE = 'oc_mkt';
@@ -21,21 +22,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 params: { scope: 'profile_nickname account_email' },
             },
             profile(p) {
-                const account = p.kakao_account as
-                    | {
-                          email?: string;
-                          is_email_valid?: boolean;
-                          is_email_verified?: boolean;
-                          profile?: { nickname?: string };
-                      }
-                    | undefined;
-                const emailOk = account?.is_email_valid && account?.is_email_verified;
-                return {
-                    id: String(p.id),
-                    name: account?.profile?.nickname ?? null,
-                    email: emailOk ? (account?.email ?? null) : null,
-                    image: null,
-                };
+                const m = mapKakaoUser(p as Parameters<typeof mapKakaoUser>[0]);
+                return { id: m.id, name: m.name, email: m.email, image: null };
+            },
+        }),
+        // Kakao "간편로그인": the KakaoTalk app opens instead of the id/password page. The browser starts it with Kakao's
+        // JavaScript SDK; /api/kakao/callback hands the code to this provider (same member as the regular Kakao login).
+        Credentials({
+            id: 'kakao-app',
+            name: 'kakao-app',
+            credentials: { code: {}, redirectUri: {} },
+            async authorize(creds) {
+                const profile = await exchangeKakaoCode(String(creds?.code ?? ''), String(creds?.redirectUri ?? ''));
+                return profile ? { id: profile.id, name: profile.name, email: profile.email, image: null } : null;
             },
         }),
         // Naver: 이름(필수), 이메일(선택). The stock provider only reads the nickname, so name stayed empty.
@@ -79,7 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async signIn({ user, account }) {
             if (!account) return false;
             if (account.provider === 'review') return true; // already verified in authorize()
-            const provider = account.provider;
+            const provider = account.provider === 'kakao-app' ? 'kakao' : account.provider;
             const providerAccountId = account.providerAccountId;
             const sql = getSql();
 

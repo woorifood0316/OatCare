@@ -16,6 +16,7 @@ import {
 } from '../../lib/catalog';
 import { PRODUCT_PAGES, detailUrl, getProductPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
+import { hasReturnPoint } from '../../lib/return-point';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const SLICES = Array.from({ length: 13 }, (_, i) => String(i + 1).padStart(2, '0'));
@@ -91,7 +92,21 @@ export function ProductPage({ slug }: { slug: string }) {
         <div className="pd">
             <header className="pd-top">
                 <div className="pd-top__inner">
-                    <Link href="/#product-lineup" className="pd-top__brand" onClick={() => { try { sessionStorage.setItem('oc_return', 'product-lineup'); } catch {} }}>
+                    <Link
+                        href="/#product-lineup"
+                        className="pd-top__brand"
+                        onClick={(e) => {
+                            // Came here from the landing page: step back so the visitor lands exactly where they left.
+                            if (hasReturnPoint('/') && window.history.length > 1) {
+                                e.preventDefault();
+                                router.back();
+                                return;
+                            }
+                            try {
+                                sessionStorage.setItem('oc_return', 'product-lineup');
+                            } catch {}
+                        }}
+                    >
                         <ArrowLeft size={18} />
                         <span>참오트케어</span>
                     </Link>

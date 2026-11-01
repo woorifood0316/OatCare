@@ -104,7 +104,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                         className="oc-cta-fill oc-nav__cta-mobile"
                         onClick={(e) => {
                             e.preventDefault();
-                            onOpenDrawer?.('single');
+                            onOpenDrawer?.('bundle');
                         }}
                     >
                         <ShoppingBag size={15} />
@@ -1266,7 +1266,7 @@ export const FinalCta: React.FC<FinalCtaProps> = ({ onOpenDrawer }) => {
                     </p>
                     <button
                         className="oc-cta-fill"
-                        onClick={() => onOpenDrawer?.('single')}
+                        onClick={() => onOpenDrawer?.('bundle')}
                         style={{ background: 'var(--oc-gold)', color: 'var(--oc-brown)', padding: '1rem 2.5rem', fontSize: '1.1rem', cursor: 'pointer', border: 'none' }}
                     >
                         <ShoppingBag size={20} />

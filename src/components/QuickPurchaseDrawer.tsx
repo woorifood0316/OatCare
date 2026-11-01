@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import {
     type CartLine,
 } from '../lib/catalog';
 import { slugForFlavor } from '../lib/products';
+import { rememberReturnPoint } from '../lib/return-point';
 import { useMixChoice } from './purchase/MixPicker';
 import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -29,9 +30,14 @@ interface QuickPurchaseDrawerProps {
 export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
     isOpen,
     onClose,
-    initialTab = 'single',
+    initialTab = 'bundle',
 }) => {
     const [activeTab, setActiveTab] = useState<'single' | 'bundle'>(initialTab);
+
+    // Every time the drawer opens it starts on the tab that was asked for (state would otherwise stay from last time).
+    useEffect(() => {
+        if (isOpen) setActiveTab(initialTab);
+    }, [isOpen, initialTab]);
 
     // Single items quantity state: { "그레인": 1, "고구마": 0, ... }
     const [singleQty, setSingleQty] = useState<{ [key: string]: number }>({
@@ -135,7 +141,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                         <ShoppingBag size={20} className="oc-drawer__icon" />
                         <div>
                             <h3>참오트케어 간편 구매</h3>
-                            <span>취향에 맞게 단품 또는 할인 세트를 선택하세요</span>
+                            <span>할인 세트 또는 단품을 선택하세요</span>
                         </div>
                     </div>
                     <button className="oc-drawer__close" onClick={onClose} aria-label="닫기">
@@ -146,17 +152,17 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                 {/* Tab Switcher */}
                 <div className="oc-drawer__tabs">
                     <button
-                        className={`oc-drawer__tab ${activeTab === 'single' ? 'is-active' : ''}`}
-                        onClick={() => setActiveTab('single')}
-                    >
-                        <span>🥛 1개입 단품 ({single.price.toLocaleString('ko-KR')}원)</span>
-                    </button>
-                    <button
                         className={`oc-drawer__tab ${activeTab === 'bundle' ? 'is-active' : ''}`}
                         onClick={() => setActiveTab('bundle')}
                     >
                         <span className="oc-drawer__tab-badge">최대 {maxBundlePct}% OFF</span>
                         <span>🎁 알뜰 세트 ({minUnit.toLocaleString('ko-KR')}원~)</span>
+                    </button>
+                    <button
+                        className={`oc-drawer__tab ${activeTab === 'single' ? 'is-active' : ''}`}
+                        onClick={() => setActiveTab('single')}
+                    >
+                        <span>🥛 1개입 단품 ({single.price.toLocaleString('ko-KR')}원)</span>
                     </button>
                 </div>
 
@@ -189,7 +195,10 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                     <Link
                                                         href={`/products/${slugForFlavor(p.flavor)}`}
                                                         className="oc-drawer-item__more"
-                                                        onClick={onClose}
+                                                        onClick={() => {
+                                                            rememberReturnPoint({ drawer: { tab: activeTab } });
+                                                            onClose();
+                                                        }}
                                                     >
                                                         상세보기 →
                                                     </Link>
@@ -223,8 +232,8 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                 {BUNDLES.map((b) => {
                                     const isSelected = selectedBundleId === b.count;
                                     return (
+                                        <React.Fragment key={b.count}>
                                         <div
-                                            key={b.count}
                                             className={`oc-drawer-bundle-card ${isSelected ? 'is-selected' : ''}`}
                                             onClick={() => setSelectedBundleId(b.count)}
                                         >
@@ -250,12 +259,10 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 <s>{b.listPrice.toLocaleString('ko-KR')}원</s>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-
-                            {mix.picker}
-
+                                        {isSelected ? (
+                                            // The options belong to THIS set: show them directly under its card.
+                                            <div className="oc-drawer-bundle-extra">
+                                                {mix.picker}
                             {canSubscribe ? (
                                 <div className="oc-drawer__mix-option">
                                     <span>구매 방식</span>
@@ -295,6 +302,13 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                     ) : null}
                                 </div>
                             ) : null}
+                                            </div>
+                                        ) : null}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+
                         </div>
                     )}
                 </div>

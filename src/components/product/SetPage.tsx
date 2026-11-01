@@ -21,6 +21,7 @@ import {
 } from '../../lib/catalog';
 import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
+import { hasReturnPoint } from '../../lib/return-point';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -84,7 +85,13 @@ export function SetPage({ count }: { count: number }) {
         const dest = await buyNow(line);
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
-    const goBack = () => {
+    const goBack = (e?: React.MouseEvent) => {
+        // Came here from the landing page: step back so the visitor lands exactly where they left.
+        if (e && hasReturnPoint('/') && window.history.length > 1) {
+            e.preventDefault();
+            router.back();
+            return;
+        }
         try {
             sessionStorage.setItem('oc_return', 'bundles');
         } catch {}

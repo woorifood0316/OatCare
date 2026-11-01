@@ -29,6 +29,7 @@ export function CheckoutOnce({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const widgets = useRef<any>(null);
+    const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
 
     const selected = coupons.find((c) => c.id === couponId) ?? null;
     const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total) : 0;
@@ -69,18 +70,22 @@ export function CheckoutOnce({
 
     const pay = async () => {
         if (busy) return;
-        if (!addressId) {
-            setError('배송지를 선택해 주세요');
-            return;
-        }
         if (!widgets.current) return;
         setBusy(true);
         setError('');
+        // A first-time customer has typed an address but not pressed the form's own button: save it for them.
+        const resolved = (await ensureAddress.current?.()) ?? { id: addressId };
+        const useAddressId = resolved.id ?? addressId;
+        if (!useAddressId) {
+            setError(resolved.error ?? '배송지를 선택해 주세요');
+            setBusy(false);
+            return;
+        }
         try {
             const res = await fetch('/api/checkout/once', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId, memo, couponId, expectedAmount: payable }),
+                body: JSON.stringify({ addressId: useAddressId, memo, couponId, expectedAmount: payable }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -111,7 +116,7 @@ export function CheckoutOnce({
         <CheckoutShell title="주문·결제">
             <OrderSummary priced={priced} mode="once" discount={discount} />
             <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} />
-            <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} />
+            <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">
                 <h2 className="co-h2">배송 요청사항</h2>

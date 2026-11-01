@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { slugForFlavor, slugForSetName } from '../lib/products';
+import { rememberReturnPoint, restoreScroll, takeReturnPoint } from '../lib/return-point';
 import { ScrollScrubHero } from '../components/ScrollScrubHero';
 import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
 import { LegalModal, LegalModalType } from '../components/LegalModal';
@@ -29,21 +30,33 @@ export default function Home() {
         const slug = slugForFlavor(p.flavor);
         const setCount = slugForSetName(p.flavor);
         if (slug) {
-            try { sessionStorage.setItem('oc_return', 'product-lineup'); } catch {}
+            rememberReturnPoint();
             router.push(`/products/${slug}`);
         } else if (setCount) {
-            try { sessionStorage.setItem('oc_return', 'bundles'); } catch {}
+            rememberReturnPoint();
             router.push(`/sets/${setCount}`);
         }
     };
     const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [drawerTab, setDrawerTab] = useState<'single' | 'bundle'>('single');
+    const [drawerTab, setDrawerTab] = useState<'single' | 'bundle'>('bundle');
     const [legalModalType, setLegalModalType] = useState<LegalModalType>(null);
     const [standaloneLegalRoute, setStandaloneLegalRoute] = useState<'privacy' | 'terms' | null>(null);
     const [savedScrollPos, setSavedScrollPos] = useState<number>(0);
 
-    // Coming back from a product page (back button or header link) lands on the flavour lineup, not the top.
+    // Coming back from a product page: same scroll position, and the quick-purchase drawer reopens if it was open.
+    useEffect(() => {
+        const point = takeReturnPoint('/');
+        if (!point) return;
+        restoreScroll(point.y, () => {
+            if (point.drawer) {
+                setDrawerTab(point.drawer.tab);
+                setIsDrawerOpen(true);
+            }
+        });
+    }, []);
+
+    // Fallback (arrived from a product page's header link, or the saved position expired): go to the lineup section.
     useEffect(() => {
         let target: string | null = null;
         try {
@@ -85,7 +98,7 @@ export default function Home() {
         };
     }, []);
 
-    const handleOpenDrawer = (tab: 'single' | 'bundle' = 'single') => {
+    const handleOpenDrawer = (tab: 'single' | 'bundle' = 'bundle') => {
         setDrawerTab(tab);
         setIsDrawerOpen(true);
     };

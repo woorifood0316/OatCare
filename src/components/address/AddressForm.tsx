@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { AddressInput } from '../../lib/validate';
 
@@ -49,12 +49,15 @@ export function AddressForm({
     showDefault = true,
     onSubmit,
     onCancel,
+    submitRef,
 }: {
     initial?: Partial<AddressInput>;
     submitLabel?: string;
     showDefault?: boolean;
     onSubmit: (input: AddressInput) => Promise<string | null>;
     onCancel?: () => void;
+    /** Lets a parent save the form without the customer pressing its own button (e.g. the pay button). */
+    submitRef?: React.MutableRefObject<(() => Promise<string | null>) | null>;
 }) {
     const [form, setForm] = useState({
         label: initial?.label ?? '',
@@ -101,9 +104,8 @@ export function AddressForm({
         }
     };
 
-    const submit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (busy) return;
+    const save = async (): Promise<string | null> => {
+        if (busy) return '저장 중이에요. 잠시만 기다려 주세요';
         setBusy(true);
         setError('');
         const msg = await onSubmit({
@@ -117,7 +119,21 @@ export function AddressForm({
         });
         if (msg) setError(msg);
         setBusy(false);
+        return msg;
     };
+
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await save();
+    };
+
+    useEffect(() => {
+        if (!submitRef) return;
+        submitRef.current = save;
+        return () => {
+            submitRef.current = null;
+        };
+    });
 
     return (
         <form className="addr-form" onSubmit={submit} noValidate>

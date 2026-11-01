@@ -5148,3 +5148,7 @@ body {
 .adm-modal__actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .adm-prev--error td { background: #fdecea; }
 .adm-prev--already td { background: #fff7e0; }
+
+.oc-drawer-bundle-extra { margin: -.8rem 0 0; padding: 1.1rem .9rem .9rem; border: 2px solid var(--oc-maroon); border-top: 0; border-radius: 0 0 14px 14px; background: #fffdf8; display: grid; gap: .8rem; }
+.oc-drawer-bundle-extra .pd-mix { margin: 0; border: 0; padding: 0; background: transparent; }
+.oc-drawer-bundle-extra .oc-drawer__mix-option { margin: 0; }
