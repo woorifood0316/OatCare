@@ -397,7 +397,7 @@ export const QuickReviews: React.FC = () => {
             <div className="oc-section-header">
                 <ScrollReveal>
                     <span className="oc-eyebrow">Real Reviews</span>
-                    <h2>5,400명+이 입을 모아 <span className="oc-highlight-maroon">재구매하는 이유</span></h2>
+                    <h2 className="oc-h2-keep">5,400명+이 입을 모아<br /><span className="oc-highlight-maroon">재구매하는 이유</span></h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
