@@ -21,6 +21,13 @@ import { useMixChoice } from './purchase/MixPicker';
 import { getAssetUrl } from '../utils/assets';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
+/** Fixed line breaks for the set titles in the narrow drawer (two lines each, never a lone word on line two). */
+const DRAWER_TITLE: Record<number, string[]> = {
+    10: ['5종 맛보기', '10개입 세트'],
+    20: ['든든 20개입', '한달 박스'],
+    30: ['대용량 30개입', '패밀리 박스'],
+};
+
 interface QuickPurchaseDrawerProps {
     isOpen: boolean;
     onClose: () => void;
@@ -232,7 +239,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                 {BUNDLES.map((b) => {
                                     const isSelected = selectedBundleId === b.count;
                                     return (
-                                        <React.Fragment key={b.count}>
+                                        <div key={b.count} className={`oc-drawer-bundle-group${isSelected ? ' is-selected' : ''}`}>
                                         <div
                                             className={`oc-drawer-bundle-card ${isSelected ? 'is-selected' : ''}`}
                                             onClick={() => setSelectedBundleId(b.count)}
@@ -245,8 +252,24 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
                                             <div className="oc-drawer-bundle-card__info">
                                                 <div className="oc-drawer-bundle-card__head">
-                                                    <strong>{b.flavor}</strong>
-                                                    {b.badge && <span className="oc-badge-mini">{b.badge}</span>}
+                                                    <strong>
+                                                        {(DRAWER_TITLE[b.count] ?? [b.flavor]).map((line, i) => (
+                                                            <React.Fragment key={i}>
+                                                                {i > 0 ? <br /> : null}
+                                                                {line}
+                                                            </React.Fragment>
+                                                        ))}
+                                                    </strong>
+                                                    {b.badge ? (
+                                                        <span className="oc-badge-mini oc-badge-mini--2l">
+                                                            {b.badge.split(' (')[0]}
+                                                            {b.badge.includes(' (') ? (
+                                                                <>
+                                                                    <br />({b.badge.split(' (').slice(1).join(' (')}
+                                                                </>
+                                                            ) : null}
+                                                        </span>
+                                                    ) : null}
                                                 </div>
                                                 <p>{b.desc}</p>
                                                 <div className="oc-drawer-bundle-card__unit">
@@ -259,7 +282,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 <s>{b.listPrice.toLocaleString('ko-KR')}원</s>
                                             </div>
                                         </div>
-                                        {isSelected ? (
+                                        {isSelected && (mix.picker || canSubscribe) ? (
                                             // The options belong to THIS set: show them directly under its card.
                                             <div className="oc-drawer-bundle-extra">
                                                 {mix.picker}
@@ -277,7 +300,8 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                             className={purchaseMode === 'subscribe' ? 'is-active' : ''}
                                             onClick={() => setPurchaseMode('subscribe')}
                                         >
-                                            🔁 정기구독 ({Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인 · 첫 회 쉐이커 보틀 증정)
+                                            <b className="oc-mode-title">🔁 정기구독</b>
+                                            <small className="oc-mode-sub">{Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인 · 첫 회 보틀 증정</small>
                                         </button>
                                     </div>
                                     {purchaseMode === 'subscribe' ? (
@@ -304,7 +328,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                             ) : null}
                                             </div>
                                         ) : null}
-                                        </React.Fragment>
+                                        </div>
                                     );
                                 })}
                             </div>

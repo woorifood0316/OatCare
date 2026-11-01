@@ -140,6 +140,10 @@ export default function Home() {
             </ScrollReveal>
 
             <ScrollReveal className="oc-band oc-band--cream">
+                <Bundles onSelectProduct={setSelectedProduct} />
+            </ScrollReveal>
+
+            <ScrollReveal className="oc-band oc-band--tan">
                 <ProductGrid onSelectProduct={setSelectedProduct} />
             </ScrollReveal>
 
@@ -151,12 +155,8 @@ export default function Home() {
 
             <LegalModal type={legalModalType} onClose={() => setLegalModalType(null)} />
 
-            <ScrollReveal className="oc-band oc-band--tan">
-                <FamilyStory />
-            </ScrollReveal>
-
             <ScrollReveal className="oc-band oc-band--cream">
-                <Bundles onSelectProduct={setSelectedProduct} />
+                <FamilyStory />
             </ScrollReveal>
 
             <ScrollReveal className="oc-band oc-band--tan">

@@ -75,14 +75,14 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                     <a className="oc-nav__link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
                         WHY CHAMOATCARE
                     </a>
-                    <a className="oc-nav__link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
-                        맛 둘러보기
-                    </a>
                     <a className="oc-nav__link" href="#reviews" onClick={(e) => handleNavClick(e, 'reviews')}>
                         고객 후기
                     </a>
                     <a className="oc-nav__link" href="#bundles" onClick={(e) => handleNavClick(e, 'bundles')}>
                         세트 구성
+                    </a>
+                    <a className="oc-nav__link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
+                        맛 둘러보기
                     </a>
                     <a className="oc-nav__link" href="#content" onClick={(e) => handleNavClick(e, 'content')}>
                         아침 가이드
@@ -136,16 +136,16 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                                 <span>WHY CHAMOATCARE</span>
                                 <ArrowRight size={18} />
                             </a>
-                            <a className="oc-mobile-menu-link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
-                                <span>맛 둘러보기</span>
-                                <ArrowRight size={18} />
-                            </a>
                             <a className="oc-mobile-menu-link" href="#reviews" onClick={(e) => handleNavClick(e, 'reviews')}>
                                 <span>고객 후기</span>
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href="#bundles" onClick={(e) => handleNavClick(e, 'bundles')}>
                                 <span>세트 구성</span>
+                                <ArrowRight size={18} />
+                            </a>
+                            <a className="oc-mobile-menu-link" href="#product-lineup" onClick={(e) => handleNavClick(e, 'product-lineup')}>
+                                <span>맛 둘러보기</span>
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href="#content" onClick={(e) => handleNavClick(e, 'content')}>
