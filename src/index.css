@@ -5133,3 +5133,18 @@ body {
 .my-profile-logout { margin-top: 1rem; }
 .my-profile-logout .addr-btn { width: 100%; }
 @media (min-width: 900px) { .my-profile-logout { display: none; } }
+
+/* admin: excel tools */
+.adm-excel h2 { display: flex; align-items: center; gap: .4rem; }
+.adm-excel__row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: .5rem 0; }
+.adm-excel .adm-btn { display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; }
+.adm-excel__check { display: inline-flex; align-items: center; gap: .4rem; font-size: .86rem; }
+.adm-excel__ok { color: #1f6f31; font-weight: 700; margin-top: .4rem; }
+.adm-excel__err { color: #b3261e; font-weight: 700; margin-top: .4rem; }
+.adm-modal { position: fixed; inset: 0; z-index: 400; background: rgba(40, 24, 16, .5); display: grid; place-items: center; padding: 1rem; }
+.adm-modal__card { width: 100%; max-width: 860px; max-height: 88vh; display: flex; flex-direction: column; gap: .7rem; background: #fff; border-radius: 1rem; padding: 1.2rem; }
+.adm-modal__card h3 { font-size: 1.05rem; font-weight: 800; }
+.adm-modal__table { overflow: auto; border: 1px solid #e6dcc4; border-radius: .6rem; }
+.adm-modal__actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.adm-prev--error td { background: #fdecea; }
+.adm-prev--already td { background: #fff7e0; }

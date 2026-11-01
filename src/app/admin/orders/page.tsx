@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PAGE_SIZE, searchOrders } from '../../../lib/admin-data';
 import { ORDER_STATUS_LABEL } from '../../../lib/order-status';
 import { dt, won } from '../../../components/admin/format';
+import { ShippingExcelTools } from '../../../components/admin/ShippingExcelTools';
 
 export const runtime = 'edge';
 
@@ -46,6 +47,8 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                 </button>
             </form>
 
+            <ShippingExcelTools filter={{ status: sp.status, kind: sp.kind, q: sp.q }} />
+
             <p className="adm-muted">총 {total}건</p>
             {orders.length === 0 ? (
                 <section className="adm-card">
@@ -56,6 +59,9 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                     <table className="adm-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="adm-sel-all" aria-label="전체 선택" />
+                                </th>
                                 <th>주문번호</th>
                                 <th>일시</th>
                                 <th>받는 분</th>
@@ -68,6 +74,9 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                         <tbody>
                             {orders.map((o) => (
                                 <tr key={o.id}>
+                                    <td>
+                                        <input type="checkbox" className="adm-sel" data-order={o.orderNo} aria-label={`${o.orderNo} 선택`} />
+                                    </td>
                                     <td>
                                         <Link href={`/admin/orders/${o.orderNo}`}>{o.orderNo}</Link>
                                     </td>
