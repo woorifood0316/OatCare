@@ -60,3 +60,6 @@ tsconfig.tsbuildinfo
 /.devtools/
 /.detail-work/
 /qr/
+
+# card-company review material (contains test account)
+/결제경로자료/
