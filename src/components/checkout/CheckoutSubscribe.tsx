@@ -2,7 +2,7 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
+import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
 import { cardText } from '../mypage/PaymentMethodManager';
 import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, type PricedCart } from '../../lib/catalog';
@@ -138,6 +138,7 @@ export function CheckoutSubscribe({
                         ))}
                     </ul>
                 )}
+                {methods.length > 0 ? <ManageHint what="등록한 카드를 삭제하거나 변경" /> : null}
             </section>
 
             <section className="cart-section">

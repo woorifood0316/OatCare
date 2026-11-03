@@ -4739,6 +4739,8 @@ body {
 /* Checkout */
 .co-page { max-width: 40rem; }
 .co-h2 { margin: 0 0 0.7rem; font-size: 1rem; font-weight: 800; }
+.co-manage-hint { margin: 0.7rem 0 0; font-size: 0.8rem; line-height: 1.5; color: #8a8178; word-break: keep-all; }
+.co-manage-hint a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .co-items { margin: 0; padding: 0; list-style: none; }
 .co-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--oc-line); font-size: 0.9rem; }
 .co-item img { flex: none; width: 3.4rem; height: 3.4rem; border-radius: 0.6rem; object-fit: cover; background: var(--oc-cream-2); }

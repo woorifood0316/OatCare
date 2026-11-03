@@ -164,6 +164,19 @@ export function CouponPicker({
 }
 
 /** Pick a saved address or add a new one inline. */
+/** Small hint under a saved list: where to delete / edit entries (opens in a new tab so checkout is not lost). */
+export function ManageHint({ what }: { what: string }) {
+    return (
+        <p className="co-manage-hint">
+            💡 {what}하려면{' '}
+            <a href="/mypage/payment" target="_blank" rel="noopener noreferrer">
+                마이페이지 → 결제수단·배송지
+            </a>
+            에서 할 수 있어요.
+        </p>
+    );
+}
+
 export function AddressPicker({
     initial,
     selectedId,
@@ -248,6 +261,8 @@ export function AddressPicker({
                     ))}
                 </ul>
             ) : null}
+
+            {list.length > 0 && !adding ? <ManageHint what="저장된 배송지를 삭제하거나 수정" /> : null}
 
             {adding ? (
                 <AddressForm
