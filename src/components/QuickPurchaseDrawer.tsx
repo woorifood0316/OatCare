@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from './ShipEta';
 import React, { useEffect, useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -359,6 +360,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                         )}
                     </div>
 
+                    <ShipEta compact className="oc-drawer__ship" />
                     <div className="oc-drawer__actions">
                         <button className="oc-cta-outline oc-drawer__cart-btn" onClick={handleAddToCart}>
                             <ShoppingBag size={16} />

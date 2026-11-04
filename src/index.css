@@ -5292,3 +5292,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cf__card { transition: opacity 0.2s ease; }
 }
+
+/* ============================================================================
+   Same-day shipping notice (13:00 KST cut-off, weekdays excluding public holidays)
+   ========================================================================== */
+.ship-eta { --ship-c: #2f6b3a; display: flex; flex-direction: column; gap: 0.2rem; margin: 0.9rem 0; padding: 0.7rem 0.9rem; border-radius: 12px; background: rgba(47, 107, 58, 0.07); border: 1px solid rgba(47, 107, 58, 0.18); color: var(--oc-brown); }
+.ship-eta p { margin: 0; }
+.ship-eta__main { display: flex; align-items: center; gap: 0.45rem; font-size: 0.93rem; font-weight: 600; line-height: 1.4; }
+.ship-eta__main svg { flex: none; color: var(--ship-c); }
+.ship-eta__main b { color: var(--ship-c); font-weight: 800; }
+.ship-eta.is-today .ship-eta__left { color: var(--oc-maroon); font-variant-numeric: tabular-nums; }
+.ship-eta__rule { padding-left: calc(17px + 0.45rem); font-size: 0.76rem; opacity: 0.7; }
+.ship-eta--compact { margin: 0.55rem 0; padding: 0.45rem 0.7rem; }
+.ship-eta--compact .ship-eta__main { font-size: 0.85rem; }
+.ship-eta--wait { min-height: 3.6rem; background: transparent; border-color: transparent; }
+.ship-eta--compact.ship-eta--wait { min-height: 2.1rem; }
+.cf__bar .ship-eta, .oc-drawer__ship { margin: 0 0 0.6rem; }
+.oc-drawer__ship { margin: 0; }

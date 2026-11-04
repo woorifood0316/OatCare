@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from '../ShipEta';
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -232,6 +233,7 @@ function Section({
                     <strong>{won(priced.total)}</strong>
                 </div>
                 {blocked ? <p className="cart-summary__error">{priced.error}</p> : null}
+                <ShipEta compact />
                 {blocked ? (
                     <button type="button" className="my-btn my-btn--primary cart-summary__cta" disabled>
                         {cta}

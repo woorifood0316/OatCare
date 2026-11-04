@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
@@ -266,6 +267,7 @@ export function FlavorCoverflow({
                         </span>
                     )}
                 </div>
+                <ShipEta compact />
                 <div className="cf__actions">
                     <button type="button" className="ca__btn ca__btn--cart" onClick={addAll} disabled={totalCount === 0}>
                         <ShoppingBag size={15} />

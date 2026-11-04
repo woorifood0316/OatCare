@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from '../ShipEta';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -190,6 +191,7 @@ export function SetPage({ count }: { count: number }) {
 
                         {picker}
 
+                        <ShipEta />
                         {subscribable ? (
                             <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
                         ) : (
@@ -336,7 +338,7 @@ export function SetPage({ count }: { count: number }) {
                     <dl className="pd-policy">
                         <dt>배송</dt>
                         <dd>
-                            결제 완료 후 순차 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {won(FREE_SHIPPING_MIN)} 이상 무료)
+                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {won(FREE_SHIPPING_MIN)} 이상 무료)
                         </dd>
                         <dt>정기구독</dt>
                         <dd>

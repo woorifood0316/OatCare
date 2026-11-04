@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from '../ShipEta';
 import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, won } from './Parts';
@@ -185,6 +186,7 @@ export function CheckoutSubscribe({
                 </div>
             ) : null}
 
+            <ShipEta />
             <button type="button" className="my-btn my-btn--primary co-pay" onClick={start} disabled={busy}>
                 {busy ? '결제 진행 중...' : `${won(payable)} 결제하고 정기구독 시작`}
             </button>

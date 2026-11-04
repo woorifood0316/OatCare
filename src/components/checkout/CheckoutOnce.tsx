@@ -1,5 +1,6 @@
 'use client';
 
+import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
 import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
 import { loadTossSdk as loadSdk } from '../../lib/toss-sdk';
@@ -142,6 +143,7 @@ export function CheckoutOnce({
                 </p>
             ) : null}
 
+            <ShipEta />
             <button type="button" className="my-btn my-btn--primary co-pay" onClick={pay} disabled={!ready || busy}>
                 {busy ? '결제 진행 중...' : `${won(payable)} 결제하기`}
             </button>
