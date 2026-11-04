@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Repeat, Users, Bell } from 'lucide-react';
+import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff } from 'lucide-react';
 
 const NAV = [
     { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
@@ -11,6 +11,7 @@ const NAV = [
     { href: '/admin/subscriptions', label: '구독', icon: Repeat },
     { href: '/admin/members', label: '회원', icon: Users },
     { href: '/admin/notifications', label: '알림', icon: Bell },
+    { href: '/admin/holidays', label: '휴무일', icon: CalendarOff },
 ] as const;
 
 export function AdminShell({ name, children }: { name: string | null; children: React.ReactNode }) {

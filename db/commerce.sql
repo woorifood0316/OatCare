@@ -149,3 +149,15 @@ alter table orders add column if not exists coupon_id uuid references coupons(id
 alter table users add column if not exists shaker_gifted_at timestamptz;
 alter table subscriptions add column if not exists paid_count int not null default 0;
 alter table subscriptions add column if not exists cancel_requested_at timestamptz;
+
+-- ---- Shipping calendar overrides (admin /admin/holidays) ----
+-- Legal public holidays are computed in code (src/lib/ship-date.ts). This table holds only what the operator sets:
+--   closed: no shipping that day (election day, temporary holiday, courier day off, ...)
+--   open:   ship even though it is an automatic holiday
+create table if not exists ship_calendar (
+    day        date primary key,
+    kind       text not null check (kind in ('closed', 'open')),
+    memo       text not null default '',
+    created_by uuid references users(id) on delete set null,
+    created_at timestamptz not null default now()
+);

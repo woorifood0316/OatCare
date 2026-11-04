@@ -8,6 +8,7 @@ import { findSkuByName, getItem } from '../lib/catalog';
 import { PurchaseChooser } from './purchase/PurchaseChooser';
 import { CardActions } from './purchase/CardActions';
 import { FlavorCoverflow } from './purchase/FlavorCoverflow';
+import { ShipEta } from './ShipEta';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 
@@ -874,6 +875,8 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                     </p>
                 </ScrollReveal>
             </div>
+
+            <ShipEta compact className="oc-bundles-ship" />
 
             <div className="oc-bundles-grid">
                 {BUNDLES.map((b, index) => (
