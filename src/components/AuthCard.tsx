@@ -1,11 +1,15 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
-import { startKakaoLogin } from '../lib/kakao-sdk';
+import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
+import { CART_PARAM, encodeCart, inAppKind, isMobile, openInAppLink, type InAppKind } from '../lib/app-switch';
+import { useCart } from './cart/CartProvider';
+
+const CHOOSER_DISMISSED = 'oc_app_chooser_dismissed';
 
 type Mode = 'login' | 'signup';
 type Provider = 'kakao' | 'naver' | 'google';
@@ -21,6 +25,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     Configuration: '로그인 설정에 문제가 있어요. 잠시 후 다시 시도해 주세요.',
     OAuthAccountNotLinked: '이미 다른 방법으로 가입된 계정이에요.',
     KakaoLogin: '카카오 로그인을 마치지 못했어요. 다시 시도해 주세요.',
+    SignupExpired: '시간이 지나 가입이 취소됐어요. 버튼을 눌러 다시 시작해 주세요.',
+    CredentialsSignin: '가입을 마치지 못했어요. 버튼을 눌러 다시 시작해 주세요.',
     Default: '로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
 };
 
@@ -57,14 +63,53 @@ const ICONS: Record<Provider, React.ReactNode> = {
 function AuthCardInner({ mode }: { mode: Mode }) {
     const params = useSearchParams();
     const callbackUrl = safeCallbackPath(params.get('callbackUrl'));
-    const [marketing, setMarketing] = useState(false);
     const [pending, setPending] = useState<Provider | null>(null);
     const [testOpen, setTestOpen] = useState(false);
     const [testId, setTestId] = useState('');
     const [testPw, setTestPw] = useState('');
     const [testError, setTestError] = useState<string | null>(null);
+    const { lines } = useCart();
+    // Phone browser (QR scanned with the camera): offer to continue inside KakaoTalk / Naver, where no id/password is
+    // needed. Decided after mount (depends on the device).
+    const [env, setEnv] = useState<{ inApp: InAppKind; mobile: boolean } | null>(null);
+    const [chooser, setChooser] = useState(false);
+    const [opening, setOpening] = useState<'kakao' | 'naver' | null>(null);
+    useEffect(() => {
+        preloadKakaoSdk();
+        const e = { inApp: inAppKind(), mobile: isMobile() };
+        setEnv(e);
+        let dismissed = false;
+        try {
+            dismissed = sessionStorage.getItem(CHOOSER_DISMISSED) === '1';
+        } catch {
+            /* ignore */
+        }
+        if (e.mobile && e.inApp === null && !dismissed) setChooser(true);
+    }, []);
+    const closeChooser = () => {
+        setChooser(false);
+        try {
+            sessionStorage.setItem(CHOOSER_DISMISSED, '1');
+        } catch {
+            /* ignore */
+        }
+    };
+    const openIn = (app: 'kakao' | 'naver') => {
+        const here = new URL(window.location.href);
+        here.searchParams.delete('error');
+        here.searchParams.delete('reason');
+        const cart = encodeCart(lines);
+        if (cart) here.searchParams.set(CART_PARAM, cart);
+        setOpening(app);
+        window.location.href = openInAppLink(app, here.toString(), window.location.href);
+        // The app did not open (not installed / blocked): stay here and say so.
+        setTimeout(() => {
+            if (document.visibilityState === 'visible') setOpening(null);
+        }, 2500);
+    };
 
-    const isSignup = mode === 'signup';
+    // Sign-up and log-in are one flow now: both pages show the same "…로 시작하기" card.
+    void mode;
     const errorCode = params.get('error');
     const notice = params.get('notice');
 
@@ -81,12 +126,9 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const handleClick = (provider: Provider) => {
         if (pending) return;
         setPending(provider);
-        // Consent is recorded server-side only for sign-ups (short-lived cookie, read once).
-        if (isSignup) {
-            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-            document.cookie = `oc_consent=1; path=/; max-age=600; SameSite=Lax${secure}`;
-            document.cookie = `oc_mkt=${marketing ? 1 : 0}; path=/; max-age=600; SameSite=Lax${secure}`;
-        }
+        // A first-time visitor stops at /welcome (one-tap consent) on the way back: remember where to go afterwards.
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `oc_after=${encodeURIComponent(callbackUrl)}; path=/; max-age=1200; SameSite=Lax${secure}`;
         if (provider === 'kakao') {
             // KakaoTalk app "간편로그인" (no id/password). If the SDK cannot start, use the regular web login.
             startKakaoLogin(callbackUrl)
@@ -97,7 +139,6 @@ function AuthCardInner({ mode }: { mode: Mode }) {
         signIn(provider, { redirectTo: callbackUrl });
     };
 
-    const verb = isSignup ? '3초 회원가입' : '로 로그인';
 
     return (
         <main className="oc-auth">
@@ -107,16 +148,14 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     <span>참오트케어</span>
                 </a>
 
-                <h1 className="oc-auth__title">{isSignup ? '3초 만에 시작하세요' : '다시 만나서 반가워요'}</h1>
+                <h1 className="oc-auth__title">참오트케어 시작하기</h1>
                 <p className="oc-auth__sub">
-                    {isSignup
-                        ? '쓰던 소셜 계정으로 바로 가입할 수 있어요. 별도 입력은 없어요.'
-                        : '가입할 때 사용한 소셜 계정으로 로그인해 주세요.'}
+                    쓰시는 카카오·네이버 계정으로 바로 시작해요.
+                    <br />
+                    처음이시면 동의 한 번으로 가입까지 끝나요.
                 </p>
 
-                {isSignup ? (
-                    <p className="oc-auth__perk">🎟️ 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (30일 이내 사용)</p>
-                ) : null}
+                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (30일 이내 사용)</p>
 
                 {message && (
                     <p className={`oc-auth__msg oc-auth__msg--${message.tone}`} role="alert">
@@ -125,7 +164,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                 )}
 
                 <div className="oc-auth__buttons">
-                    {(['kakao', 'naver', 'google'] as Provider[]).map((p) => (
+                    {(['kakao', 'naver', 'google'] as Provider[]).filter((p) => !(p === 'google' && env?.inApp)).map((p) => (
                         <button
                             key={p}
                             type="button"
@@ -135,17 +174,13 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         >
                             <span className="oc-auth__btn-icon">{ICONS[p]}</span>
                             <span>
-                                {pending === p
-                                    ? '이동 중...'
-                                    : isSignup
-                                      ? `${PROVIDER_LABEL[p]} ${verb}`
-                                      : `${PROVIDER_LABEL[p]}${verb}`}
+                                {pending === p ? '이동 중...' : `${PROVIDER_LABEL[p]}로 시작하기`}
                             </span>
                         </button>
                     ))}
                 </div>
 
-                {!isSignup ? (
+                {(
                     <>
                         <button type="button" className="oc-auth__btn oc-auth__btn--review" onClick={() => setTestOpen(true)}>
                             <span>테스트 로그인</span>
@@ -175,9 +210,9 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                             </div>
                         ) : null}
                     </>
-                ) : null}
+                )}
 
-                {isSignup && (
+                {(
                     <div className="oc-auth__collect">
                         <strong>가입 시 받는 정보</strong>
                         <ul>
@@ -189,39 +224,48 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     </div>
                 )}
 
-                {isSignup && (
-                    <label className="oc-auth__check">
-                        <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
-                        <span>(선택) 신제품·혜택 소식 수신에 동의합니다.</span>
-                    </label>
-                )}
-
-                {isSignup && (
-                    <p className="oc-auth__legal">
-                        가입 버튼을 누르면{' '}
-                        <a href="/terms" target="_blank" rel="noopener noreferrer">
-                            이용약관
-                        </a>
-                        과{' '}
-                        <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                            개인정보처리방침
-                        </a>
-                        에 동의한 것으로 봅니다. 만 14세 미만은 가입할 수 없어요.
-                    </p>
-                )}
-
-                <p className="oc-auth__switch">
-                    {isSignup ? (
-                        <>
-                            이미 회원이신가요? <a href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}>로그인</a>
-                        </>
-                    ) : (
-                        <>
-                            아직 회원이 아니신가요?{' '}
-                            <a href={`/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`}>3초 회원가입</a>
-                        </>
-                    )}
+                <p className="oc-auth__legal">
+                    처음 오신 분은 다음 화면에서{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer">
+                        이용약관
+                    </a>
+                    과{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                        개인정보처리방침
+                    </a>
+                    에 동의하면 가입돼요. 만 14세 미만은 가입할 수 없어요.
                 </p>
+                {env?.inApp ? (
+                    <p className="oc-auth__inapp">구글 계정은 크롬·사파리 같은 일반 브라우저에서 이용할 수 있어요.</p>
+                ) : null}
+                {env?.mobile && env.inApp === null && !chooser ? (
+                    <button type="button" className="oc-auth__reopen" onClick={() => setChooser(true)}>
+                        아이디·비밀번호 없이 가입하기 (카카오톡·네이버 앱에서 열기)
+                    </button>
+                ) : null}
+
+                {chooser ? (
+                    <div className="oc-chooser" role="dialog" aria-modal="true" aria-labelledby="oc-chooser-title" onClick={closeChooser}>
+                        <div className="oc-chooser__card" onClick={(e) => e.stopPropagation()}>
+                            <strong id="oc-chooser-title">평소 쓰시는 앱에서 열어 주세요</strong>
+                            <p>
+                                앱에서 열면 <b>아이디·비밀번호 없이</b>
+                                <br />
+                                동의만 누르면 바로 가입·로그인돼요.
+                            </p>
+                            <button type="button" className="oc-chooser__btn oc-chooser__btn--kakao" onClick={() => openIn('kakao')} disabled={opening !== null}>
+                                {opening === 'kakao' ? '카카오톡 여는 중...' : '카카오톡에서 열기'}
+                            </button>
+                            <button type="button" className="oc-chooser__btn oc-chooser__btn--naver" onClick={() => openIn('naver')} disabled={opening !== null}>
+                                {opening === 'naver' ? '네이버 앱 여는 중...' : '네이버 앱에서 열기'}
+                            </button>
+                            {opening === null && lines.length > 0 ? <small>담아 두신 장바구니도 그대로 옮겨져요.</small> : null}
+                            <button type="button" className="oc-chooser__skip" onClick={closeChooser}>
+                                이 화면에서 계속할게요
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
             </div>
         </main>
     );

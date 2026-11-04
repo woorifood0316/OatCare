@@ -3,7 +3,7 @@ export function safeCallbackPath(value: string | null | undefined): string {
     if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
         return '/';
     }
-    if (value.startsWith('/login') || value.startsWith('/signup')) {
+    if (value.startsWith('/login') || value.startsWith('/signup') || value.startsWith('/welcome')) {
         return '/';
     }
     return value;

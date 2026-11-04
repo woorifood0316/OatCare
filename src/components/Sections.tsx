@@ -159,7 +159,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href={isLoggedIn ? '/mypage' : '/login'}>
-                                <span>{isLoggedIn ? '마이페이지' : '로그인 / 3초 회원가입'}</span>
+                                <span>{isLoggedIn ? '마이페이지' : '로그인 · 가입하기'}</span>
                                 <ArrowRight size={18} />
                             </a>
                         </nav>

@@ -7,7 +7,7 @@ import { ShoppingCart } from 'lucide-react';
 import { useCart } from './CartProvider';
 
 // Pages where a floating cart button would only get in the way.
-const HIDDEN_PREFIXES = ['/cart', '/checkout', '/mypage', '/login', '/signup', '/admin', '/privacy', '/terms'];
+const HIDDEN_PREFIXES = ['/cart', '/checkout', '/mypage', '/login', '/signup', '/welcome', '/admin', '/privacy', '/terms'];
 
 export function CartFab() {
     const { count, toast, hydrated } = useCart();

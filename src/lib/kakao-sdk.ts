@@ -50,8 +50,21 @@ const randomState = () => {
  * Starts Kakao login. On a phone with KakaoTalk installed this opens the app ("동의하고 계속하기" only);
  * otherwise Kakao shows its normal web login. Rejects if the SDK cannot be used, so the caller can fall back.
  */
-export async function startKakaoLogin(callbackPath: string): Promise<void> {
-    const Kakao = await loadSdk();
+/** Start downloading the SDK early (call when the login page opens). */
+export function preloadKakaoSdk(): void {
+    loadSdk().catch(() => {});
+}
+
+export function startKakaoLogin(callbackPath: string): Promise<void> {
+    // Already loaded: open KakaoTalk synchronously, inside the tap.
+    if (window.Kakao) {
+        runKakaoLogin(window.Kakao, callbackPath);
+        return Promise.resolve();
+    }
+    return loadSdk().then((Kakao) => runKakaoLogin(Kakao, callbackPath));
+}
+
+function runKakaoLogin(Kakao: KakaoSdk, callbackPath: string): void {
     if (!Kakao.isInitialized()) Kakao.init(JS_KEY);
     const state = randomState();
     const secure = window.location.protocol === 'https:' ? '; Secure' : '';

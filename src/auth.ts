@@ -8,6 +8,7 @@ import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
 import { verifyTestLogin } from './lib/test-login';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
+import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
 
 /** Kakao app-login failure with the reason in `code` (shown on /login so a failed try tells us why). */
 class KakaoSignin extends CredentialsSignin {
@@ -17,8 +18,6 @@ class KakaoSignin extends CredentialsSignin {
     }
 }
 
-export const CONSENT_COOKIE = 'oc_consent';
-export const MARKETING_COOKIE = 'oc_mkt';
 
 // Credentials are read automatically from AUTH_GOOGLE_*, AUTH_KAKAO_*, AUTH_NAVER_*.
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -64,6 +63,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
         Google,
+        // Second half of the one-step sign-up: /welcome posts the visitor's consent here. The social profile comes from
+        // the encrypted oc_pending cookie set in the signIn callback below, never from the browser.
+        Credentials({
+            id: 'signup',
+            name: 'signup',
+            credentials: { agreed: {}, marketing: {} },
+            async authorize(creds) {
+                if (creds?.agreed !== '1') return null;
+                const jar = await cookies();
+                const pending = await openPending(jar.get(PENDING_COOKIE)?.value);
+                if (!pending) return null;
+                const sql = getSql();
+                // Already a member (e.g. the welcome page was submitted twice): just log in.
+                const existing = await sql`
+                    select user_id from accounts where provider = ${pending.provider} and provider_account_id = ${pending.providerAccountId}
+                `;
+                let userId: string;
+                if (existing.length > 0) {
+                    userId = existing[0].user_id as string;
+                } else {
+                    const created = await sql`
+                        insert into users (name, email, terms_agreed_at, privacy_agreed_at, marketing_agreed, last_login_at)
+                        values (${pending.name}, ${pending.email}, now(), now(), ${creds?.marketing === '1'}, now())
+                        returning id
+                    `;
+                    userId = created[0].id as string;
+                    await sql`
+                        insert into accounts (user_id, provider, provider_account_id)
+                        values (${userId}, ${pending.provider}, ${pending.providerAccountId})
+                    `;
+                    await issueWelcomeCoupon(userId);
+                }
+                jar.delete(PENDING_COOKIE);
+                return { id: userId, name: pending.name, email: pending.email };
+            },
+        }),
         // TEMPORARY: test id/password login for the payment-provider review (see lib/test-login.ts).
         Credentials({
             id: 'review',
@@ -91,7 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async signIn({ user, account }) {
             if (!account) return false;
-            if (account.provider === 'review') return true; // already verified in authorize()
+            if (account.provider === 'review' || account.provider === 'signup') return true; // done in authorize()
             const provider = account.provider === 'kakao-app' ? 'kakao' : account.provider;
             const providerAccountId = account.providerAccountId;
             const sql = getSql();
@@ -113,26 +148,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 return true;
             }
 
-            // New social account: only /signup sets the consent cookie.
+            // New social account: no separate sign-up page. Keep its profile for 15 minutes and show the one-tap
+            // consent screen; /welcome then creates the member and logs them in.
             const jar = await cookies();
-            if (jar.get(CONSENT_COOKIE)?.value !== '1') {
-                return '/signup?notice=not-registered';
-            }
-            const marketing = jar.get(MARKETING_COOKIE)?.value === '1';
-
-            const created = await sql`
-                insert into users (name, email, terms_agreed_at, privacy_agreed_at, marketing_agreed)
-                values (${user.name ?? null}, ${user.email ?? null}, now(), now(), ${marketing})
-                returning id
-            `;
-            const userId = created[0].id as string;
-            await sql`
-                insert into accounts (user_id, provider, provider_account_id)
-                values (${userId}, ${provider}, ${providerAccountId})
-            `;
-            await issueWelcomeCoupon(userId);
-            user.id = userId;
-            return true;
+            jar.set(
+                PENDING_COOKIE,
+                await sealPending({ provider, providerAccountId, name: user.name ?? null, email: user.email ?? null }),
+                pendingCookieOptions,
+            );
+            return '/welcome';
         },
         async jwt({ token, user }) {
             if (user?.id) token.uid = user.id;

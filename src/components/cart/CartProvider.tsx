@@ -1,5 +1,6 @@
 'use client';
 
+import { CART_PARAM, decodeCart } from '../../lib/app-switch';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
@@ -72,12 +73,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Load the browser copy once (localStorage may be blocked, so always guard).
     useEffect(() => {
+        let initial: CartLine[] = [];
         try {
             const raw = window.localStorage.getItem(STORAGE_KEY);
-            if (raw) setLines(sanitizeLines(JSON.parse(raw)));
+            if (raw) initial = sanitizeLines(JSON.parse(raw));
         } catch {
             /* ignore */
         }
+        // Opened inside the KakaoTalk / Naver app from the phone browser: the guest cart came along in the URL.
+        try {
+            const url = new URL(window.location.href);
+            const carried = url.searchParams.get(CART_PARAM);
+            if (carried) {
+                const lines = decodeCart(carried);
+                if (lines) initial = sanitizeLines(lines).reduce(addTo, initial);
+                url.searchParams.delete(CART_PARAM);
+                window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+            }
+        } catch {
+            /* ignore */
+        }
+        setLines(initial);
         setHydrated(true);
 
         const onStorage = (e: StorageEvent) => {
