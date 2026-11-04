@@ -114,6 +114,8 @@ export interface UploadRow {
     trackingNo: string;
     /** Set by a parser when the file itself is inconsistent for this order (shown as an error). */
     conflict?: string;
+    /** TOGLE rows: the waybill may come from any carrier, so a missing / unknown carrier name is not an error. */
+    anyCarrier?: boolean;
 }
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -170,9 +172,12 @@ export function parseUpload(data: Uint8Array): ParseResult {
 // ---- TOGLE waybill file ------------------------------------------------------------------------------------------
 // TOGLE_<이름>_YYYYMMDD_HHMMSS.xlsx: Sheet1, header in row 1, 13 columns (운송장번호 … 주문번호, header typo "우편변호").
 // It is our own delivery-info export plus a 운송장번호 column, so one order can span several rows (one per product
-// line, gift included). There is no carrier column: the operator picks the carrier for the whole file.
+// line, gift included). TOGLE gathers waybills from several carriers; the file normally has no carrier column,
+// so the carrier is stored only when a "택배사" column exists (the tracking link then falls back to a search).
 
-export const TOGLE_HEADERS = { order: '주문번호', tracking: '운송장번호' } as const;
+export const TOGLE_HEADERS = { order: '주문번호', tracking: '운송장번호', carrier: '택배사' } as const;
+/** Stored as the carrier when the TOGLE file does not say which one. */
+export const UNKNOWN_CARRIER = '택배';
 
 /** Cell value as text without losing digits (a 12-digit number must not become 4.12E+11). */
 function cellText(v: unknown): string {
@@ -181,7 +186,7 @@ function cellText(v: unknown): string {
     return String(v).trim();
 }
 
-export function parseTogleUpload(data: Uint8Array, carrier: string): ParseResult {
+export function parseTogleUpload(data: Uint8Array): ParseResult {
     let wb: XLSX.WorkBook;
     try {
         // cellStyles off: TOGLE files carry broken style records that some readers choke on.
@@ -205,6 +210,7 @@ export function parseTogleUpload(data: Uint8Array, carrier: string): ParseResult
     const header = (grid[headerAt] ?? []).map(cellText);
     const iOrder = header.indexOf(TOGLE_HEADERS.order);
     const iTracking = header.indexOf(TOGLE_HEADERS.tracking);
+    const iCarrier = header.indexOf(TOGLE_HEADERS.carrier); // optional
 
     // One row per order: rows of the same order are merged; different waybill numbers for one order are flagged.
     const byOrder = new Map<string, UploadRow>();
@@ -212,11 +218,12 @@ export function parseTogleUpload(data: Uint8Array, carrier: string): ParseResult
         const r = grid[i] ?? [];
         const orderNo = cellText(r[iOrder]);
         const trackingNo = cellText(r[iTracking]);
+        const carrier = iCarrier >= 0 ? cellText(r[iCarrier]) : '';
         if (!orderNo && !trackingNo) continue;
         if (!orderNo) continue; // a row without an order number cannot be matched
         const prev = byOrder.get(orderNo);
         if (!prev) {
-            byOrder.set(orderNo, { line: i + 1, orderNo, method: METHOD_COURIER, carrier, trackingNo });
+            byOrder.set(orderNo, { line: i + 1, orderNo, method: METHOD_COURIER, carrier, trackingNo, anyCarrier: true });
             if (byOrder.size > MAX_UPLOAD_ROWS) return { ok: false, error: `한 번에 ${MAX_UPLOAD_ROWS.toLocaleString('ko-KR')}건까지 올릴 수 있어요` };
         } else if (!prev.trackingNo && trackingNo) {
             prev.trackingNo = trackingNo;
@@ -297,9 +304,14 @@ export function checkRows(rows: UploadRow[], orders: Map<string, OrderLite>): Ch
             return fail(`배송방법이 올바르지 않아요 (${METHODS.join(' / ')})`);
         }
         if (row.method === METHOD_COURIER) {
-            const carrierName = normalizeCarrier(row.carrier);
-            if (!row.carrier) return fail('택배사를 입력해 주세요');
-            if (!carrierName) return fail(`등록되지 않은 택배사예요 (${row.carrier})`);
+            let carrierName = normalizeCarrier(row.carrier);
+            if (row.anyCarrier) {
+                // TOGLE: keep whatever the file says (or a generic name); never reject the row for it
+                carrierName ??= row.carrier.trim().slice(0, 20) || UNKNOWN_CARRIER;
+            } else {
+                if (!row.carrier) return fail('택배사를 입력해 주세요');
+                if (!carrierName) return fail(`등록되지 않은 택배사예요 (${row.carrier})`);
+            }
             const tracking = normalizeTracking(row.trackingNo);
             if (!tracking) return fail('송장번호를 입력해 주세요');
             if (tracking.length < 5) return fail('송장번호가 너무 짧아요');

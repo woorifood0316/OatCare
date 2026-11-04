@@ -32,7 +32,9 @@ export const CARRIERS = [
 export function trackingUrl(carrier: string | null, trackingNo: string | null): string | null {
     if (!carrier || !trackingNo) return null;
     const c = CARRIERS.find((x) => x.name === carrier || x.id === carrier);
-    return c ? c.url(trackingNo) : null;
+    if (c) return c.url(trackingNo);
+    // Carrier not known (e.g. TOGLE waybills): Naver's search finds the courier from the number itself.
+    return `https://search.naver.com/search.naver?query=${encodeURIComponent(`${trackingNo} 배송조회`)}`;
 }
 
 /** Customer can cancel on their own only before the parcel is handed to the carrier. */
