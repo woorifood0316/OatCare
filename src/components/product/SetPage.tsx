@@ -43,7 +43,9 @@ export function SetPage({ count }: { count: number }) {
     const { addLine, buyNow, count: cartCount, hydrated } = useCart();
     const page = getSetPage(count)!;
     const item = getItem(page.sku)!;
-    const [qty, setQty] = useState(1);
+    // Nothing is pre-selected: the customer chooses the quantity (starts at 0, again on every set).
+    const [qty, setQty] = useState(0);
+    useEffect(() => setQty(0), [count]);
     const [tab, setTab] = useState<string>(TABS[0].id);
     const [added, setAdded] = useState(false);
     const [expanded, setExpanded] = useState(false);
@@ -68,7 +70,8 @@ export function SetPage({ count }: { count: number }) {
     const total = item.price * qty;
     const unit = Math.round(item.price / item.count);
     const pct = Math.round(((item.listPrice - item.price) / item.listPrice) * 100);
-    const clamp = (n: number) => Math.min(99, Math.max(1, n));
+    const clamp = (n: number) => Math.min(99, Math.max(0, n));
+    const noQty = qty === 0;
     const subscribable = item.subscribable;
 
     const goTab = (id: string) => {
@@ -76,13 +79,13 @@ export function SetPage({ count }: { count: number }) {
         if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 112, behavior: 'smooth' });
     };
     const handleCart = () => {
-        if (mixErr) return;
+        if (mixErr || noQty) return;
         addLine(line);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };
     const handleBuy = async () => {
-        if (mixErr) return;
+        if (mixErr || noQty) return;
         const dest = await buyNow(line);
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
@@ -100,11 +103,11 @@ export function SetPage({ count }: { count: number }) {
 
     const actions = (
         <div className="pd-actions">
-            <button type="button" className="pd-btn pd-btn--cart" onClick={handleCart} disabled={!!mixErr}>
+            <button type="button" className="pd-btn pd-btn--cart" onClick={handleCart} disabled={!!mixErr || noQty}>
                 <ShoppingBag size={17} />
                 <span>{added ? '담았어요 ✓' : '장바구니 담기'}</span>
             </button>
-            <button type="button" className="pd-btn pd-btn--buy" onClick={handleBuy}>
+            <button type="button" className="pd-btn pd-btn--buy" onClick={handleBuy} disabled={!!mixErr || noQty}>
                 <Zap size={17} />
                 <span>바로 구매</span>
             </button>
@@ -176,10 +179,10 @@ export function SetPage({ count }: { count: number }) {
                                 <input
                                     type="number"
                                     inputMode="numeric"
-                                    min={1}
+                                    min={0}
                                     max={99}
                                     value={qty}
-                                    onChange={(e) => setQty(clamp(Number(e.target.value) || 1))}
+                                    onChange={(e) => setQty(clamp(Number(e.target.value) || 0))}
                                     aria-label="수량"
                                 />
                                 <button type="button" onClick={() => setQty((q) => clamp(q + 1))} aria-label="수량 늘리기">
@@ -188,6 +191,11 @@ export function SetPage({ count }: { count: number }) {
                             </div>
                             <em>{won(total)}</em>
                         </div>
+                        {noQty ? (
+                            <p className="pd-qty-hint">
+                                + 버튼으로 수량을 선택해 주세요{subscribable ? ' (정기구독은 수량 선택 없이 시작할 수 있어요)' : ''}
+                            </p>
+                        ) : null}
 
                         {picker}
 

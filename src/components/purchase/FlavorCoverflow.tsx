@@ -1,5 +1,6 @@
 'use client';
 
+import { FreeShipHint } from './FreeShipHint';
 import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -267,6 +268,7 @@ export function FlavorCoverflow({
                         </span>
                     )}
                 </div>
+                <FreeShipHint subtotal={totalPrice} />
                 <ShipEta compact />
                 <div className="cf__actions">
                     <button type="button" className="ca__btn ca__btn--cart" onClick={addAll} disabled={totalCount === 0}>

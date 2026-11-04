@@ -2,12 +2,23 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { Download, Upload, FileSpreadsheet, Truck } from 'lucide-react';
+import { CARRIERS } from '../../lib/order-status';
+
+type Format = 'togle' | 'naver';
+const TOGLE_CARRIER_KEY = 'oc-admin-togle-carrier';
 
 interface Filter {
     status?: string;
     kind?: string;
     q?: string;
+    no?: string;
+    name?: string;
+    from?: string;
+    to?: string;
+    product?: string;
+    min?: string;
+    max?: string;
 }
 
 interface PreviewRow {
@@ -47,6 +58,25 @@ function filenameOf(res: Response, fallback: string): string {
 export function ShippingExcelTools({ filter }: { filter: Filter }) {
     const router = useRouter();
     const fileRef = useRef<HTMLInputElement>(null);
+    const togleRef = useRef<HTMLInputElement>(null);
+    const [format, setFormat] = useState<Format>('naver');
+    // TOGLE files have no carrier column: the operator picks it once (remembered in this browser).
+    const [togleCarrier, setTogleCarrier] = useState('');
+    useEffect(() => {
+        try {
+            setTogleCarrier(localStorage.getItem(TOGLE_CARRIER_KEY) ?? '');
+        } catch {
+            /* ignore */
+        }
+    }, []);
+    const pickCarrier = (v: string) => {
+        setTogleCarrier(v);
+        try {
+            localStorage.setItem(TOGLE_CARRIER_KEY, v);
+        } catch {
+            /* ignore */
+        }
+    };
     const [selected, setSelected] = useState(0);
     const [mark, setMark] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -94,22 +124,25 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
         setBusy(false);
     };
 
-    const send = async (f: File, mode: 'preview' | 'commit' | 'errors', ow = false) => {
+    const send = async (f: File, mode: 'preview' | 'commit' | 'errors', ow = false, fmt: Format = format) => {
         const fd = new FormData();
         fd.set('file', f);
         fd.set('mode', mode);
+        fd.set('format', fmt);
+        if (fmt === 'togle') fd.set('carrier', togleCarrier);
         if (ow) fd.set('overwrite', '1');
         return fetch('/api/admin/orders/shipping-upload', { method: 'POST', body: fd });
     };
 
-    const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onPick = (fmt: Format) => async (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
         e.target.value = '';
         if (!f) return;
         setBusy(true);
         setMsg(null);
+        setFormat(fmt);
         try {
-            const res = await send(f, 'preview');
+            const res = await send(f, 'preview', false, fmt);
             const data = await res.json().catch(() => ({}));
             if (!res.ok) setMsg({ tone: 'err', text: (data.error as string) ?? '파일을 확인하지 못했어요' });
             else {
@@ -168,21 +201,52 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
             <p className="adm-muted">
                 체크하지 않으면 현재 목록(상태를 고르지 않았으면 결제 완료·상품 준비 중 주문)이 모두 내려받아져요.
             </p>
+            <h3 className="adm-excel__h3">송장번호 일괄 업로드</h3>
+            <div className="adm-excel__row">
+                <button
+                    type="button"
+                    className="adm-btn adm-btn--primary"
+                    onClick={() => {
+                        if (!togleCarrier) {
+                            setMsg({ tone: 'err', text: '토글 송장의 택배사를 먼저 선택해 주세요' });
+                            return;
+                        }
+                        togleRef.current?.click();
+                    }}
+                    disabled={busy}
+                >
+                    <Upload size={14} /> 토글 송장 파일 업로드
+                </button>
+                <label className="adm-excel__carrier">
+                    <Truck size={14} />
+                    <span>택배사</span>
+                    <select value={togleCarrier} onChange={(e) => pickCarrier(e.target.value)} aria-label="토글 송장 택배사">
+                        <option value="">선택</option>
+                        {CARRIERS.map((c) => (
+                            <option key={c.id} value={c.name}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+                <input ref={togleRef} type="file" accept=".xlsx,.xls" hidden onChange={onPick('togle')} />
+            </div>
+            <p className="adm-muted">토글에서 내려받은 파일(TOGLE_…xlsx)을 그대로 올리면 돼요. 주문번호로 찾아 운송장번호를 등록하고 발송 처리해요.</p>
             <div className="adm-excel__row">
                 <button type="button" className="adm-btn" onClick={() => fileRef.current?.click()} disabled={busy}>
-                    <Upload size={14} /> 송장번호 일괄 업로드
+                    <Upload size={14} /> 직접 작성 양식 업로드
                 </button>
                 <a className="adm-btn" href="/api/admin/orders/template">
                     빈 양식 받기
                 </a>
-                <input ref={fileRef} type="file" accept=".xls,.xlsx" hidden onChange={onPick} />
+                <input ref={fileRef} type="file" accept=".xls,.xlsx" hidden onChange={onPick('naver')} />
             </div>
             {msg ? <p className={msg.tone === 'ok' ? 'adm-excel__ok' : 'adm-excel__err'}>{msg.text}</p> : null}
 
             {preview ? (
                 <div className="adm-modal" role="dialog" aria-modal="true">
                     <div className="adm-modal__card">
-                        <h3>송장번호 업로드 미리보기</h3>
+                        <h3>{format === 'togle' ? `토글 송장 업로드 미리보기 · ${togleCarrier}` : '송장번호 업로드 미리보기'}</h3>
                         <p className="adm-muted">
                             전체 {preview.summary.total}행 · 정상 {preview.summary.ok} · 이미 등록됨 {preview.summary.already} · 오류{' '}
                             {preview.summary.error}
@@ -192,7 +256,7 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
                                 <thead>
                                     <tr>
                                         <th>행</th>
-                                        <th>상품주문번호</th>
+                                        <th>주문번호</th>
                                         <th>배송방법</th>
                                         <th>택배사</th>
                                         <th>송장번호</th>

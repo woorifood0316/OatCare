@@ -5,6 +5,8 @@ import {
     MAX_UPLOAD_BYTES,
     buildErrorWorkbook,
     checkRows,
+    normalizeCarrier,
+    parseTogleUpload,
     parseUpload,
     type CheckedRow,
     type OrderLite,
@@ -17,6 +19,8 @@ export const runtime = 'edge';
  *   file       .xls / .xlsx
  *   mode       preview (default) | commit | errors
  *   overwrite  "1" to also update orders that already have a tracking number (commit only)
+ *   format     naver (default: 상품주문번호/배송방법/택배사/송장번호 form) | togle (TOGLE waybill file)
+ *   carrier    with format=togle: the carrier for every row (the TOGLE file has no carrier column)
  * The file is parsed and re-validated on every call, so the browser never has to be trusted with the result.
  */
 export async function POST(request: Request) {
@@ -36,7 +40,15 @@ export async function POST(request: Request) {
     const mode = String(form.get('mode') ?? 'preview');
     const overwrite = form.get('overwrite') === '1';
 
-    const parsed = parseUpload(new Uint8Array(await file.arrayBuffer()));
+    const format = String(form.get('format') ?? 'naver');
+    let parsed;
+    if (format === 'togle') {
+        const carrier = normalizeCarrier(String(form.get('carrier') ?? ''));
+        if (!carrier) return jsonError('토글 송장의 택배사를 선택해 주세요');
+        parsed = parseTogleUpload(new Uint8Array(await file.arrayBuffer()), carrier);
+    } else {
+        parsed = parseUpload(new Uint8Array(await file.arrayBuffer()));
+    }
     if (!parsed.ok) return jsonError(parsed.error);
 
     const sql = getSql();

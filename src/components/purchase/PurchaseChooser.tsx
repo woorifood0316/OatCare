@@ -52,13 +52,15 @@ export function PurchaseChooser({
     const panelId = `pc-panel-${sku.replace(/\W/g, '')}`;
 
     const mixPart = mixChoice ?? { mix: 'all' as const };
+    // qty 0 (set page, nothing chosen yet): one-time buying waits for a quantity; the subscription is unaffected.
+    const noQty = qty <= 0;
     const addOnce = () => {
-        if (blockedReason) return;
+        if (blockedReason || noQty) return;
         addLine({ sku, qty, mode: 'once', ...mixPart });
         onAdded?.();
     };
     const buyOnce = async () => {
-        if (blockedReason) return;
+        if (blockedReason || noQty) return;
         const dest = await buyNow({ sku, qty, mode: 'once', ...mixPart });
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
@@ -72,11 +74,11 @@ export function PurchaseChooser({
     return (
         <div className="pc2" role="group" aria-label="구매 방식 선택">
             <div className="pc2__row">
-                <button type="button" className="pc2__btn pc2__btn--once" onClick={addOnce} disabled={!!blockedReason}>
+                <button type="button" className="pc2__btn pc2__btn--once" onClick={addOnce} disabled={!!blockedReason || noQty}>
                     <ShoppingBag size={16} />
                     <span>장바구니 담기</span>
                 </button>
-                <button type="button" className="pc2__btn pc2__btn--buy" onClick={buyOnce} disabled={!!blockedReason}>
+                <button type="button" className="pc2__btn pc2__btn--buy" onClick={buyOnce} disabled={!!blockedReason || noQty}>
                     <Zap size={16} />
                     <span>바로 구매</span>
                 </button>

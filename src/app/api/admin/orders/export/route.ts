@@ -2,12 +2,13 @@ import { getSql } from '../../../../../lib/db';
 import { jsonError, requireAdmin, sameOrigin } from '../../../../../lib/api';
 import { mapOrder } from '../../../../../lib/orders';
 import { buildExportWorkbook } from '../../../../../lib/shipping-excel';
+import { orderWhere } from '../../../../../lib/admin-data';
 
 export const runtime = 'edge';
 
 const MAX_ORDERS = 2000;
 
-/** Delivery-info Excel (form A). Body: { orderNos?: string[], status?, kind?, q?, markPreparing?: boolean } */
+/** Delivery-info Excel (form A). Body: { orderNos?: string[], status?, kind?, q?, no?, name?, from?, to?, product?, min?, max?, markPreparing?: boolean } */
 export async function POST(request: Request) {
     if (!sameOrigin(request)) return jsonError('Forbidden', 403);
     const admin = await requireAdmin();
@@ -21,34 +22,38 @@ export async function POST(request: Request) {
     }
 
     const sql = getSql();
-    const where: string[] = [];
-    const params: unknown[] = [];
-    const add = (cond: string, value: unknown) => {
-        params.push(value);
-        where.push(cond.replace('?', `$${params.length}`));
-    };
-
+    const str = (k: string) => (typeof body[k] === 'string' ? (body[k] as string) : undefined);
     const orderNos = Array.isArray(body.orderNos) ? body.orderNos.filter((x): x is string => typeof x === 'string').slice(0, MAX_ORDERS) : [];
+    let rows: Record<string, unknown>[];
     if (orderNos.length > 0) {
         // Explicit selection: any paid order, but never unpaid / failed / canceled ones.
-        add('order_no = any(?)', orderNos);
-        where.push(`status in ('paid','preparing','shipped','delivered')`);
+        rows = (await sql.query(
+            `select * from orders where order_no = any($1) and status in ('paid','preparing','shipped','delivered')
+             order by coalesce(paid_at, created_at) asc limit ${MAX_ORDERS}`,
+            [orderNos],
+        )) as Record<string, unknown>[];
     } else {
-        const status = typeof body.status === 'string' && body.status !== 'all' ? body.status : '';
-        if (status) add('status = ?', status);
-        else where.push(`status in ('paid','preparing')`); // default: waiting to ship
-        if (body.kind === 'once' || body.kind === 'subscription') add('kind = ?', body.kind);
-        if (typeof body.q === 'string' && body.q.trim()) {
-            params.push(`%${body.q.trim()}%`);
-            const i = params.length;
-            where.push(`(order_no ilike $${i} or ship_name ilike $${i} or ship_phone ilike $${i} or tracking_no ilike $${i})`);
-        }
+        // Same column filters as the list on screen; no status filter = orders waiting to ship.
+        const { clause, params } = orderWhere(
+            {
+                status: str('status'),
+                kind: str('kind'),
+                q: str('q'),
+                no: str('no'),
+                name: str('name'),
+                from: str('from'),
+                to: str('to'),
+                product: str('product'),
+                min: str('min'),
+                max: str('max'),
+            },
+            ['paid', 'preparing'],
+        );
+        rows = (await sql.query(
+            `select * from orders where ${clause} order by coalesce(paid_at, created_at) asc limit ${MAX_ORDERS}`,
+            params,
+        )) as Record<string, unknown>[];
     }
-
-    const rows = (await sql.query(
-        `select * from orders where ${where.join(' and ')} order by coalesce(paid_at, created_at) asc limit ${MAX_ORDERS}`,
-        params,
-    )) as Record<string, unknown>[];
     if (rows.length === 0) return jsonError('내려받을 주문이 없어요', 404);
     const orders = rows.map(mapOrder);
 

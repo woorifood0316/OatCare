@@ -1,5 +1,6 @@
 'use client';
 
+import { FreeShipHint } from './purchase/FreeShipHint';
 import { ShipEta } from './ShipEta';
 import React, { useEffect, useState } from 'react';
 import { X, ShoppingBag, Plus, Minus, Check, ArrowRight } from 'lucide-react';
@@ -51,11 +52,14 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
         if (isOpen) {
             setActiveTab(initialTab);
             setSingleQty({ '그레인': 0, '고구마': 0, '단백질': 0, '서리태': 0, '초코': 0 });
+            setSelectedBundleId(null);
+            setPurchaseMode('once');
+            setCycleDays(null);
         }
     }, [isOpen, initialTab]);
 
-    // Bundle selection state
-    const [selectedBundleId, setSelectedBundleId] = useState<number>(20); // Default 20-pack BEST
+    // Bundle selection state: no set is pre-selected
+    const [selectedBundleId, setSelectedBundleId] = useState<number | null>(null);
     const [purchaseMode, setPurchaseMode] = useState<'once' | 'subscribe'>('once');
     const [cycleDays, setCycleDays] = useState<number | null>(null);
 
@@ -80,6 +84,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 
     // Bundle calculation
     const currentBundle = BUNDLES.find((b) => b.count === selectedBundleId) || BUNDLES[1];
+    const noBundle = selectedBundleId === null;
     const totalBundlePrice = currentBundle.price;
 
     const handleQtyChange = (flavor: string, delta: number) => {
@@ -105,6 +110,10 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
             return Object.entries(singleQty)
                 .filter(([, qty]) => qty > 0)
                 .map(([flavor, qty]) => ({ sku: `single:${flavor}`, qty, mode: 'once' as const }));
+        }
+        if (noBundle) {
+            setNotice({ icon: '🎁', title: '세트를 선택해 주세요', body: '원하는 세트를 눌러 선택한 뒤 담아 주세요.' });
+            return null;
         }
         if (mix.mixErr) {
             setNotice({ icon: '🌾', title: '맛 구성을 완성해 주세요', body: mix.mixErr });
@@ -241,7 +250,10 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                         <div key={b.count} className={`oc-drawer-bundle-group${isSelected ? ' is-selected' : ''}`}>
                                         <div
                                             className={`oc-drawer-bundle-card ${isSelected ? 'is-selected' : ''}`}
-                                            onClick={() => setSelectedBundleId(b.count)}
+                                            onClick={() => {
+                                                if (selectedBundleId !== b.count) setCycleDays(null);
+                                                setSelectedBundleId(b.count);
+                                            }}
                                         >
                                             <div className="oc-drawer-bundle-card__radio">
                                                 <div className={`oc-radio-circle ${isSelected ? 'is-active' : ''}`}>
@@ -347,6 +359,13 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                     {totalSingleCount > 0 && <s>{totalSingleListPrice.toLocaleString('ko-KR')}원</s>}
                                 </div>
                             </div>
+                        ) : noBundle ? (
+                            <div>
+                                <span className="oc-drawer__summary-lbl">세트를 선택해 주세요</span>
+                                <div className="oc-drawer__summary-price">
+                                    <strong>0원</strong>
+                                </div>
+                            </div>
                         ) : (
                             <div>
                                 <span className="oc-drawer__summary-lbl">
@@ -360,6 +379,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                         )}
                     </div>
 
+                    {activeTab === 'single' ? <FreeShipHint subtotal={totalSinglePrice} className="oc-drawer__fsh" /> : null}
                     <ShipEta compact className="oc-drawer__ship" />
                     <div className="oc-drawer__actions">
                         <button className="oc-cta-outline oc-drawer__cart-btn" onClick={handleAddToCart}>

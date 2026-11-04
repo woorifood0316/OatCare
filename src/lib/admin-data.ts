@@ -45,32 +45,83 @@ export async function dashboardStats() {
 }
 
 export interface OrderFilter {
+    /** One status or several separated by commas ("paid,preparing"). */
     status?: string;
     kind?: string;
     q?: string;
+    /** Column filters */
+    no?: string; // order number contains
+    name?: string; // recipient contains
+    from?: string; // YYYY-MM-DD (KST, payment date or order date)
+    to?: string;
+    product?: string; // sku contained in the order
+    min?: string; // amount range
+    max?: string;
+    sort?: string;
+    dir?: string;
     page?: number;
 }
 
-export async function searchOrders(f: OrderFilter): Promise<{ orders: Order[]; total: number; page: number }> {
-    const sql = getSql();
+export const ORDER_SORTS = {
+    no: 'order_no',
+    date: 'coalesce(paid_at, created_at)',
+    name: 'ship_name',
+    product: "(items->0->>'name')",
+    kind: 'kind',
+    status: 'status',
+    amount: 'amount',
+} as const;
+export type OrderSortKey = keyof typeof ORDER_SORTS;
+
+const isDay = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
+const intOf = (v?: string) => (v && /^\d{1,9}$/.test(v.replace(/,/g, '')) ? Number(v.replace(/,/g, '')) : null);
+export const statusList = (v?: string) =>
+    (v ?? '')
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => /^(paid|preparing|shipped|delivered|canceled|failed)$/.test(x));
+
+/**
+ * WHERE clause shared by the orders list and the Excel export (same filters → same rows).
+ * `defaultStatuses` applies when no status filter is set.
+ */
+export function orderWhere(f: OrderFilter, defaultStatuses?: string[]): { clause: string; params: unknown[] } {
     const where: string[] = [`status <> 'pending'`];
     const params: unknown[] = [];
     const add = (cond: string, value: unknown) => {
         params.push(value);
-        where.push(cond.replace('?', `$${params.length}`));
+        where.push(cond.replaceAll('?', `$${params.length}`));
     };
-    if (f.status && f.status !== 'all') add('status = ?', f.status);
+    const statuses = statusList(f.status);
+    if (statuses.length) add('status = any(?)', statuses);
+    else if (defaultStatuses?.length) add('status = any(?)', defaultStatuses);
     if (f.kind === 'once' || f.kind === 'subscription') add('kind = ?', f.kind);
-    if (f.q) {
-        params.push(`%${f.q.trim()}%`);
-        const i = params.length;
-        where.push(`(order_no ilike $${i} or ship_name ilike $${i} or ship_phone ilike $${i} or tracking_no ilike $${i})`);
-    }
+    if (f.q?.trim()) add('(order_no ilike ? or ship_name ilike ? or ship_phone ilike ? or tracking_no ilike ?)', `%${f.q.trim()}%`);
+    if (f.no?.trim()) add('order_no ilike ?', `%${f.no.trim()}%`);
+    if (f.name?.trim()) add('ship_name ilike ?', `%${f.name.trim()}%`);
+    if (isDay(f.from)) add(`coalesce(paid_at, created_at) >= (?::date)::timestamp at time zone 'Asia/Seoul'`, f.from);
+    if (isDay(f.to)) add(`coalesce(paid_at, created_at) < ((?::date) + 1)::timestamp at time zone 'Asia/Seoul'`, f.to);
+    if (f.product && /^[\w:가-힣]+$/.test(f.product)) add('items @> ?::jsonb', JSON.stringify([{ sku: f.product }]));
+    const min = intOf(f.min);
+    const max = intOf(f.max);
+    if (min !== null) add('amount >= ?', min);
+    if (max !== null) add('amount <= ?', max);
+    return { clause: where.join(' and '), params };
+}
+
+export function orderBy(f: OrderFilter, fallback = 'created_at desc'): string {
+    const col = ORDER_SORTS[f.sort as OrderSortKey];
+    if (!col) return fallback;
+    return `${col} ${f.dir === 'asc' ? 'asc' : 'desc'} nulls last, created_at desc`;
+}
+
+export async function searchOrders(f: OrderFilter): Promise<{ orders: Order[]; total: number; page: number }> {
+    const sql = getSql();
+    const { clause, params } = orderWhere(f);
     const page = Math.max(1, f.page ?? 1);
-    const clause = where.join(' and ');
     const total = ((await sql.query(`select count(*)::int n from orders where ${clause}`, params)) as { n: number }[])[0].n;
     const rows = (await sql.query(
-        `select * from orders where ${clause} order by created_at desc limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`,
+        `select * from orders where ${clause} order by ${orderBy(f)} limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`,
         params,
     )) as Record<string, unknown>[];
     return { orders: rows.map(mapOrder), total, page };

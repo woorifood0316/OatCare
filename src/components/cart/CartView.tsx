@@ -1,5 +1,6 @@
 'use client';
 
+import { FreeShipHint } from '../purchase/FreeShipHint';
 import { ShipEta } from '../ShipEta';
 import React from 'react';
 import Link from 'next/link';
@@ -222,6 +223,9 @@ function Section({
                     <span>배송비</span>
                     <span>{priced.shipping === 0 ? '무료' : won(priced.shipping)}</span>
                 </div>
+                {mode === 'once' ? (
+                    <FreeShipHint subtotal={priced.subtotal} hasBundle={lines.some((l) => getItem(l.sku)?.kind === 'bundle')} className="cart-fsh" />
+                ) : null}
                 {mode === 'once' && listTotal > priced.subtotal ? (
                     <div className="cart-summary__row cart-summary__row--sub">
                         <span>할인 혜택</span>

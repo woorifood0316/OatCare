@@ -41,7 +41,7 @@ export function exportRows(orders: Order[]): (string | number)[][] {
     const rows: (string | number)[][] = [];
     for (const o of orders) {
         for (const it of o.items) {
-            const option = it.mixBreakdown
+            const rawOption = it.mixBreakdown
                 ? // jsonb does not keep key order, so always print in the catalog's flavour order
                   FLAVORS.filter((f) => (it.mixBreakdown?.[f] ?? 0) > 0)
                       .map((f) => `${f} ${it.mixBreakdown?.[f]}`)
@@ -49,13 +49,18 @@ export function exportRows(orders: Order[]): (string | number)[][] {
                 : it.gift
                   ? '증정'
                   : '';
+            // Brackets make the option stand out on the printed waybill: "[그레인 4 / 고구마 4]"
+            const option = rawOption ? `[${rawOption}]` : '';
+            // The carrier's waybill prints only "받는사람 주소", so the detail address goes into it too;
+            // the 상세주소 column stays (the form's layout is fixed) but is left empty to avoid printing it twice.
+            const address = [o.shipAddress1, o.shipAddress2].map((x) => (x ?? '').trim()).filter(Boolean).join(' ');
             rows.push([
                 o.shipName ?? '',
                 o.shipPhone ?? '',
                 '',
                 o.shipZip ?? '',
-                o.shipAddress1 ?? '',
-                o.shipAddress2 ?? '',
+                address,
+                '',
                 it.gift ? it.name || GIFT_SHAKER_NAME : it.name,
                 option,
                 it.qty,
@@ -107,6 +112,8 @@ export interface UploadRow {
     method: string;
     carrier: string;
     trackingNo: string;
+    /** Set by a parser when the file itself is inconsistent for this order (shown as an error). */
+    conflict?: string;
 }
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -156,6 +163,68 @@ export function parseUpload(data: Uint8Array): ParseResult {
         });
         if (rows.length > MAX_UPLOAD_ROWS) return { ok: false, error: `한 번에 ${MAX_UPLOAD_ROWS.toLocaleString('ko-KR')}행까지 올릴 수 있어요` };
     }
+    if (rows.length === 0) return { ok: false, error: '처리할 행이 없어요' };
+    return { ok: true, rows };
+}
+
+// ---- TOGLE waybill file ------------------------------------------------------------------------------------------
+// TOGLE_<이름>_YYYYMMDD_HHMMSS.xlsx: Sheet1, header in row 1, 13 columns (운송장번호 … 주문번호, header typo "우편변호").
+// It is our own delivery-info export plus a 운송장번호 column, so one order can span several rows (one per product
+// line, gift included). There is no carrier column: the operator picks the carrier for the whole file.
+
+export const TOGLE_HEADERS = { order: '주문번호', tracking: '운송장번호' } as const;
+
+/** Cell value as text without losing digits (a 12-digit number must not become 4.12E+11). */
+function cellText(v: unknown): string {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'number') return Number.isInteger(v) ? v.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 }) : String(v);
+    return String(v).trim();
+}
+
+export function parseTogleUpload(data: Uint8Array, carrier: string): ParseResult {
+    let wb: XLSX.WorkBook;
+    try {
+        // cellStyles off: TOGLE files carry broken style records that some readers choke on.
+        wb = XLSX.read(data, { type: 'array', cellStyles: false, cellDates: false });
+    } catch {
+        return { ok: false, error: '엑셀 파일을 읽지 못했어요. 토글에서 내려받은 .xlsx 파일인지 확인해 주세요' };
+    }
+    const sheet = wb.Sheets.Sheet1 ?? wb.Sheets[wb.SheetNames[0]];
+    if (!sheet) return { ok: false, error: '시트를 찾지 못했어요' };
+    const grid = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', raw: true, blankrows: false });
+
+    let headerAt = -1;
+    for (let i = 0; i < Math.min(grid.length, 10); i++) {
+        const cells = (grid[i] ?? []).map(cellText);
+        if (cells.includes(TOGLE_HEADERS.order) && cells.includes(TOGLE_HEADERS.tracking)) {
+            headerAt = i;
+            break;
+        }
+    }
+    if (headerAt < 0) return { ok: false, error: '"운송장번호"와 "주문번호" 열을 찾지 못했어요. 토글에서 내려받은 송장 파일인지 확인해 주세요' };
+    const header = (grid[headerAt] ?? []).map(cellText);
+    const iOrder = header.indexOf(TOGLE_HEADERS.order);
+    const iTracking = header.indexOf(TOGLE_HEADERS.tracking);
+
+    // One row per order: rows of the same order are merged; different waybill numbers for one order are flagged.
+    const byOrder = new Map<string, UploadRow>();
+    for (let i = headerAt + 1; i < grid.length; i++) {
+        const r = grid[i] ?? [];
+        const orderNo = cellText(r[iOrder]);
+        const trackingNo = cellText(r[iTracking]);
+        if (!orderNo && !trackingNo) continue;
+        if (!orderNo) continue; // a row without an order number cannot be matched
+        const prev = byOrder.get(orderNo);
+        if (!prev) {
+            byOrder.set(orderNo, { line: i + 1, orderNo, method: METHOD_COURIER, carrier, trackingNo });
+            if (byOrder.size > MAX_UPLOAD_ROWS) return { ok: false, error: `한 번에 ${MAX_UPLOAD_ROWS.toLocaleString('ko-KR')}건까지 올릴 수 있어요` };
+        } else if (!prev.trackingNo && trackingNo) {
+            prev.trackingNo = trackingNo;
+        } else if (trackingNo && normalizeTracking(trackingNo) !== normalizeTracking(prev.trackingNo)) {
+            prev.conflict = `한 주문에 운송장번호가 여러 개예요 (${prev.trackingNo}, ${trackingNo})`;
+        }
+    }
+    const rows = [...byOrder.values()];
     if (rows.length === 0) return { ok: false, error: '처리할 행이 없어요' };
     return { ok: true, rows };
 }
@@ -216,6 +285,7 @@ export function checkRows(rows: UploadRow[], orders: Map<string, OrderLite>): Ch
         const base: CheckedRow = { ...row, state: 'ok', message: '', carrierName: null, tracking: null, orderStatus: null };
         const fail = (message: string): CheckedRow => ({ ...base, state: 'error', message });
 
+        if (row.conflict) return fail(row.conflict);
         if (seen.has(row.orderNo)) return fail('파일 안에서 주문번호가 중복돼요');
         seen.add(row.orderNo);
 

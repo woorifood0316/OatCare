@@ -5362,3 +5362,53 @@ body {
   .oc-bundles-ship .ship-eta__rule { font-size: 0.78rem; word-break: keep-all; text-wrap: balance; }
   .oc-bundles-ship.ship-eta--wait { width: 100%; }
 }
+
+/* ---- Admin orders: Excel-like column sort / filter ---- */
+.adm-table th.och { padding: 0.45rem 0.5rem 0.45rem 0.8rem; }
+.och__in { display: inline-flex; align-items: center; gap: 0.15rem; }
+.och.r .och__in { justify-content: flex-end; }
+.och__sort { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.25rem; border: 0; border-radius: 0.35rem; background: none; color: inherit; font: inherit; font-weight: 800; cursor: pointer; }
+.och__sort:hover { background: #efe5cd; }
+.och__idle { opacity: 0.35; }
+.och[aria-sort='ascending'] .och__sort, .och[aria-sort='descending'] .och__sort { color: var(--oc-maroon); }
+.och__filter { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border: 1px solid transparent; border-radius: 0.35rem; background: none; color: rgba(59, 42, 32, 0.45); cursor: pointer; }
+.och__filter:hover { background: #efe5cd; color: var(--oc-brown); }
+.och__filter.is-on { background: var(--oc-maroon); color: #fff; }
+.och-pop { position: fixed; z-index: 1000; width: 260px; padding: 0.7rem; background: #fff; border: 1px solid #d9ccae; border-radius: 0.8rem; box-shadow: 0 14px 38px rgba(43, 29, 22, 0.18); color: var(--oc-brown); font-size: 0.86rem; font-weight: 600; text-align: left; white-space: normal; }
+.och-pop__sort { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; padding-bottom: 0.6rem; margin-bottom: 0.6rem; border-bottom: 1px solid #efe7d3; }
+.och-pop__sort button { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.45rem 0.3rem; border: 1px solid #e6dcc4; border-radius: 0.5rem; background: #faf6ea; color: inherit; font: inherit; font-size: 0.78rem; cursor: pointer; }
+.och-pop__sort button.is-on { background: var(--oc-brown); border-color: var(--oc-brown); color: #fff; }
+.och-pop__body { display: flex; flex-direction: column; gap: 0.45rem; max-height: 16rem; overflow-y: auto; }
+.och-pop__body > input, .och-field input { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid #d9ccae; border-radius: 0.5rem; font: inherit; color: inherit; background: #fff; }
+.och-field { display: flex; align-items: center; gap: 0.45rem; }
+.och-field span { flex: none; width: 3rem; font-size: 0.78rem; color: rgba(59, 42, 32, 0.7); }
+.och-field em { flex: none; font-style: normal; font-size: 0.8rem; }
+.och-quick { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.och-quick button { padding: 0.3rem 0.55rem; border: 1px solid #d9ccae; border-radius: 999px; background: #fff; color: inherit; font: inherit; font-size: 0.75rem; cursor: pointer; }
+.och-quick button:hover { background: #faf6ea; }
+.och-list { display: flex; flex-direction: column; gap: 0.15rem; }
+.och-list label { display: flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.3rem; border-radius: 0.4rem; cursor: pointer; }
+.och-list label:hover { background: #faf6ea; }
+.och-pop__foot { display: flex; justify-content: space-between; gap: 0.4rem; margin-top: 0.7rem; }
+.och-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: -0.2rem 0 0.8rem; }
+.och-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.7rem; border-radius: 999px; background: var(--oc-maroon); color: #fff; font-size: 0.8rem; font-weight: 700; text-decoration: none; }
+.och-chip span { opacity: 0.8; }
+.och-chip--clear { background: #fff; color: var(--oc-maroon); border: 1px solid #e7b3af; }
+.adm-table td.och-empty { padding: 1.4rem; text-align: center; color: rgba(59, 42, 32, 0.6); white-space: normal; }
+.adm-excel__h3 { margin: 1rem 0 0.2rem; padding-top: 0.8rem; border-top: 1px dashed #e6dcc4; font-size: 0.92rem; font-weight: 800; }
+.adm-excel__carrier { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.84rem; font-weight: 700; }
+.adm-excel__carrier select { padding: 0.5rem 0.6rem; border: 1px solid #d9ccae; border-radius: 0.6rem; background: #fff; color: var(--oc-brown); font: inherit; }
+
+.pd-qty-hint { margin: -0.3rem 0 0.4rem; font-size: 0.82rem; font-weight: 700; color: var(--oc-maroon); }
+.pd-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---- Free-shipping progress (single items) ---- */
+.fsh { margin: 0 0 0.55rem; padding: 0.5rem 0.75rem; border-radius: 12px; background: #fbf5e8; border: 1px solid #ecdcb6; color: var(--oc-brown); font-size: 0.85rem; font-weight: 600; }
+.fsh p { margin: 0; }
+.fsh b { font-weight: 800; color: var(--oc-maroon); }
+.fsh.is-free { background: rgba(47, 107, 58, 0.07); border-color: rgba(47, 107, 58, 0.22); }
+.fsh.is-free b { color: #2f6b3a; }
+.fsh__bar { height: 6px; margin-top: 0.4rem; border-radius: 999px; background: #efe3c6; overflow: hidden; }
+.fsh__bar span { display: block; height: 100%; border-radius: inherit; background: var(--oc-gold); transition: width 0.3s ease; }
+.oc-drawer__fsh { margin: 0; }
+.cart-fsh { margin: 0.2rem 0 0.6rem; }
