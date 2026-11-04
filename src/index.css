@@ -5415,3 +5415,20 @@ body {
 
 .co-first-sub { margin: 0; padding: 0.75rem 0.9rem; border-radius: 12px; background: rgba(47, 107, 58, 0.07); border: 1px solid rgba(47, 107, 58, 0.22); color: var(--oc-brown); font-size: 0.9rem; line-height: 1.5; }
 .co-first-sub b { color: #2f6b3a; }
+
+/* ---- Admin orders: extra columns ---- */
+.adm-table tr.is-late td { background: #fff8e1; }
+.ord-late { margin-left: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: #e0a100; color: #fff; font-size: 0.7rem; font-weight: 800; }
+.ord-memo { margin-left: 0.3rem; cursor: help; font-size: 0.85rem; }
+.ord-track { display: inline-flex; flex-direction: column; line-height: 1.25; }
+.ord-track small { color: rgba(59, 42, 32, 0.6); font-size: 0.7rem; font-weight: 700; }
+.ord-track a { font-variant-numeric: tabular-nums; }
+.ord-disc { margin-right: 0.35rem; padding: 0.1rem 0.4rem; border-radius: 0.35rem; background: #f3e3e5; color: var(--oc-maroon); font-size: 0.68rem; font-weight: 800; }
+
+.adm-table--orders { font-size: 0.83rem; }
+.adm-table--orders th, .adm-table--orders td { padding: 0.6rem 0.5rem; }
+.adm-table--orders th.och { padding: 0.4rem 0.3rem 0.4rem 0.5rem; }
+.adm-table--orders td.ord-product { white-space: normal; min-width: 9rem; max-width: 14rem; }
+
+.adm-btn--lotte { background: #e60012; border-color: #e60012; color: #fff; }
+.adm-prev--skip td { color: rgba(59, 42, 32, 0.45); }

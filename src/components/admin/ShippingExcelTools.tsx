@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Download, Upload, FileSpreadsheet } from 'lucide-react';
 
-type Format = 'togle' | 'naver';
+type Format = 'togle' | 'lotte' | 'naver';
 
 interface Filter {
     status?: string;
@@ -17,6 +17,8 @@ interface Filter {
     product?: string;
     min?: string;
     max?: string;
+    tn?: string;
+    track?: string;
 }
 
 interface PreviewRow {
@@ -26,15 +28,15 @@ interface PreviewRow {
     carrier: string;
     carrierName?: string | null;
     trackingNo: string;
-    state: 'ok' | 'already' | 'error';
+    state: 'ok' | 'already' | 'error' | 'skip';
     message: string;
 }
 interface Preview {
-    summary: { total: number; ok: number; already: number; error: number };
+    summary: { total: number; ok: number; already: number; error: number; skip?: number };
     rows: PreviewRow[];
 }
 
-const STATE_LABEL = { ok: '✅ 정상', already: '⚠️ 이미 등록됨', error: '❌ 오류' } as const;
+const STATE_LABEL = { ok: '✅ 정상', already: '⚠️ 이미 등록됨', error: '❌ 오류', skip: '⏭️ 건너뜀' } as const;
 
 function saveBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
@@ -58,6 +60,7 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
     const router = useRouter();
     const fileRef = useRef<HTMLInputElement>(null);
     const togleRef = useRef<HTMLInputElement>(null);
+    const lotteRef = useRef<HTMLInputElement>(null);
     const [format, setFormat] = useState<Format>('naver');
     const [selected, setSelected] = useState(0);
     const [mark, setMark] = useState(false);
@@ -145,7 +148,7 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
             const data = await res.json().catch(() => ({}));
             if (!res.ok) setMsg({ tone: 'err', text: (data.error as string) ?? '등록하지 못했어요' });
             else {
-                setMsg({ tone: 'ok', text: `송장번호 ${data.applied}건을 등록했어요${data.skipped ? ` (제외 ${data.skipped}건)` : ''}` });
+                setMsg({ tone: 'ok', text: `송장번호 ${data.applied}건을 등록했어요${data.skipped ? ` (제외 ${data.skipped}건)` : ''}${data.others ? ` · 다른 판매처 ${data.others}건은 건너뜀` : ''}` });
                 setPreview(null);
                 setFile(null);
                 router.refresh();
@@ -193,8 +196,15 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
                     <Upload size={14} /> 토글 송장 파일 업로드
                 </button>
                 <input ref={togleRef} type="file" accept=".xlsx,.xls" hidden onChange={onPick('togle')} />
+                <button type="button" className="adm-btn adm-btn--lotte" onClick={() => lotteRef.current?.click()} disabled={busy}>
+                    <Upload size={14} /> 롯데택배 송장 파일 업로드
+                </button>
+                <input ref={lotteRef} type="file" accept=".xlsx,.xls" hidden onChange={onPick('lotte')} />
             </div>
-            <p className="adm-muted">토글에서 내려받은 파일(TOGLE_…xlsx)을 그대로 올리면 돼요. 주문번호로 찾아 운송장번호를 등록하고 발송 처리해요.</p>
+            <p className="adm-muted">
+                토글(TOGLE_…xlsx)이나 롯데택배(출고 내역 …_YYMMDD.xlsx)에서 내려받은 파일을 그대로 올리면 돼요. 주문번호로 찾아 운송장번호를 등록하고
+                발송 처리해요. 다른 판매처 주문은 자동으로 건너뛰어요.
+            </p>
             <div className="adm-excel__row">
                 <button type="button" className="adm-btn" onClick={() => fileRef.current?.click()} disabled={busy}>
                     <Upload size={14} /> 직접 작성 양식 업로드
@@ -209,10 +219,11 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
             {preview ? (
                 <div className="adm-modal" role="dialog" aria-modal="true">
                     <div className="adm-modal__card">
-                        <h3>{format === 'togle' ? '토글 송장 업로드 미리보기' : '송장번호 업로드 미리보기'}</h3>
+                        <h3>{format === 'togle' ? '토글 송장 업로드 미리보기' : format === 'lotte' ? '롯데택배 송장 업로드 미리보기' : '송장번호 업로드 미리보기'}</h3>
                         <p className="adm-muted">
                             전체 {preview.summary.total}행 · 정상 {preview.summary.ok} · 이미 등록됨 {preview.summary.already} · 오류{' '}
                             {preview.summary.error}
+                            {preview.summary.skip ? ` · 다른 판매처 ${preview.summary.skip} (건너뜀)` : ''}
                         </p>
                         <div className="adm-modal__table">
                             <table className="adm-table">
@@ -227,7 +238,7 @@ export function ShippingExcelTools({ filter }: { filter: Filter }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {preview.rows.map((r) => (
+                                    {[...preview.rows].sort((a, b) => Number(a.state === 'skip') - Number(b.state === 'skip') || a.line - b.line).map((r) => (
                                         <tr key={r.line} className={`adm-prev adm-prev--${r.state}`}>
                                             <td>{r.line}</td>
                                             <td>{r.orderNo}</td>

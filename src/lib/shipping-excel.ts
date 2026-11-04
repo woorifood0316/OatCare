@@ -116,6 +116,8 @@ export interface UploadRow {
     conflict?: string;
     /** TOGLE rows: the waybill may come from any carrier, so a missing / unknown carrier name is not an error. */
     anyCarrier?: boolean;
+    /** Courier files list other sellers' parcels too: rows whose order number is not ours are skipped. */
+    foreign?: boolean;
 }
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -186,15 +188,33 @@ function cellText(v: unknown): string {
     return String(v).trim();
 }
 
-export function parseTogleUpload(data: Uint8Array): ParseResult {
+/** Our own order numbers: OC + YYYYMMDD + "-" + 6 letters/digits (lib/orders.ts newOrderNo). */
+export const OUR_ORDER_RE = /^OC\d{8}-[A-Z0-9]{6,8}$/;
+
+export type WaybillSource = 'togle' | 'lotte';
+
+const SOURCES: Record<WaybillSource, { label: string; sheet: string; carrier: string | null }> = {
+    // TOGLE: our delivery-info export + 운송장번호; mixed carriers, normally no carrier column.
+    togle: { label: '토글', sheet: 'Sheet1', carrier: null },
+    // Lotte (롯데택배 출고·송장 내역 *_YYMMDD.xlsx): Sheet0, 48 columns, one row per waybill. The file lists every
+    // parcel of the day, other malls' orders included (Naver/Coupang numbers, "-"): only OC… numbers are ours.
+    lotte: { label: '롯데택배', sheet: 'Sheet0', carrier: '롯데택배' },
+};
+
+/**
+ * Waybill files from TOGLE or Lotte: find the 운송장번호 / 주문번호 columns by name, read every cell as text,
+ * merge the rows of one order, flag one order with two different waybills, and mark other sellers' rows.
+ */
+export function parseWaybillUpload(data: Uint8Array, source: WaybillSource): ParseResult {
+    const src = SOURCES[source];
     let wb: XLSX.WorkBook;
     try {
-        // cellStyles off: TOGLE files carry broken style records that some readers choke on.
+        // cellStyles off: these files carry broken style records that some readers choke on.
         wb = XLSX.read(data, { type: 'array', cellStyles: false, cellDates: false });
     } catch {
-        return { ok: false, error: '엑셀 파일을 읽지 못했어요. 토글에서 내려받은 .xlsx 파일인지 확인해 주세요' };
+        return { ok: false, error: `엑셀 파일을 읽지 못했어요. ${src.label}에서 내려받은 .xlsx 파일인지 확인해 주세요` };
     }
-    const sheet = wb.Sheets.Sheet1 ?? wb.Sheets[wb.SheetNames[0]];
+    const sheet = wb.Sheets[src.sheet] ?? wb.Sheets[wb.SheetNames[0]];
     if (!sheet) return { ok: false, error: '시트를 찾지 못했어요' };
     const grid = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '', raw: true, blankrows: false });
 
@@ -206,34 +226,44 @@ export function parseTogleUpload(data: Uint8Array): ParseResult {
             break;
         }
     }
-    if (headerAt < 0) return { ok: false, error: '"운송장번호"와 "주문번호" 열을 찾지 못했어요. 토글에서 내려받은 송장 파일인지 확인해 주세요' };
+    if (headerAt < 0) return { ok: false, error: `"운송장번호"와 "주문번호" 열을 찾지 못했어요. ${src.label}에서 내려받은 송장 파일인지 확인해 주세요` };
     const header = (grid[headerAt] ?? []).map(cellText);
     const iOrder = header.indexOf(TOGLE_HEADERS.order);
     const iTracking = header.indexOf(TOGLE_HEADERS.tracking);
-    const iCarrier = header.indexOf(TOGLE_HEADERS.carrier); // optional
+    const iCarrier = src.carrier ? -1 : header.indexOf(TOGLE_HEADERS.carrier); // optional (TOGLE)
 
-    // One row per order: rows of the same order are merged; different waybill numbers for one order are flagged.
     const byOrder = new Map<string, UploadRow>();
+    const others: UploadRow[] = [];
     for (let i = headerAt + 1; i < grid.length; i++) {
         const r = grid[i] ?? [];
         const orderNo = cellText(r[iOrder]);
         const trackingNo = cellText(r[iTracking]);
-        const carrier = iCarrier >= 0 ? cellText(r[iCarrier]) : '';
+        const carrier = src.carrier ?? (iCarrier >= 0 ? cellText(r[iCarrier]) : '');
         if (!orderNo && !trackingNo) continue;
-        if (!orderNo) continue; // a row without an order number cannot be matched
+        const row: UploadRow = { line: i + 1, orderNo: orderNo || '-', method: METHOD_COURIER, carrier, trackingNo, anyCarrier: true };
+        // Another seller's parcel in the same courier file: shown as "skipped", never an error.
+        if (!OUR_ORDER_RE.test(orderNo)) {
+            others.push({ ...row, foreign: true });
+            continue;
+        }
         const prev = byOrder.get(orderNo);
         if (!prev) {
-            byOrder.set(orderNo, { line: i + 1, orderNo, method: METHOD_COURIER, carrier, trackingNo, anyCarrier: true });
-            if (byOrder.size > MAX_UPLOAD_ROWS) return { ok: false, error: `한 번에 ${MAX_UPLOAD_ROWS.toLocaleString('ko-KR')}건까지 올릴 수 있어요` };
+            byOrder.set(orderNo, row);
         } else if (!prev.trackingNo && trackingNo) {
             prev.trackingNo = trackingNo;
         } else if (trackingNo && normalizeTracking(trackingNo) !== normalizeTracking(prev.trackingNo)) {
             prev.conflict = `한 주문에 운송장번호가 여러 개예요 (${prev.trackingNo}, ${trackingNo})`;
         }
+        if (byOrder.size + others.length > MAX_UPLOAD_ROWS) return { ok: false, error: `한 번에 ${MAX_UPLOAD_ROWS.toLocaleString('ko-KR')}행까지 올릴 수 있어요` };
     }
-    const rows = [...byOrder.values()];
+    const rows = [...byOrder.values(), ...others].sort((x, y) => x.line - y.line);
     if (rows.length === 0) return { ok: false, error: '처리할 행이 없어요' };
     return { ok: true, rows };
+}
+
+/** @deprecated kept for callers/tests: same as parseWaybillUpload(data, 'togle'). */
+export function parseTogleUpload(data: Uint8Array): ParseResult {
+    return parseWaybillUpload(data, 'togle');
 }
 
 // ---- carrier names / validation -----------------------------------------------------------------------------------
@@ -267,7 +297,7 @@ export function normalizeTracking(raw: string): string {
     return raw.replace(/[^0-9A-Za-z]/g, '').slice(0, 30);
 }
 
-export type RowState = 'ok' | 'already' | 'error';
+export type RowState = 'ok' | 'already' | 'error' | 'skip';
 
 export interface CheckedRow extends UploadRow {
     state: RowState;
@@ -292,6 +322,7 @@ export function checkRows(rows: UploadRow[], orders: Map<string, OrderLite>): Ch
         const base: CheckedRow = { ...row, state: 'ok', message: '', carrierName: null, tracking: null, orderStatus: null };
         const fail = (message: string): CheckedRow => ({ ...base, state: 'error', message });
 
+        if (row.foreign) return { ...base, state: 'skip', message: '다른 판매처 주문이에요 (참오트케어 주문번호가 아님)' };
         if (row.conflict) return fail(row.conflict);
         if (seen.has(row.orderNo)) return fail('파일 안에서 주문번호가 중복돼요');
         seen.add(row.orderNo);

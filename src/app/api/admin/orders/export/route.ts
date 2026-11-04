@@ -46,6 +46,8 @@ export async function POST(request: Request) {
                 product: str('product'),
                 min: str('min'),
                 max: str('max'),
+                tn: str('tn'),
+                track: str('track'),
             },
             ['paid', 'preparing'],
         );

@@ -4,7 +4,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowDown, ArrowUp, ArrowUpDown, Filter } from 'lucide-react';
 
-export type ColumnKey = 'no' | 'date' | 'name' | 'product' | 'kind' | 'status' | 'amount';
+export type ColumnKey = 'no' | 'date' | 'name' | 'product' | 'kind' | 'status' | 'amount' | 'qty' | 'tracking';
 
 type Option = { value: string; label: string };
 
@@ -17,9 +17,11 @@ const PARAMS: Record<ColumnKey, string[]> = {
     kind: ['kind'],
     status: ['status'],
     amount: ['min', 'max'],
+    qty: [],
+    tracking: ['tn', 'track'],
 };
 /** Sorting a column for the first time: newest / largest first for date and amount, A→Z otherwise. */
-const FIRST_DIR: Record<ColumnKey, 'asc' | 'desc'> = { no: 'desc', date: 'desc', name: 'asc', product: 'asc', kind: 'asc', status: 'asc', amount: 'desc' };
+const FIRST_DIR: Record<ColumnKey, 'asc' | 'desc'> = { no: 'desc', date: 'desc', name: 'asc', product: 'asc', kind: 'asc', status: 'asc', amount: 'desc', qty: 'desc', tracking: 'asc' };
 
 const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
 const shift = (day: string, n: number) => {
@@ -163,6 +165,24 @@ export function OrderColumnHead({
                 </label>
             </>
         );
+    } else if (col === 'tracking') {
+        body = (
+            <>
+                <div className="och-list">
+                    {[
+                        ['', '전체'],
+                        ['no', '송장 없음 (발송 전)'],
+                        ['yes', '송장 있음'],
+                    ].map(([v, t]) => (
+                        <label key={v}>
+                            <input type="radio" name="och-tn" checked={(draft.tn ?? '') === v} onChange={() => set('tn', v)} />
+                            <span>{t}</span>
+                        </label>
+                    ))}
+                </div>
+                <input value={draft.track ?? ''} onChange={(e) => set('track', e.target.value)} onKeyDown={(e) => e.key === 'Enter' && apply()} placeholder="운송장번호 일부" aria-label="운송장번호 포함" />
+            </>
+        );
     } else if (col === 'status') {
         const chosen = new Set((draft.status ?? '').split(',').filter(Boolean));
         const toggle = (v: string) => {
@@ -206,6 +226,7 @@ export function OrderColumnHead({
                     {label}
                     {sorted === 'asc' ? <ArrowUp size={13} /> : sorted === 'desc' ? <ArrowDown size={13} /> : <ArrowUpDown size={13} className="och__idle" />}
                 </button>
+                {PARAMS[col].length ? (
                 <button
                     ref={btnRef}
                     type="button"
@@ -216,6 +237,7 @@ export function OrderColumnHead({
                 >
                     <Filter size={13} />
                 </button>
+                ) : null}
             </span>
             {open && pos ? (
                 <div ref={popRef} className="och-pop" style={{ top: pos.top, left: pos.left }} role="dialog" aria-label={`${label} 필터`}>

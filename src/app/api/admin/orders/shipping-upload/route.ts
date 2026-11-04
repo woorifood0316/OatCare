@@ -5,7 +5,7 @@ import {
     MAX_UPLOAD_BYTES,
     buildErrorWorkbook,
     checkRows,
-    parseTogleUpload,
+    parseWaybillUpload,
     parseUpload,
     type CheckedRow,
     type OrderLite,
@@ -18,7 +18,7 @@ export const runtime = 'edge';
  *   file       .xls / .xlsx
  *   mode       preview (default) | commit | errors
  *   overwrite  "1" to also update orders that already have a tracking number (commit only)
- *   format     naver (default: 상품주문번호/배송방법/택배사/송장번호 form) | togle (TOGLE waybill file)
+ *   format     naver (default: 상품주문번호/배송방법/택배사/송장번호 form) | togle (TOGLE waybill file) | lotte (롯데택배 출고 내역)
  * The file is parsed and re-validated on every call, so the browser never has to be trusted with the result.
  */
 export async function POST(request: Request) {
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
 
     const format = String(form.get('format') ?? 'naver');
     let parsed;
-    if (format === 'togle') {
-        parsed = parseTogleUpload(new Uint8Array(await file.arrayBuffer()));
+    if (format === 'togle' || format === 'lotte') {
+        parsed = parseWaybillUpload(new Uint8Array(await file.arrayBuffer()), format);
     } else {
         parsed = parseUpload(new Uint8Array(await file.arrayBuffer()));
     }
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
         ok: checked.filter((r) => r.state === 'ok').length,
         already: checked.filter((r) => r.state === 'already').length,
         error: checked.filter((r) => r.state === 'error').length,
+        skip: checked.filter((r) => r.state === 'skip').length,
     };
 
     if (mode === 'errors') {
@@ -99,5 +100,5 @@ export async function POST(request: Request) {
         await enqueue('order_shipped', { orderNo: r.orderNo, carrier: r.carrierName, trackingNo: r.tracking ?? '' }, { userId: userOf.get(r.orderNo) ?? null });
     }
     console.info('[admin-tracking-upload]', JSON.stringify({ admin: admin.id, applied: targets.length, overwrite }));
-    return Response.json({ summary, applied: targets.length, skipped: checked.length - targets.length });
+    return Response.json({ summary, applied: targets.length, skipped: checked.length - targets.length - summary.skip, others: summary.skip });
 }

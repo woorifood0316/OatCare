@@ -57,6 +57,8 @@ export interface OrderFilter {
     product?: string; // sku contained in the order
     min?: string; // amount range
     max?: string;
+    tn?: string; // tracking: 'yes' (has a waybill) | 'no' (not yet)
+    track?: string; // waybill number contains
     sort?: string;
     dir?: string;
     page?: number;
@@ -70,7 +72,13 @@ export const ORDER_SORTS = {
     kind: 'kind',
     status: 'status',
     amount: 'amount',
+    qty: 'qty_total',
+    tracking: 'tracking_no',
 } as const;
+
+/** Sachets in an order (sets count as their size, the free gift line not at all). */
+const QTY_SQL = `(select coalesce(sum((i->>'qty')::int * coalesce((i->>'count')::int, 1)), 0)
+    from jsonb_array_elements(items) i where coalesce((i->>'gift')::boolean, false) = false)`;
 export type OrderSortKey = keyof typeof ORDER_SORTS;
 
 const isDay = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -106,13 +114,17 @@ export function orderWhere(f: OrderFilter, defaultStatuses?: string[]): { clause
     const max = intOf(f.max);
     if (min !== null) add('amount >= ?', min);
     if (max !== null) add('amount <= ?', max);
+    if (f.tn === 'yes') where.push(`coalesce(tracking_no, '') <> ''`);
+    if (f.tn === 'no') where.push(`coalesce(tracking_no, '') = ''`);
+    if (f.track?.trim()) add('tracking_no ilike ?', `%${f.track.trim().replace(/[^0-9A-Za-z]/g, '')}%`);
     return { clause: where.join(' and '), params };
 }
 
 export function orderBy(f: OrderFilter, fallback = 'created_at desc'): string {
-    const col = ORDER_SORTS[f.sort as OrderSortKey];
+    const key = f.sort as OrderSortKey;
+    const col = ORDER_SORTS[key];
     if (!col) return fallback;
-    return `${col} ${f.dir === 'asc' ? 'asc' : 'desc'} nulls last, created_at desc`;
+    return `${key === 'qty' ? QTY_SQL : col} ${f.dir === 'asc' ? 'asc' : 'desc'} nulls last, created_at desc`;
 }
 
 export async function searchOrders(f: OrderFilter): Promise<{ orders: Order[]; total: number; page: number }> {

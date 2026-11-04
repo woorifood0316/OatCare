@@ -2,6 +2,10 @@ import Link from 'next/link';
 import { PAGE_SIZE, searchOrders, statusList } from '../../../lib/admin-data';
 import { CATALOG } from '../../../lib/catalog';
 import { OrderColumnHead } from '../../../components/admin/OrderColumnHead';
+import { listShipOverrides } from '../../../lib/ship-calendar';
+import { shipEstimate, todayKey } from '../../../lib/ship-date';
+import { trackingUrl } from '../../../lib/order-status';
+import type { Order } from '../../../lib/orders';
 import { ORDER_STATUS_LABEL } from '../../../lib/order-status';
 import { dt, won } from '../../../components/admin/format';
 import { ShippingExcelTools } from '../../../components/admin/ShippingExcelTools';
@@ -19,11 +23,13 @@ type SP = {
     product?: string;
     min?: string;
     max?: string;
+    tn?: string;
+    track?: string;
     sort?: string;
     dir?: string;
     page?: string;
 };
-const FILTER_KEYS = ['q', 'no', 'name', 'from', 'to', 'product', 'kind', 'status', 'min', 'max'] as const;
+const FILTER_KEYS = ['q', 'no', 'name', 'from', 'to', 'product', 'kind', 'status', 'min', 'max', 'tn', 'track'] as const;
 const STATUS_OPTIONS = Object.entries(ORDER_STATUS_LABEL)
     .filter(([k]) => k !== 'pending')
     .map(([value, label]) => ({ value, label }));
@@ -34,10 +40,27 @@ const KIND_OPTIONS = [
 ];
 const comma = (v: string) => Number(v).toLocaleString('ko-KR');
 
+/** Sachets in the order (sets count as their size; the free gift does not count). */
+const sachets = (o: Order) => o.items.filter((i) => !i.gift).reduce((n, i) => n + i.qty * (i.count || 1), 0);
+
+/** KST calendar day ("YYYY-MM-DD") of a timestamp plus n days. */
+const kstDayPlus = (iso: string, n: number) => new Date(new Date(iso).getTime() + 9 * 3600 * 1000 + n * 86400 * 1000).toISOString().slice(0, 10);
+
 export default async function AdminOrders({ searchParams }: { searchParams: Promise<SP> }) {
     const sp = await searchParams;
     const page = Math.max(1, Number(sp.page) || 1);
-    const { orders, total } = await searchOrders({ ...sp, page });
+    const [{ orders, total }, overrideRows] = await Promise.all([searchOrders({ ...sp, page }), listShipOverrides()]);
+    const overrides = {
+        closed: new Set(overrideRows.filter((r) => r.kind === 'closed').map((r) => r.day)),
+        open: new Set(overrideRows.filter((r) => r.kind === 'open').map((r) => r.day)),
+    };
+    const today = todayKey();
+    /** Paid but not shipped after the day it should have left (13:00 cut-off, weekends/holidays skipped). */
+    const shipDue = (o: Order): string | null => {
+        if ((o.status !== 'paid' && o.status !== 'preparing') || !o.paidAt) return null;
+        const due = kstDayPlus(o.paidAt, shipEstimate(new Date(o.paidAt), overrides).daysAhead);
+        return due < today ? due : null;
+    };
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const qs = (over: Partial<Record<keyof SP, string | undefined>>) => {
@@ -58,6 +81,8 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
     if (sp.product) chips.push({ key: 'product', label: `상품: ${PRODUCT_OPTIONS.find((o) => o.value === sp.product)?.label ?? sp.product}`, params: ['product'] });
     if (sp.kind && sp.kind !== 'all') chips.push({ key: 'kind', label: `유형: ${sp.kind === 'subscription' ? '정기' : '일반'}`, params: ['kind'] });
     if (statusNames.length) chips.push({ key: 'status', label: `상태: ${statusNames.join('·')}`, params: ['status'] });
+    if (sp.tn) chips.push({ key: 'tn', label: sp.tn === 'no' ? '송장 없음' : '송장 있음', params: ['tn'] });
+    if (sp.track) chips.push({ key: 'track', label: `운송장: ${sp.track}`, params: ['track'] });
     if (sp.min || sp.max)
         chips.push({ key: 'amount', label: `금액: ${sp.min ? `${comma(sp.min)}원` : '0원'} ~ ${sp.max ? `${comma(sp.max)}원` : ''}`, params: ['min', 'max'] });
 
@@ -91,13 +116,13 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
             ) : null}
 
             <ShippingExcelTools
-                filter={{ status: sp.status, kind: sp.kind, q: sp.q, no: sp.no, name: sp.name, from: sp.from, to: sp.to, product: sp.product, min: sp.min, max: sp.max }}
+                filter={{ status: sp.status, kind: sp.kind, q: sp.q, no: sp.no, name: sp.name, from: sp.from, to: sp.to, product: sp.product, min: sp.min, max: sp.max, tn: sp.tn, track: sp.track }}
             />
 
             <p className="adm-muted">총 {total}건</p>
             {
                 <div className="adm-table-wrap">
-                    <table className="adm-table">
+                    <table className="adm-table adm-table--orders">
                         <thead>
                             <tr>
                                 <th>
@@ -107,21 +132,26 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                                 <OrderColumnHead col="date" label="일시" />
                                 <OrderColumnHead col="name" label="받는 분" />
                                 <OrderColumnHead col="product" label="상품" options={PRODUCT_OPTIONS} />
+                                <OrderColumnHead col="qty" label="수량" align="right" />
                                 <OrderColumnHead col="kind" label="유형" options={KIND_OPTIONS} />
                                 <OrderColumnHead col="status" label="상태" options={STATUS_OPTIONS} />
+                                <OrderColumnHead col="tracking" label="송장번호" />
                                 <OrderColumnHead col="amount" label="금액" align="right" />
                             </tr>
                         </thead>
                         <tbody>
                             {orders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="och-empty">
+                                    <td colSpan={10} className="och-empty">
                                         조건에 맞는 주문이 없어요. 위의 필터를 지우거나 바꿔 보세요.
                                     </td>
                                 </tr>
                             ) : null}
-                            {orders.map((o) => (
-                                <tr key={o.id}>
+                            {orders.map((o) => {
+                                const due = shipDue(o);
+                                const link = trackingUrl(o.carrier, o.trackingNo);
+                                return (
+                                <tr key={o.id} className={due ? 'is-late' : undefined}>
                                     <td>
                                         <input type="checkbox" className="adm-sel" data-order={o.orderNo} aria-label={`${o.orderNo} 선택`} />
                                     </td>
@@ -129,18 +159,51 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                                         <Link href={`/admin/orders/${o.orderNo}`}>{o.orderNo}</Link>
                                     </td>
                                     <td>{dt(o.paidAt ?? o.createdAt)}</td>
-                                    <td>{o.shipName}</td>
                                     <td>
+                                        {o.shipName}
+                                        {o.shipMemo ? (
+                                            <span className="ord-memo" title={`배송메모: ${o.shipMemo}`} aria-label={`배송메모: ${o.shipMemo}`}>
+                                                📝
+                                            </span>
+                                        ) : null}
+                                    </td>
+                                    <td className="ord-product">
                                         {o.items[0]?.name}
                                         {o.items.length > 1 ? ` 외 ${o.items.length - 1}` : ''}
                                     </td>
+                                    <td className="r">{sachets(o)}포</td>
                                     <td>{o.kind === 'subscription' ? '정기' : '일반'}</td>
                                     <td>
                                         <span className={`ord-status ord-status--${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
+                                        {due ? (
+                                            <span className="ord-late" title={`${due.slice(5).replace('-', '/')} 출고 예정이었어요`}>
+                                                발송 지연
+                                            </span>
+                                        ) : null}
                                     </td>
-                                    <td className="r">{won(o.amount)}</td>
+                                    <td>
+                                        {o.trackingNo ? (
+                                            <span className="ord-track">
+                                                <small>{o.carrier}</small>
+                                                {link ? (
+                                                    <a href={link} target="_blank" rel="noopener noreferrer">
+                                                        {o.trackingNo}
+                                                    </a>
+                                                ) : (
+                                                    o.trackingNo
+                                                )}
+                                            </span>
+                                        ) : (
+                                            <span className="adm-muted">-</span>
+                                        )}
+                                    </td>
+                                    <td className="r">
+                                        {o.discountAmount > 0 ? <span className="ord-disc">{o.couponId ? '쿠폰' : '첫 구독'}</span> : null}
+                                        {won(o.amount)}
+                                    </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
