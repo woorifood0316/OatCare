@@ -39,7 +39,7 @@ export default async function CouponsPage() {
                             </div>
                             <div className="cpn__body">
                                 <b>{c.name}</b>
-                                <span>{won(c.minOrder)} 이상 주문 시 사용 · {day(c.expiresAt)}까지</span>
+                                <span>세트·정기구독은 금액 상관없이 · 낱개만 주문 시 {won(c.minOrder)} 이상 · {day(c.expiresAt)}까지</span>
                             </div>
                             <Link href="/#product-lineup" className="cpn__cta">
                                 쓰러 가기

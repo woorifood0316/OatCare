@@ -32,10 +32,20 @@ export function mapKakaoUser(p: {
     };
 }
 
-export async function exchangeKakaoCode(code: string, redirectUri: string): Promise<KakaoProfile | null> {
+/** Why the Kakao login failed, short and safe to show (Kakao's own error code when it gave one, e.g. KOE320). */
+export class KakaoLoginError extends Error {
+    constructor(public reason: string) {
+        super(`kakao login failed: ${reason}`);
+    }
+}
+
+export async function exchangeKakaoCode(code: string, redirectUri: string): Promise<KakaoProfile> {
     const clientId = process.env.AUTH_KAKAO_ID;
     const clientSecret = process.env.AUTH_KAKAO_SECRET;
-    if (!clientId || !code) return null;
+    if (!clientId) throw new KakaoLoginError('no_rest_key');
+    if (!code) throw new KakaoLoginError('no_code');
+    let tokenRes: Response;
+    let token: { access_token?: string; error?: string; error_code?: string } | null;
     try {
         const body = new URLSearchParams({
             grant_type: 'authorization_code',
@@ -44,19 +54,27 @@ export async function exchangeKakaoCode(code: string, redirectUri: string): Prom
             code,
         });
         if (clientSecret) body.set('client_secret', clientSecret);
-        const tokenRes = await fetch(TOKEN_URL(), {
+        tokenRes = await fetch(TOKEN_URL(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
             body,
         });
-        const token = (await tokenRes.json().catch(() => null)) as { access_token?: string } | null;
-        if (!tokenRes.ok || !token?.access_token) return null;
-
-        const meRes = await fetch(USERINFO_URL(), { headers: { Authorization: `Bearer ${token.access_token}` } });
-        if (!meRes.ok) return null;
-        const me = (await meRes.json().catch(() => null)) as Parameters<typeof mapKakaoUser>[0] | null;
-        return me?.id ? mapKakaoUser(me) : null;
+        token = (await tokenRes.json().catch(() => null)) as typeof token;
     } catch {
-        return null;
+        throw new KakaoLoginError('token_network');
     }
+    if (!tokenRes.ok || !token?.access_token) {
+        // e.g. {"error":"invalid_grant","error_code":"KOE320"} / {"error":"invalid_client","error_code":"KOE010"}
+        throw new KakaoLoginError(`token_${token?.error_code || token?.error || tokenRes.status}`);
+    }
+    let meRes: Response;
+    try {
+        meRes = await fetch(USERINFO_URL(), { headers: { Authorization: `Bearer ${token.access_token}` } });
+    } catch {
+        throw new KakaoLoginError('me_network');
+    }
+    if (!meRes.ok) throw new KakaoLoginError(`me_${meRes.status}`);
+    const me = (await meRes.json().catch(() => null)) as Parameters<typeof mapKakaoUser>[0] | null;
+    if (!me?.id) throw new KakaoLoginError('me_empty');
+    return mapKakaoUser(me);
 }

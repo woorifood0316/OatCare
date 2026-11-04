@@ -312,7 +312,7 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                             onClick={() => setPurchaseMode('subscribe')}
                                         >
                                             <b className="oc-mode-title">🔁 정기구독</b>
-                                            <small className="oc-mode-sub">{Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인 · 첫 회 보틀 증정</small>
+                                            <small className="oc-mode-sub">{Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100)}% 추가 할인 · 첫 결제 5천원 할인 · 보틀 증정</small>
                                         </button>
                                     </div>
                                     {purchaseMode === 'subscribe' ? (

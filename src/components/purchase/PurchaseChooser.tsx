@@ -6,6 +6,7 @@ import { ShoppingBag, Repeat, Check, ChevronDown, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import {
     CYCLE_OPTIONS,
+    FIRST_SUBSCRIPTION_DISCOUNT,
     MIN_SUBSCRIPTION_CHARGES,
     SUBSCRIPTION_DISCOUNT_RATE,
     getItem,
@@ -115,6 +116,9 @@ export function PurchaseChooser({
                     <ul className="pc2__perks">
                         <li>
                             <Check size={13} /> {pct}% 추가 할인
+                        </li>
+                        <li>
+                            <Check size={13} /> 첫 구독 첫 결제 {won(FIRST_SUBSCRIPTION_DISCOUNT)} 할인
                         </li>
                         <li>
                             <Check size={13} /> 첫 회 쉐이커 보틀 증정

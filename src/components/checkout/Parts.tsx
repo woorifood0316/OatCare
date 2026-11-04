@@ -30,11 +30,13 @@ export function OrderSummary({
     priced,
     mode,
     discount = 0,
+    discountLabel = '쿠폰 할인',
     gift = false,
 }: {
     priced: PricedCart;
     mode: 'once' | 'subscribe';
     discount?: number;
+    discountLabel?: string;
     gift?: boolean;
 }) {
     return (
@@ -87,7 +89,7 @@ export function OrderSummary({
                 </div>
                 {discount > 0 ? (
                     <div className="cart-summary__row cart-summary__row--sub">
-                        <span>쿠폰 할인</span>
+                        <span>{discountLabel}</span>
                         <span>-{won(discount)}</span>
                     </div>
                 ) : null}
@@ -107,6 +109,7 @@ export function CouponPicker({
     onSelect,
     subtotal,
     total,
+    hasSet = false,
     note,
 }: {
     coupons: Coupon[];
@@ -114,6 +117,8 @@ export function CouponPicker({
     onSelect: (id: string | null) => void;
     subtotal: number;
     total: number;
+    /** Order has a set (or is a subscription): the coupon's minimum does not apply. */
+    hasSet?: boolean;
     note?: string;
 }) {
     const usable = coupons.filter((c) => c.available);
@@ -135,7 +140,7 @@ export function CouponPicker({
                     </label>
                 </li>
                 {usable.map((c) => {
-                    const ok = couponDiscount(c, subtotal, total) > 0;
+                    const ok = couponDiscount(c, subtotal, total, hasSet) > 0;
                     return (
                         <li key={c.id}>
                             <label className={`co-addr__item${selectedId === c.id ? ' is-active' : ''}${ok ? '' : ' is-disabled'}`}>
@@ -145,7 +150,7 @@ export function CouponPicker({
                                         {c.name} · {won(c.amount)} 할인
                                     </strong>
                                     <span>
-                                        {exp(c.expiresAt)} · {won(c.minOrder)} 이상 주문 시 사용
+                                        {exp(c.expiresAt)} · 세트 포함 주문은 금액 상관없이, 낱개만 주문 시 {won(c.minOrder)} 이상
                                         {ok ? '' : ' (현재 주문은 사용할 수 없어요)'}
                                     </span>
                                 </div>

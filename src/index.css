@@ -5412,3 +5412,6 @@ body {
 .fsh__bar span { display: block; height: 100%; border-radius: inherit; background: var(--oc-gold); transition: width 0.3s ease; }
 .oc-drawer__fsh { margin: 0; }
 .cart-fsh { margin: 0.2rem 0 0.6rem; }
+
+.co-first-sub { margin: 0; padding: 0.75rem 0.9rem; border-radius: 12px; background: rgba(47, 107, 58, 0.07); border: 1px solid rgba(47, 107, 58, 0.22); color: var(--oc-brown); font-size: 0.9rem; line-height: 1.5; }
+.co-first-sub b { color: #2f6b3a; }

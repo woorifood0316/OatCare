@@ -1,6 +1,6 @@
 import { getSql } from '../../../../lib/db';
 import { isUuid, jsonError, sameOrigin, sessionUserId } from '../../../../lib/api';
-import { couponDiscount, priceCart, sanitizeLines, type CartLine } from '../../../../lib/catalog';
+import { couponDiscount, firstSubscriptionDiscount, priceCart, sanitizeLines, type CartLine } from '../../../../lib/catalog';
 import { getAddress } from '../../../../lib/addresses';
 import { removeCartLines } from '../../../../lib/orders';
 import { startSubscription } from '../../../../lib/subscriptions';
@@ -66,19 +66,23 @@ export async function POST(request: Request) {
     const ordered = [...groups.entries()].sort((a, b) => a[0] - b[0]);
     const firstPriced = priceCart(ordered[0][1], 'subscribe');
 
+    const gifted = await sql`select shaker_gifted_at from users where id = ${userId}`;
+    const giftEligible = !gifted[0]?.shaker_gifted_at;
+
     let discount = 0;
     let couponId: string | null = null;
-    if (body.couponId) {
+    if (giftEligible) {
+        // First subscription: automatic 5,000원 off the first payment. One discount per order, so no coupon here
+        // (the member keeps it for another order).
+        discount = firstSubscriptionDiscount(firstPriced.total);
+    } else if (body.couponId) {
         if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
         const coupon = await getAvailableCoupon(userId, body.couponId);
         if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
-        discount = couponDiscount(coupon, firstPriced.subtotal, firstPriced.total);
-        if (discount <= 0) return jsonError(`${won(coupon.minOrder)} 이상 주문에 사용할 수 있는 쿠폰이에요`);
+        discount = couponDiscount(coupon, firstPriced.subtotal, firstPriced.total, true);
+        if (discount <= 0) return jsonError('사용할 수 없는 쿠폰이에요');
         couponId = coupon.id;
     }
-
-    const gifted = await sql`select shaker_gifted_at from users where id = ${userId}`;
-    const giftEligible = !gifted[0]?.shaker_gifted_at;
 
     const expected = priced.total - discount;
     if (typeof body.expectedAmount === 'number' && body.expectedAmount !== expected) {

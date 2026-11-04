@@ -20,6 +20,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     AccessDenied: '로그인이 취소되었거나 허용되지 않았어요. 다시 시도해 주세요.',
     Configuration: '로그인 설정에 문제가 있어요. 잠시 후 다시 시도해 주세요.',
     OAuthAccountNotLinked: '이미 다른 방법으로 가입된 계정이에요.',
+    KakaoLogin: '카카오 로그인을 마치지 못했어요. 다시 시도해 주세요.',
     Default: '로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
 };
 
@@ -71,7 +72,10 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     if (notice === 'not-registered') {
         message = { tone: 'info', text: '아직 가입되지 않은 계정이에요. 아래에서 3초 만에 가입해 주세요.' };
     } else if (errorCode) {
-        message = { tone: 'error', text: ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default };
+        const reason = params.get('reason');
+        const base = ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default;
+        // A short code (e.g. KOE320, state_cookie_missing) so a failed try can be reported and diagnosed.
+        message = { tone: 'error', text: reason ? `${base} (오류 코드: ${reason})` : base };
     }
 
     const handleClick = (provider: Provider) => {
@@ -111,7 +115,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                 </p>
 
                 {isSignup ? (
-                    <p className="oc-auth__perk">🎟️ 가입하면 <b>5,000원 쿠폰</b>을 바로 드려요 (60일 이내 사용)</p>
+                    <p className="oc-auth__perk">🎟️ 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (30일 이내 사용)</p>
                 ) : null}
 
                 {message && (

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
 import { cardText } from '../mypage/PaymentMethodManager';
-import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, type PricedCart } from '../../lib/catalog';
+import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, firstSubscriptionDiscount, type PricedCart } from '../../lib/catalog';
 import type { Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
@@ -56,7 +56,9 @@ export function CheckoutSubscribe({
     const firstCycle = cycles[0]?.[0];
     const firstGroup = priced.items.filter((i) => (i.cycleDays ?? 30) === firstCycle).reduce((sum, i) => sum + i.amount, 0);
     const selected = coupons.find((c) => c.id === couponId) ?? null;
-    const discount = selected ? couponDiscount(selected, firstGroup, firstGroup) : 0;
+    // A member's first subscription gets 5,000원 off automatically; a coupon is then kept for another order.
+    const firstSubDiscount = giftEligible ? firstSubscriptionDiscount(firstGroup) : 0;
+    const discount = giftEligible ? firstSubDiscount : selected ? couponDiscount(selected, firstGroup, firstGroup, true) : 0;
     const payable = priced.total - discount;
 
     const start = async () => {
@@ -79,7 +81,7 @@ export function CheckoutSubscribe({
             const res = await fetch('/api/checkout/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId: useAddressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId }),
+                body: JSON.stringify({ addressId: useAddressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId: giftEligible ? null : couponId }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -103,15 +105,26 @@ export function CheckoutSubscribe({
 
     return (
         <CheckoutShell title="정기구독 시작">
-            <OrderSummary priced={priced} mode="subscribe" discount={discount} gift={giftEligible} />
-            <CouponPicker
-                coupons={coupons}
-                selectedId={couponId}
-                onSelect={setCouponId}
-                subtotal={firstGroup}
-                total={firstGroup}
-                note="쿠폰은 첫 회 결제에만 적용돼요."
-            />
+            <OrderSummary priced={priced} mode="subscribe" discount={discount} discountLabel={giftEligible ? '첫 구독 할인' : '쿠폰 할인'} gift={giftEligible} />
+            {giftEligible ? (
+                <section className="cart-section">
+                    <h2 className="co-h2">할인</h2>
+                    <p className="co-first-sub">
+                        🎉 <b>첫 정기구독 {won(firstSubDiscount)} 할인</b>이 자동으로 적용됐어요.
+                        {coupons.some((c) => c.available) ? ' 할인은 주문 1건에 하나만 적용돼서, 가진 쿠폰은 다음 주문에 쓸 수 있어요.' : ''}
+                    </p>
+                </section>
+            ) : (
+                <CouponPicker
+                    coupons={coupons}
+                    selectedId={couponId}
+                    onSelect={setCouponId}
+                    subtotal={firstGroup}
+                    total={firstGroup}
+                    hasSet
+                    note="쿠폰은 첫 회 결제에만 적용돼요."
+                />
+            )}
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">

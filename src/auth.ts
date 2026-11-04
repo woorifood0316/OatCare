@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
@@ -7,7 +7,15 @@ import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
 import { verifyTestLogin } from './lib/test-login';
-import { exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
+import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
+
+/** Kakao app-login failure with the reason in `code` (shown on /login so a failed try tells us why). */
+class KakaoSignin extends CredentialsSignin {
+    constructor(reason: string) {
+        super(reason);
+        this.code = reason;
+    }
+}
 
 export const CONSENT_COOKIE = 'oc_consent';
 export const MARKETING_COOKIE = 'oc_mkt';
@@ -33,8 +41,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: 'kakao-app',
             credentials: { code: {}, redirectUri: {} },
             async authorize(creds) {
-                const profile = await exchangeKakaoCode(String(creds?.code ?? ''), String(creds?.redirectUri ?? ''));
-                return profile ? { id: profile.id, name: profile.name, email: profile.email, image: null } : null;
+                try {
+                    const profile = await exchangeKakaoCode(String(creds?.code ?? ''), String(creds?.redirectUri ?? ''));
+                    return { id: profile.id, name: profile.name, email: profile.email, image: null };
+                } catch (e) {
+                    const reason = e instanceof KakaoLoginError ? e.reason : 'unknown';
+                    console.error('[kakao-app]', reason);
+                    throw new KakaoSignin(reason);
+                }
             },
         }),
         // Naver: 이름(필수), 이메일(선택). The stock provider only reads the nickname, so name stayed empty.

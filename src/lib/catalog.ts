@@ -36,7 +36,7 @@ export const CATALOG: CatalogItem[] = [
             kind: 'single',
             name: `참오트케어 ${flavor}`,
             img: SINGLE_IMG[flavor],
-            price: 1100,
+            price: 1200,
             listPrice: 1250,
             count: 1,
             subscribable: false,
@@ -48,7 +48,7 @@ export const CATALOG: CatalogItem[] = [
         kind: 'bundle',
         name: '5종 맛보기 10개입 세트',
         img: '/assets/bundle-all-1.jpg',
-        price: 12000,
+        price: 11200,
         listPrice: 12500,
         count: 10,
         subscribable: false,
@@ -59,7 +59,7 @@ export const CATALOG: CatalogItem[] = [
         kind: 'bundle',
         name: '든든 20개입 한달 박스',
         img: '/assets/bundle-all-2.jpg',
-        price: 19800,
+        price: 18700,
         listPrice: 25000,
         count: 20,
         subscribable: true,
@@ -70,7 +70,7 @@ export const CATALOG: CatalogItem[] = [
         kind: 'bundle',
         name: '대용량 30개입 패밀리 박스',
         img: '/assets/bundle-all-3.jpg',
-        price: 27000,
+        price: 26100,
         listPrice: 37500,
         count: 30,
         subscribable: true,
@@ -96,11 +96,17 @@ export const FREE_SHIPPING_MIN = 30000;
 
 /** Subscriptions must be paid at least this many times (cancelling earlier only schedules the end). */
 export const MIN_SUBSCRIPTION_CHARGES = 2;
-/** Welcome coupon issued at sign-up. */
+/** Welcome coupon issued at sign-up. The minimum applies only to orders of single items (any set: no minimum). */
 export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
-export const WELCOME_COUPON_AMOUNT = 5000;
-export const WELCOME_COUPON_DAYS = 60;
-export const WELCOME_COUPON_MIN_ORDER = 10000;
+export const WELCOME_COUPON_AMOUNT = 3000;
+export const WELCOME_COUPON_DAYS = 30;
+export const WELCOME_COUPON_MIN_ORDER = 20000;
+/**
+ * First subscription: this much off its first payment, automatically (no coupon). Same eligibility as the shaker
+ * bottle (a member's first subscription; given back if that order is refunded). One discount per order, so a coupon
+ * is not used on that payment and stays for a later order.
+ */
+export const FIRST_SUBSCRIPTION_DISCOUNT = 5000;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;
 export const GIFT_SHAKER_NAME = '참오트케어 쉐이커 보틀 (정기구독 첫 회 증정)';
@@ -130,8 +136,9 @@ export function findSkuByName(name: string): string | undefined {
     return CATALOG.find((i) => i.name === name)?.sku;
 }
 
+/** Set price minus 5%, rounded DOWN to 100원, so the advertised "5% 할인" always holds (18,700 → 17,700). */
 export function subscriptionUnitPrice(item: CatalogItem): number {
-    return Math.round((item.price * (1 - SUBSCRIPTION_DISCOUNT_RATE)) / 10) * 10;
+    return Math.floor((item.price * (1 - SUBSCRIPTION_DISCOUNT_RATE)) / 100) * 100;
 }
 
 export function unitPriceOf(line: CartLine): number {
@@ -308,7 +315,26 @@ export function giftItem(): PricedItem {
  * Coupon discount for an order. `subtotal` is checked against the coupon's minimum order,
  * and the customer always pays at least MIN_PAYABLE.
  */
-export function couponDiscount(coupon: { amount: number; minOrder: number }, subtotal: number, total: number): number {
-    if (subtotal < coupon.minOrder) return 0;
+/**
+ * Coupon value for an order. The coupon's minimum order applies only when the order has NO set:
+ * any order with a 10·20·30 set (and every subscription) can use it whatever the amount.
+ */
+export function couponDiscount(
+    coupon: { amount: number; minOrder: number },
+    subtotal: number,
+    total: number,
+    hasSet = false,
+): number {
+    if (!hasSet && subtotal < coupon.minOrder) return 0;
     return Math.max(0, Math.min(coupon.amount, total - MIN_PAYABLE));
+}
+
+/** True when the priced items include a set (bundle). */
+export function hasSetItem(items: { sku: string }[]): boolean {
+    return items.some((i) => getItem(i.sku)?.kind === 'bundle');
+}
+
+/** First-subscription discount for a first payment of `total` (never below the minimum Toss accepts). */
+export function firstSubscriptionDiscount(total: number): number {
+    return Math.max(0, Math.min(FIRST_SUBSCRIPTION_DISCOUNT, total - MIN_PAYABLE));
 }

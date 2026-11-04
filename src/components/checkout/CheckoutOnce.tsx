@@ -4,7 +4,7 @@ import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
 import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
 import { loadTossSdk as loadSdk } from '../../lib/toss-sdk';
-import { couponDiscount, type PricedCart } from '../../lib/catalog';
+import { couponDiscount, hasSetItem, type PricedCart } from '../../lib/catalog';
 import type { Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 
@@ -33,7 +33,7 @@ export function CheckoutOnce({
     const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
 
     const selected = coupons.find((c) => c.id === couponId) ?? null;
-    const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total) : 0;
+    const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total, hasSetItem(priced.items)) : 0;
     const payable = priced.total - discount;
     const payableRef = useRef(payable);
     payableRef.current = payable;
@@ -116,7 +116,7 @@ export function CheckoutOnce({
     return (
         <CheckoutShell title="주문·결제">
             <OrderSummary priced={priced} mode="once" discount={discount} />
-            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} />
+            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} hasSet={hasSetItem(priced.items)} />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">

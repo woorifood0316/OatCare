@@ -66,7 +66,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
                         </div>
                         {order.discountAmount > 0 ? (
                             <div>
-                                <dt>쿠폰 할인</dt>
+                                <dt>{order.couponId ? '쿠폰 할인' : '첫 구독 할인'}</dt>
                                 <dd>-{won(order.discountAmount)}</dd>
                             </div>
                         ) : null}

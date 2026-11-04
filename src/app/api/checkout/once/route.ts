@@ -1,6 +1,6 @@
 import { getSql } from '../../../../lib/db';
 import { isUuid, jsonError, sameOrigin, sessionUserId } from '../../../../lib/api';
-import { couponDiscount, orderNameOf, priceCart, sanitizeLines } from '../../../../lib/catalog';
+import { couponDiscount, hasSetItem, orderNameOf, priceCart, sanitizeLines } from '../../../../lib/catalog';
 import { getAddress } from '../../../../lib/addresses';
 import { getOrCreateCustomerKey, newOrderNo } from '../../../../lib/orders';
 import { getAvailableCoupon, reserveCoupon } from '../../../../lib/coupons';
@@ -38,8 +38,8 @@ export async function POST(request: Request) {
         if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
         const coupon = await getAvailableCoupon(userId, body.couponId);
         if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
-        discount = couponDiscount(coupon, priced.subtotal, priced.total);
-        if (discount <= 0) return jsonError(`${won(coupon.minOrder)} 이상 주문에 사용할 수 있는 쿠폰이에요`);
+        discount = couponDiscount(coupon, priced.subtotal, priced.total, hasSetItem(priced.items));
+        if (discount <= 0) return jsonError(`낱개만 주문할 때는 ${won(coupon.minOrder)} 이상 주문에 사용할 수 있는 쿠폰이에요 (세트가 있으면 금액 상관없이 사용 가능)`);
         couponId = coupon.id;
     }
     const amount = priced.total - discount;
