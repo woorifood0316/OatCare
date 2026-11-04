@@ -172,12 +172,17 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                                 <span className="oc-auth__guide-app oc-auth__guide-app--naver">네이버 앱</span>
                                 네이버 앱 검색창의 <b>렌즈(카메라)</b>로 QR코드를 찍어 주세요.
                             </li>
-                            <li>
-                                <span className="oc-auth__guide-app">QR이 없으면</span>
-                                카카오톡·네이버 앱 검색창에 <b>chamoatcare.com</b>을 입력해 들어오세요.
-                                <button type="button" className="oc-auth__copy" onClick={copyAddress}>
-                                    {copied ? '복사했어요 ✓' : '주소 복사'}
-                                </button>
+                            <li className="oc-auth__guide-noqr">
+                                <span className="oc-auth__guide-app">QR코드가 없으면</span>
+                                <span>
+                                    <b>카카오톡:</b> 주소를 복사해 <b>나와의 채팅</b>에 보낸 뒤, 보낸 주소를 눌러 주세요.
+                                    <button type="button" className="oc-auth__copy" onClick={copyAddress}>
+                                        {copied ? '복사했어요 ✓' : '주소 복사'}
+                                    </button>
+                                </span>
+                                <span>
+                                    <b>네이버 앱:</b> 검색창에 <b>참오트케어</b>를 검색해 주세요.
+                                </span>
                             </li>
                         </ol>
                     </section>

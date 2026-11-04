@@ -5453,3 +5453,6 @@ body {
 .oc-auth__guide-app--naver { background: #03c75a; color: #fff; }
 .oc-auth__copy { margin-left: 0.35rem; padding: 0.2rem 0.6rem; border: 1px solid #d9ccae; border-radius: 999px; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
 .oc-auth__inapp { margin: 0.4rem 0 0; font-size: 0.8rem; color: rgba(59, 42, 32, 0.6); text-align: center; }
+
+.oc-auth__guide-noqr { display: grid; gap: 0.35rem; }
+.oc-auth__guide-noqr .oc-auth__guide-app { justify-self: start; }
