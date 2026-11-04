@@ -16,14 +16,36 @@ export function inAppKind(ua: string = navigator.userAgent): InAppKind {
 export const isMobile = (ua: string = navigator.userAgent) => /Android|iPhone|iPad|iPod/i.test(ua);
 const isAndroid = (ua: string = navigator.userAgent) => /Android/i.test(ua);
 
-/** Link that opens `url` inside the app's own browser (Android intent with a fallback back to this page). */
+/** Set on the URL we hand to the app, so the page knows it is inside that app even if the user agent doesn't say so. */
+export const INAPP_PARAM = 'oc_inapp';
+const INAPP_KEY = 'oc_inapp';
+
+/** The app browser we were opened in by our own "…에서 열기" button (kept for this tab). */
+export function rememberedInApp(): InAppKind {
+    try {
+        const url = new URL(window.location.href);
+        const v = url.searchParams.get(INAPP_PARAM);
+        if (v === 'kakao' || v === 'naver') {
+            sessionStorage.setItem(INAPP_KEY, v);
+            url.searchParams.delete(INAPP_PARAM);
+            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+            return v;
+        }
+        const saved = sessionStorage.getItem(INAPP_KEY);
+        return saved === 'kakao' || saved === 'naver' ? saved : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Link that opens `url` inside the app's own browser.
+ * KakaoTalk: the plain kakaotalk://inappbrowser scheme (the form Kakao's own SDK uses; the Android intent form
+ * opened an empty KakaoTalk browser). Naver: Android intent with a fallback back to this page.
+ */
 export function openInAppLink(app: 'kakao' | 'naver', url: string, fallback: string): string {
     const u = encodeURIComponent(url);
-    if (app === 'kakao') {
-        return isAndroid()
-            ? `intent://inappbrowser?url=${u}#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallback)};end`
-            : `kakaotalk://inappbrowser?url=${u}`;
-    }
+    if (app === 'kakao') return `kakaotalk://inappbrowser?url=${u}`;
     return isAndroid()
         ? `intent://inappbrowser?url=${u}&target=new&version=6#Intent;scheme=naversearchapp;package=com.nhn.android.search;S.browser_fallback_url=${encodeURIComponent(fallback)};end`
         : `naversearchapp://inappbrowser?url=${u}&target=new&version=6`;

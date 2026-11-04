@@ -6,10 +6,12 @@ import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
-import { CART_PARAM, encodeCart, inAppKind, isMobile, openInAppLink, type InAppKind } from '../lib/app-switch';
+import { CART_PARAM, INAPP_PARAM, encodeCart, inAppKind, isMobile, openInAppLink, rememberedInApp, type InAppKind } from '../lib/app-switch';
 import { useCart } from './cart/CartProvider';
 
 const CHOOSER_DISMISSED = 'oc_app_chooser_dismissed';
+/** Set when the visitor pressed "…에서 열기": if they come back to this browser, don't ask again (no loops). */
+const CHOOSER_USED = 'oc_app_chooser_used';
 
 type Mode = 'login' | 'signup';
 type Provider = 'kakao' | 'naver' | 'google';
@@ -76,15 +78,19 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const [opening, setOpening] = useState<'kakao' | 'naver' | null>(null);
     useEffect(() => {
         preloadKakaoSdk();
-        const e = { inApp: inAppKind(), mobile: isMobile() };
+        // Inside an app browser: by user agent, or because our own button opened us there (works even when the
+        // app's user agent doesn't identify itself).
+        const e = { inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile() };
         setEnv(e);
-        let dismissed = false;
+        let skip = false;
         try {
-            dismissed = sessionStorage.getItem(CHOOSER_DISMISSED) === '1';
+            skip = sessionStorage.getItem(CHOOSER_DISMISSED) === '1' || localStorage.getItem(CHOOSER_USED) === '1';
         } catch {
             /* ignore */
         }
-        if (e.mobile && e.inApp === null && !dismissed) setChooser(true);
+        // Never pop up over a login error (coming back from a failed attempt) — show the message instead.
+        const returning = new URLSearchParams(window.location.search).has('error');
+        if (e.mobile && e.inApp === null && !skip && !returning) setChooser(true);
     }, []);
     const closeChooser = () => {
         setChooser(false);
@@ -100,6 +106,12 @@ function AuthCardInner({ mode }: { mode: Mode }) {
         here.searchParams.delete('reason');
         const cart = encodeCart(lines);
         if (cart) here.searchParams.set(CART_PARAM, cart);
+        here.searchParams.set(INAPP_PARAM, app);
+        try {
+            localStorage.setItem(CHOOSER_USED, '1');
+        } catch {
+            /* ignore */
+        }
         setOpening(app);
         window.location.href = openInAppLink(app, here.toString(), window.location.href);
         // The app did not open (not installed / blocked): stay here and say so.
