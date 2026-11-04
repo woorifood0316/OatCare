@@ -71,6 +71,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     // from a web page is blocked or unreliable on many phones).
     const [env, setEnv] = useState<{ inApp: InAppKind; mobile: boolean } | null>(null);
     const [copied, setCopied] = useState(false);
+    const [guideOpen, setGuideOpen] = useState(false);
     useEffect(() => {
         preloadKakaoSdk();
         setEnv({ inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile() });
@@ -158,34 +159,63 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                 </div>
 
                 {env?.mobile && env.inApp === null ? (
-                    <section className="oc-auth__guide" aria-labelledby="oc-guide-title">
-                        <strong id="oc-guide-title">아이디·비밀번호가 기억나지 않으세요?</strong>
-                        <p>
-                            <b>카카오톡이나 네이버 앱</b>으로 들어오시면 아이디·비밀번호 없이 <b>동의만 누르면</b> 바로 가입돼요.
-                        </p>
-                        <ol>
-                            <li>
+                    <button type="button" className="oc-auth__guide-open" onClick={() => setGuideOpen(true)}>
+                        아이디·비밀번호가 기억나지 않으세요?
+                        <small>카카오톡·네이버 앱으로 쉽게 가입하는 방법 보기 ›</small>
+                    </button>
+                ) : null}
+
+                {guideOpen ? (
+                    <div className="oc-guide" role="dialog" aria-modal="true" aria-labelledby="oc-guide-title" onClick={() => setGuideOpen(false)}>
+                        <section className="oc-guide__card" onClick={(e) => e.stopPropagation()}>
+                            <strong id="oc-guide-title">아이디·비밀번호 없이 가입하기</strong>
+                            <p>
+                                <b>카카오톡이나 네이버 앱</b>으로 들어오시면 <b>동의만 누르면</b> 바로 가입돼요.
+                            </p>
+                            <div className="oc-guide__app">
                                 <span className="oc-auth__guide-app oc-auth__guide-app--kakao">카카오톡</span>
-                                카카오톡의 <b>코드 스캔(렌즈)</b>으로 전단지 QR코드를 찍어 주세요.
-                            </li>
-                            <li>
+                                <ol>
+                                    <li>카카오톡 실행</li>
+                                    <li>
+                                        오른쪽 아래 <b>[···]</b> 누르기
+                                    </li>
+                                    <li>
+                                        오른쪽 위 <b>렌즈 모양</b> 누르기
+                                    </li>
+                                    <li>
+                                        <b>QR코드</b> 비추기
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="oc-guide__app">
                                 <span className="oc-auth__guide-app oc-auth__guide-app--naver">네이버 앱</span>
-                                네이버 앱 검색창의 <b>렌즈(카메라)</b>로 QR코드를 찍어 주세요.
-                            </li>
-                            <li className="oc-auth__guide-noqr">
+                                <ol>
+                                    <li>네이버 앱 실행</li>
+                                    <li>
+                                        검색창 오른쪽 <b>렌즈 모양</b> 누르기
+                                    </li>
+                                    <li>
+                                        <b>QR코드</b> 비추기
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="oc-guide__app oc-guide__noqr">
                                 <span className="oc-auth__guide-app">QR코드가 없으면</span>
-                                <span>
-                                    <b>카카오톡:</b> 주소를 복사해 <b>나와의 채팅</b>에 보낸 뒤, 보낸 주소를 눌러 주세요.
+                                <p>
+                                    <b>카카오톡:</b> 주소를 복사해 <b>나와의 채팅</b>에 보낸 뒤, 보낸 주소를 눌러 주세요.{' '}
                                     <button type="button" className="oc-auth__copy" onClick={copyAddress}>
                                         {copied ? '복사했어요 ✓' : '주소 복사'}
                                     </button>
-                                </span>
-                                <span>
+                                </p>
+                                <p>
                                     <b>네이버 앱:</b> 검색창에 <b>참오트케어</b>를 검색해 주세요.
-                                </span>
-                            </li>
-                        </ol>
-                    </section>
+                                </p>
+                            </div>
+                            <button type="button" className="oc-guide__close" onClick={() => setGuideOpen(false)}>
+                                닫기
+                            </button>
+                        </section>
+                    </div>
                 ) : null}
 
                 {(
