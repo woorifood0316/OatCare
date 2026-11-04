@@ -876,7 +876,7 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                 </ScrollReveal>
             </div>
 
-            <ShipEta compact className="oc-bundles-ship" />
+            <ShipEta hideRule className="oc-bundles-ship" />
 
             <div className="oc-bundles-grid">
                 {BUNDLES.map((b, index) => (

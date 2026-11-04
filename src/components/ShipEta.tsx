@@ -21,7 +21,16 @@ function loadOverrides(): Promise<ShipOverrides> {
  * Weekends, public holidays (computed automatically) and the operator's days off are skipped.
  * Rendered only after mount (server and visitor clocks must not disagree), refreshed every 20 s.
  */
-export function ShipEta({ compact = false, className = '' }: { compact?: boolean; className?: string }) {
+export function ShipEta({
+    compact = false,
+    hideRule = false,
+    className = '',
+}: {
+    compact?: boolean;
+    /** Hide the rule line ("평일 오후 1시까지…") — it is stated on product pages and checkout instead. */
+    hideRule?: boolean;
+    className?: string;
+}) {
     const [now, setNow] = useState<Date | null>(null);
     const [overrides, setOverrides] = useState<ShipOverrides | null>(null);
     useEffect(() => {
@@ -53,7 +62,7 @@ export function ShipEta({ compact = false, className = '' }: { compact?: boolean
                     </span>
                 )}
             </p>
-            {compact ? null : <p className="ship-eta__rule">평일 오후 1시까지 결제 완료 시 당일 발송 · 주말·공휴일 제외</p>}
+            {compact || hideRule ? null : <p className="ship-eta__rule">평일 오후 1시까지 결제 완료 시 당일 발송 · 주말·공휴일 제외</p>}
         </div>
     );
 }

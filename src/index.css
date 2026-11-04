@@ -5350,6 +5350,15 @@ body {
   .hc-cell { min-height: 4.4rem; padding: 0.45rem 0.55rem; }
   .hc-tag { font-size: 0.72rem; }
 }
-.oc-bundles-ship { width: fit-content; max-width: calc(100% - 2rem); margin: -0.4rem auto 1.6rem; }
-.oc-bundles-ship .ship-eta__main { justify-content: center; text-align: center; }
-.oc-bundles-ship.ship-eta--wait { width: 18rem; }
+.oc-bundles-ship { width: fit-content; max-width: calc(100% - 2rem); margin: -0.2rem auto 2rem; padding: 0.95rem 1.6rem; border-radius: 16px; align-items: center; text-align: center; }
+.oc-bundles-ship .ship-eta__main { justify-content: center; gap: 0.55rem; font-size: 1.25rem; font-weight: 700; }
+.oc-bundles-ship .ship-eta__main svg { width: 24px; height: 24px; }
+.oc-bundles-ship .ship-eta__rule { padding-left: 0; font-size: 0.86rem; }
+.oc-bundles-ship.ship-eta--wait { width: 24rem; min-height: 3.4rem; }
+@media (max-width: 640px) {
+  .oc-bundles-ship { padding: 0.8rem 1.1rem; }
+  .oc-bundles-ship .ship-eta__main { font-size: 1.08rem; }
+  .oc-bundles-ship .ship-eta__main svg { width: 20px; height: 20px; }
+  .oc-bundles-ship .ship-eta__rule { font-size: 0.78rem; word-break: keep-all; text-wrap: balance; }
+  .oc-bundles-ship.ship-eta--wait { width: 100%; }
+}
