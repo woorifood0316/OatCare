@@ -5441,18 +5441,15 @@ body {
 .oc-welcome__start { width: 100%; min-height: 3.6rem; margin: 0.8rem 0 1rem; border: 0; border-radius: 14px; background: var(--oc-maroon); color: #fff7e8; font-family: inherit; font-size: 1.15rem; font-weight: 800; cursor: pointer; }
 .oc-welcome__start:disabled { opacity: 0.6; cursor: default; }
 
-/* ---- start page: "open in KakaoTalk / Naver" chooser for phone browsers ---- */
-.oc-chooser { position: fixed; inset: 0; z-index: 400; display: grid; place-items: end center; padding: 1rem; background: rgba(40, 24, 16, 0.5); }
-@media (min-width: 640px) { .oc-chooser { place-items: center; } }
-.oc-chooser__card { width: 100%; max-width: 380px; display: grid; gap: 0.7rem; padding: 1.6rem 1.3rem 1.2rem; border-radius: 22px; background: #fffdf8; text-align: center; box-shadow: 0 20px 50px rgba(59, 42, 32, 0.3); }
-.oc-chooser__card strong { font-size: 1.3rem; font-weight: 800; color: var(--oc-brown); }
-.oc-chooser__card p { margin: 0 0 0.3rem; font-size: 1.02rem; line-height: 1.55; color: var(--oc-brown); }
-.oc-chooser__card p b { color: var(--oc-maroon); }
-.oc-chooser__card small { color: rgba(59, 42, 32, 0.65); font-size: 0.85rem; }
-.oc-chooser__btn { min-height: 3.6rem; border: 0; border-radius: 14px; font-family: inherit; font-size: 1.15rem; font-weight: 800; cursor: pointer; }
-.oc-chooser__btn:disabled { opacity: 0.7; }
-.oc-chooser__btn--kakao { background: #fee500; color: #191919; }
-.oc-chooser__btn--naver { background: #03c75a; color: #fff; }
-.oc-chooser__skip { margin-top: 0.2rem; padding: 0.6rem; border: 0; background: none; color: rgba(59, 42, 32, 0.7); font-family: inherit; font-size: 0.95rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.oc-auth__reopen { width: 100%; margin-top: 0.7rem; padding: 0.75rem; border: 1.5px dashed var(--oc-line); border-radius: 12px; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+/* ---- start page: how to sign up without an id/password (phone browsers only) ---- */
+.oc-auth__guide { margin-top: 1rem; padding: 1rem 1.05rem; border-radius: 16px; background: #fffaf0; border: 1.5px solid #f0dca8; text-align: left; color: var(--oc-brown); }
+.oc-auth__guide strong { display: block; margin-bottom: 0.35rem; font-size: 1.08rem; font-weight: 800; }
+.oc-auth__guide p { margin: 0 0 0.6rem; font-size: 0.98rem; line-height: 1.55; }
+.oc-auth__guide p b { color: var(--oc-maroon); }
+.oc-auth__guide ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.55rem; }
+.oc-auth__guide li { font-size: 0.95rem; line-height: 1.55; }
+.oc-auth__guide-app { display: inline-block; margin-right: 0.35rem; padding: 0.1rem 0.5rem; border-radius: 6px; background: #efe5cd; font-size: 0.82rem; font-weight: 800; }
+.oc-auth__guide-app--kakao { background: #fee500; color: #191919; }
+.oc-auth__guide-app--naver { background: #03c75a; color: #fff; }
+.oc-auth__copy { margin-left: 0.35rem; padding: 0.2rem 0.6rem; border: 1px solid #d9ccae; border-radius: 999px; background: #fff; color: var(--oc-brown); font-family: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
 .oc-auth__inapp { margin: 0.4rem 0 0; font-size: 0.8rem; color: rgba(59, 42, 32, 0.6); text-align: center; }

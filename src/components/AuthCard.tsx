@@ -6,12 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
-import { CART_PARAM, INAPP_PARAM, encodeCart, inAppKind, isMobile, openInAppLink, rememberedInApp, type InAppKind } from '../lib/app-switch';
-import { useCart } from './cart/CartProvider';
+import { inAppKind, isMobile, rememberedInApp, type InAppKind } from '../lib/app-switch';
 
-const CHOOSER_DISMISSED = 'oc_app_chooser_dismissed';
-/** Set when the visitor pressed "…에서 열기": if they come back to this browser, don't ask again (no loops). */
-const CHOOSER_USED = 'oc_app_chooser_used';
 
 type Mode = 'login' | 'signup';
 type Provider = 'kakao' | 'naver' | 'google';
@@ -70,54 +66,23 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const [testId, setTestId] = useState('');
     const [testPw, setTestPw] = useState('');
     const [testError, setTestError] = useState<string | null>(null);
-    const { lines } = useCart();
-    // Phone browser (QR scanned with the camera): offer to continue inside KakaoTalk / Naver, where no id/password is
-    // needed. Decided after mount (depends on the device).
+    // Phone browser (QR scanned with the camera): Kakao/Naver are not logged in there, so their pages may ask for an
+    // id and password. We only EXPLAIN how to come in through the KakaoTalk / Naver app instead (opening those apps
+    // from a web page is blocked or unreliable on many phones).
     const [env, setEnv] = useState<{ inApp: InAppKind; mobile: boolean } | null>(null);
-    const [chooser, setChooser] = useState(false);
-    const [opening, setOpening] = useState<'kakao' | 'naver' | null>(null);
+    const [copied, setCopied] = useState(false);
     useEffect(() => {
         preloadKakaoSdk();
-        // Inside an app browser: by user agent, or because our own button opened us there (works even when the
-        // app's user agent doesn't identify itself).
-        const e = { inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile() };
-        setEnv(e);
-        let skip = false;
-        try {
-            skip = sessionStorage.getItem(CHOOSER_DISMISSED) === '1' || localStorage.getItem(CHOOSER_USED) === '1';
-        } catch {
-            /* ignore */
-        }
-        // Never pop up over a login error (coming back from a failed attempt) — show the message instead.
-        const returning = new URLSearchParams(window.location.search).has('error');
-        if (e.mobile && e.inApp === null && !skip && !returning) setChooser(true);
+        setEnv({ inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile() });
     }, []);
-    const closeChooser = () => {
-        setChooser(false);
+    const copyAddress = async () => {
         try {
-            sessionStorage.setItem(CHOOSER_DISMISSED, '1');
+            await navigator.clipboard.writeText('chamoatcare.com');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
         } catch {
-            /* ignore */
+            /* clipboard blocked: the address is on screen anyway */
         }
-    };
-    const openIn = (app: 'kakao' | 'naver') => {
-        const here = new URL(window.location.href);
-        here.searchParams.delete('error');
-        here.searchParams.delete('reason');
-        const cart = encodeCart(lines);
-        if (cart) here.searchParams.set(CART_PARAM, cart);
-        here.searchParams.set(INAPP_PARAM, app);
-        try {
-            localStorage.setItem(CHOOSER_USED, '1');
-        } catch {
-            /* ignore */
-        }
-        setOpening(app);
-        window.location.href = openInAppLink(app, here.toString(), window.location.href);
-        // The app did not open (not installed / blocked): stay here and say so.
-        setTimeout(() => {
-            if (document.visibilityState === 'visible') setOpening(null);
-        }, 2500);
     };
 
     // Sign-up and log-in are one flow now: both pages show the same "…로 시작하기" card.
@@ -192,6 +157,32 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     ))}
                 </div>
 
+                {env?.mobile && env.inApp === null ? (
+                    <section className="oc-auth__guide" aria-labelledby="oc-guide-title">
+                        <strong id="oc-guide-title">아이디·비밀번호가 기억나지 않으세요?</strong>
+                        <p>
+                            <b>카카오톡이나 네이버 앱</b>으로 들어오시면 아이디·비밀번호 없이 <b>동의만 누르면</b> 바로 가입돼요.
+                        </p>
+                        <ol>
+                            <li>
+                                <span className="oc-auth__guide-app oc-auth__guide-app--kakao">카카오톡</span>
+                                카카오톡의 <b>코드 스캔(렌즈)</b>으로 전단지 QR코드를 찍어 주세요.
+                            </li>
+                            <li>
+                                <span className="oc-auth__guide-app oc-auth__guide-app--naver">네이버 앱</span>
+                                네이버 앱 검색창의 <b>렌즈(카메라)</b>로 QR코드를 찍어 주세요.
+                            </li>
+                            <li>
+                                <span className="oc-auth__guide-app">QR이 없으면</span>
+                                카카오톡·네이버 앱 검색창에 <b>chamoatcare.com</b>을 입력해 들어오세요.
+                                <button type="button" className="oc-auth__copy" onClick={copyAddress}>
+                                    {copied ? '복사했어요 ✓' : '주소 복사'}
+                                </button>
+                            </li>
+                        </ol>
+                    </section>
+                ) : null}
+
                 {(
                     <>
                         <button type="button" className="oc-auth__btn oc-auth__btn--review" onClick={() => setTestOpen(true)}>
@@ -249,34 +240,6 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                 </p>
                 {env?.inApp ? (
                     <p className="oc-auth__inapp">구글 계정은 크롬·사파리 같은 일반 브라우저에서 이용할 수 있어요.</p>
-                ) : null}
-                {env?.mobile && env.inApp === null && !chooser ? (
-                    <button type="button" className="oc-auth__reopen" onClick={() => setChooser(true)}>
-                        아이디·비밀번호 없이 가입하기 (카카오톡·네이버 앱에서 열기)
-                    </button>
-                ) : null}
-
-                {chooser ? (
-                    <div className="oc-chooser" role="dialog" aria-modal="true" aria-labelledby="oc-chooser-title" onClick={closeChooser}>
-                        <div className="oc-chooser__card" onClick={(e) => e.stopPropagation()}>
-                            <strong id="oc-chooser-title">평소 쓰시는 앱에서 열어 주세요</strong>
-                            <p>
-                                앱에서 열면 <b>아이디·비밀번호 없이</b>
-                                <br />
-                                동의만 누르면 바로 가입·로그인돼요.
-                            </p>
-                            <button type="button" className="oc-chooser__btn oc-chooser__btn--kakao" onClick={() => openIn('kakao')} disabled={opening !== null}>
-                                {opening === 'kakao' ? '카카오톡 여는 중...' : '카카오톡에서 열기'}
-                            </button>
-                            <button type="button" className="oc-chooser__btn oc-chooser__btn--naver" onClick={() => openIn('naver')} disabled={opening !== null}>
-                                {opening === 'naver' ? '네이버 앱 여는 중...' : '네이버 앱에서 열기'}
-                            </button>
-                            {opening === null && lines.length > 0 ? <small>담아 두신 장바구니도 그대로 옮겨져요.</small> : null}
-                            <button type="button" className="oc-chooser__skip" onClick={closeChooser}>
-                                이 화면에서 계속할게요
-                            </button>
-                        </div>
-                    </div>
                 ) : null}
             </div>
         </main>
