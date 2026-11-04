@@ -4924,6 +4924,9 @@ body {
 .pc2__btn--once:hover { background: var(--oc-cream); }
 .pc2__btn--sub { background: var(--oc-maroon); color: #fff7e8; border-color: var(--oc-maroon); }
 .pc2__btn--sub:hover { background: var(--oc-maroon-dark); }
+.pc2__btn--buy { background: #fff; border-color: var(--oc-maroon); color: var(--oc-maroon); }
+.pc2__btn--buy:hover { background: rgba(122, 35, 49, 0.06); }
+.pc2__btn--full { grid-column: 1 / -1; }
 .pc2__sub-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; text-align: left; }
 .pc2__sub-label b { font-size: 0.86rem; }
 .pc2__sub-label small { font-size: 0.7rem; font-weight: 600; opacity: 0.85; }

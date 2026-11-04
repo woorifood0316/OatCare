@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Repeat, Check, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Repeat, Check, ChevronDown, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import {
     CYCLE_OPTIONS,
@@ -37,7 +37,7 @@ export function PurchaseChooser({
     blockedReason?: string | null;
 }) {
     const router = useRouter();
-    const { addLine } = useCart();
+    const { addLine, buyNow } = useCart();
     const item = getItem(sku);
     const [open, setOpen] = useState(false);
     const [cycle, setCycle] = useState<number | null>(null);
@@ -57,6 +57,11 @@ export function PurchaseChooser({
         addLine({ sku, qty, mode: 'once', ...mixPart });
         onAdded?.();
     };
+    const buyOnce = async () => {
+        if (blockedReason) return;
+        const dest = await buyNow({ sku, qty, mode: 'once', ...mixPart });
+        router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
+    };
     const startSubscription = () => {
         if (blockedReason) return;
         addLine({ sku, qty: 1, mode: 'subscribe', cycleDays: effectiveCycle, ...mixPart });
@@ -71,9 +76,13 @@ export function PurchaseChooser({
                     <ShoppingBag size={16} />
                     <span>장바구니 담기</span>
                 </button>
+                <button type="button" className="pc2__btn pc2__btn--buy" onClick={buyOnce} disabled={!!blockedReason}>
+                    <Zap size={16} />
+                    <span>바로 구매</span>
+                </button>
                 <button
                     type="button"
-                    className={`pc2__btn pc2__btn--sub${open ? ' is-open' : ''}`}
+                    className={`pc2__btn pc2__btn--sub pc2__btn--full${open ? ' is-open' : ''}`}
                     aria-expanded={open}
                     aria-controls={panelId}
                     onClick={() => setOpen((v) => !v)}

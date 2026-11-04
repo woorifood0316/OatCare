@@ -41,19 +41,17 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState<'single' | 'bundle'>(initialTab);
 
-    // Every time the drawer opens it starts on the tab that was asked for (state would otherwise stay from last time).
-    useEffect(() => {
-        if (isOpen) setActiveTab(initialTab);
-    }, [isOpen, initialTab]);
+    // Single items quantity state: every flavour starts at 0 (nothing pre-selected).
+    const EMPTY_QTY = { '그레인': 0, '고구마': 0, '단백질': 0, '서리태': 0, '초코': 0 };
+    const [singleQty, setSingleQty] = useState<{ [key: string]: number }>(EMPTY_QTY);
 
-    // Single items quantity state: { "그레인": 1, "고구마": 0, ... }
-    const [singleQty, setSingleQty] = useState<{ [key: string]: number }>({
-        '그레인': 1,
-        '고구마': 0,
-        '단백질': 0,
-        '서리태': 0,
-        '초코': 0,
-    });
+    // Every time the drawer opens it starts on the tab that was asked for, with all quantities at 0.
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab(initialTab);
+            setSingleQty({ '그레인': 0, '고구마': 0, '단백질': 0, '서리태': 0, '초코': 0 });
+        }
+    }, [isOpen, initialTab]);
 
     // Bundle selection state
     const [selectedBundleId, setSelectedBundleId] = useState<number>(20); // Default 20-pack BEST
