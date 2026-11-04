@@ -7,6 +7,7 @@ import { useCart } from './cart/CartProvider';
 import { findSkuByName, getItem } from '../lib/catalog';
 import { PurchaseChooser } from './purchase/PurchaseChooser';
 import { CardActions } from './purchase/CardActions';
+import { FlavorCoverflow } from './purchase/FlavorCoverflow';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 
@@ -431,7 +432,7 @@ export const QuickReviews: React.FC = () => {
     );
 };
 
-interface ProductItemDetailed extends ProductItem {
+export interface ProductItemDetailed extends ProductItem {
     icon: string;
     badge?: string;
     ingredient: string;
@@ -564,50 +565,8 @@ export const StampBadge: React.FC<{ text: string; color?: string }> = ({ text, c
     );
 };
 
-// ❹ 5-Flavor Product Showcase: 2-Top + 3-Bottom Symmetrical Luxury Grid
+// ❹ 5-Flavor Product Showcase: looping 3D coverflow
 export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) => {
-    const { addLine } = useCart();
-    const topProducts = RICH_PRODUCTS.slice(0, 2);
-    const bottomProducts = RICH_PRODUCTS.slice(2, 5);
-
-    const renderCard = (p: ProductItemDetailed, index: number) => (
-        <ScrollReveal key={p.flavor} delay={0.3 + index * 0.12}>
-            <div
-                className="oc-grid-card"
-                style={{ '--card-glow': p.accentColor } as React.CSSProperties}
-            >
-                <div className="oc-grid-card-glow" />
-                {p.badge && <StampBadge text={p.badge} color={p.accentColor || '#7A2331'} />}
-
-                <div className="oc-grid-card-img-wrap" style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                    <img src={p.img} alt={`참오트케어 ${p.flavor}`} />
-                </div>
-
-                <div className="oc-grid-card-body">
-                    <span className="oc-grid-tag">{p.tag}</span>
-                    <h4 style={{ cursor: 'pointer' }} onClick={() => onSelectProduct?.(p)}>
-                        {p.icon} 참오트케어 {p.flavor}
-                    </h4>
-                    <p className="oc-grid-ingr">{p.ingredient}</p>
-
-                    <div className="oc-grid-price-row">
-                        <span className="disc">-{Math.round(((p.listPrice - p.price) / p.listPrice) * 100)}%</span>
-                        <strong className="price">{p.price.toLocaleString('ko-KR')}원</strong>
-                        {p.listPrice > p.price && (
-                            <s className="list-price">{p.listPrice.toLocaleString('ko-KR')}원</s>
-                        )}
-                        <span className="cal">{p.calories}</span>
-                    </div>
-
-                    {(() => {
-                        const sku = findSkuByName(p.flavor);
-                        return sku ? <CardActions sku={sku} onDetail={() => onSelectProduct?.(p)} /> : null;
-                    })()}
-                </div>
-            </div>
-        </ScrollReveal>
-    );
-
     return (
         <section className="oc-section" id="product-lineup">
             <div className="oc-section-header">
@@ -622,15 +581,10 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
                 </ScrollReveal>
             </div>
 
-            {/* Top Row: 2 Cards */}
-            <div className="oc-grid-row-top">
-                {topProducts.map((p, i) => renderCard(p, i))}
-            </div>
-
-            {/* Bottom Row: 3 Cards */}
-            <div className="oc-grid-row-bottom">
-                {bottomProducts.map((p, i) => renderCard(p, i + topProducts.length))}
-            </div>
+            {/* 5 flavours as a looping 3D coverflow: the centred card is the one being chosen */}
+            <ScrollReveal delay={0.3}>
+                <FlavorCoverflow products={RICH_PRODUCTS} onDetail={(p) => onSelectProduct?.(p)} />
+            </ScrollReveal>
         </section>
     );
 };
