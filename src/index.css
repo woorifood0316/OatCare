@@ -5239,13 +5239,13 @@ body {
 .cf__img img { max-height: 100%; max-width: 170px; object-fit: contain; filter: drop-shadow(0 12px 24px rgba(60, 30, 20, 0.16)); pointer-events: none; }
 .cf__tag { font-size: 0.78rem; font-weight: 700; color: var(--oc-gold); margin-bottom: 0.25rem; }
 .cf__name { font-size: 1.28rem; font-weight: 800; color: var(--oc-brown); margin: 0 0 0.4rem; }
-.cf__ingr { font-size: 0.86rem; color: var(--oc-brown); opacity: 0.8; margin: 0 0 1rem; min-height: 2.6em; }
+.cf__ingr { font-size: 0.86rem; color: var(--oc-brown); opacity: 0.8; margin: 0; min-height: 2.6em; }
 .cf__price { display: flex; align-items: center; gap: 0.5rem; }
 .cf__price .disc { background: var(--oc-maroon); color: #fff; font-size: 0.74rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 6px; }
 .cf__price strong { font-size: 1.25rem; font-weight: 800; color: var(--oc-brown); }
 .cf__price s { font-size: 0.85rem; color: var(--oc-brown); opacity: 0.45; }
 .cf__price .cal { margin-left: auto; white-space: nowrap; font-size: 0.78rem; font-weight: 700; color: var(--oc-gold); background: rgba(201, 150, 60, 0.12); padding: 0.2rem 0.5rem; border-radius: 8px; }
-.cf__more { align-self: flex-end; margin-top: 0.55rem; padding: 0.2rem 0; border: 0; background: none; font-family: inherit; font-size: 0.82rem; font-weight: 700; color: var(--oc-brown); opacity: 0.7; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.cf__more { align-self: flex-end; margin: 0.1rem 0 0.7rem; padding: 0.2rem 0; border: 0; background: none; font-family: inherit; font-size: 0.82rem; font-weight: 700; color: var(--oc-brown); opacity: 0.7; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .cf__more:hover { opacity: 1; color: var(--oc-maroon); }
 .cf__controls { display: flex; justify-content: center; margin-top: 0.8rem; }
 .cf__stepper { display: flex; justify-content: space-between; width: 100%; max-width: 220px; align-items: center; border: 1.5px solid var(--oc-maroon); border-radius: 999px; background: #fff; }

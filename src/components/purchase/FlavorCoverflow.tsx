@@ -208,18 +208,22 @@ export function FlavorCoverflow({
                                         {p.icon} 참오트케어 {p.flavor}
                                     </h4>
                                     <p className="cf__ingr">{p.ingredient}</p>
+                                    {/* small detail link between the description and the price; side cards keep the same height */}
+                                    <button
+                                        type="button"
+                                        className="cf__more"
+                                        onClick={() => isCenter && openDetail(p)}
+                                        tabIndex={isCenter ? 0 : -1}
+                                        style={isCenter ? undefined : { visibility: 'hidden' }}
+                                    >
+                                        상세보기 →
+                                    </button>
                                     <div className="cf__price">
                                         <span className="disc">-{Math.round(((list - price) / list) * 100)}%</span>
                                         <strong>{won(price)}</strong>
                                         <s>{won(list)}</s>
                                         <span className="cal">{p.calories}</span>
                                     </div>
-
-                                    {isCenter ? (
-                                        <button type="button" className="cf__more" onClick={() => openDetail(p)}>
-                                            상세보기 →
-                                        </button>
-                                    ) : null}
 
                                     {isCenter ? (
                                         <div className="cf__controls">
