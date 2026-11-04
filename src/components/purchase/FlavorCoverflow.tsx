@@ -3,6 +3,7 @@
 import { FreeShipHint } from './FreeShipHint';
 import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
@@ -32,6 +33,7 @@ export function FlavorCoverflow({
     const [active, setActive] = useState(0);
     const [qty, setQty] = useState<Record<string, number>>({});
     const [hint, setHint] = useState('');
+    const [notice, setNotice] = useState(false);
     // The card that wraps from one end to the other must jump, not fly across the centre.
     const prevActive = useRef(active);
     useEffect(() => {
@@ -112,7 +114,7 @@ export function FlavorCoverflow({
 
     const lines = (): CartLine[] | null => {
         if (totalCount === 0) {
-            setHint('가운데 맛의 + 버튼으로 수량을 골라 주세요.');
+            setNotice(true);
             return null;
         }
         return picked.map((x) => ({ sku: x.sku, qty: x.q, mode: 'once' as const }));
@@ -271,16 +273,31 @@ export function FlavorCoverflow({
                 <FreeShipHint subtotal={totalPrice} />
                 <ShipEta compact />
                 <div className="cf__actions">
-                    <button type="button" className="ca__btn ca__btn--cart" onClick={addAll} disabled={totalCount === 0}>
+                    <button type="button" className="ca__btn ca__btn--cart" onClick={addAll}>
                         <ShoppingBag size={15} />
                         <span>장바구니 담기</span>
                     </button>
-                    <button type="button" className="ca__btn ca__btn--buy" onClick={buyAll} disabled={totalCount === 0}>
+                    <button type="button" className="ca__btn ca__btn--buy" onClick={buyAll}>
                         <Zap size={15} />
                         <span>바로 구매</span>
                     </button>
                 </div>
             </div>
+
+            {/* portal: the section's reveal animation uses transforms, which would trap a fixed overlay */}
+            {notice && typeof document !== 'undefined' ? createPortal(
+                <div className="oc-notice" role="alertdialog" aria-modal="true" onClick={() => setNotice(false)}>
+                    <div className="oc-notice__card" onClick={(e) => e.stopPropagation()}>
+                        <span className="oc-notice__icon" aria-hidden="true">🥣</span>
+                        <strong>맛과 수량을 골라 주세요</strong>
+                        <p>좌우로 넘겨 원하는 맛을 가운데에 두고, + 버튼으로 수량을 선택해 주세요.</p>
+                        <button type="button" autoFocus onClick={() => setNotice(false)}>
+                            확인
+                        </button>
+                    </div>
+                </div>,
+                document.body,
+            ) : null}
         </div>
     );
 }
