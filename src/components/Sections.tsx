@@ -31,6 +31,11 @@ export interface ProductDetailItem {
 import { getAssetUrl } from '../utils/assets';
 import { ScrollReveal } from './ScrollReveal';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { SwipeDots, useSwipeIndex } from './ui/SwipeRow';
+
+/** Short set names for the phone tabs above the swipeable set cards. */
+const BUNDLE_TAB: Record<number, string> = { 10: '맛보기 10개', 20: '한달 20개', 30: '대용량 30개' };
+const BEST_BUNDLE_COUNT = 20;
 
 export interface NavProps {
     onOpenDrawer?: (tab?: 'single' | 'bundle') => void;
@@ -729,6 +734,8 @@ export const FamilyStory: React.FC = () => {
             icon: '❤️',
         },
     ];
+    const familyRef = React.useRef<HTMLDivElement>(null);
+    const [familyIndex, scrollFamily] = useSwipeIndex(familyRef);
 
     return (
         <section className="oc-section" id="family-story">
@@ -736,7 +743,7 @@ export const FamilyStory: React.FC = () => {
                 <ScrollReveal>
                     <span className="oc-eyebrow">OUR BRAND STORY</span>
                     <h2>
-                        <span className="oc-chunk">나와 내가 사랑하는 사람들이</span> <span className="oc-chunk">매일 아침</span> <span className="oc-chunk"><span className="oc-highlight-maroon">안심하고 먹는 정직함</span></span>
+                        <span className="oc-chunk">나와 내가 사랑하는</span> <span className="oc-chunk">사람들이 매일 아침</span> <span className="oc-chunk"><span className="oc-highlight-maroon">안심하고 먹는 정직함</span></span>
                     </h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
@@ -746,7 +753,7 @@ export const FamilyStory: React.FC = () => {
                 </ScrollReveal>
             </div>
 
-            <div className="oc-family-grid">
+            <div className="oc-family-grid oc-swipe" ref={familyRef}>
                 {familyMoments.map((item, index) => (
                     <ScrollReveal key={index} delay={0.3 + index * 0.12}>
                         <div className="oc-family-card">
@@ -760,6 +767,7 @@ export const FamilyStory: React.FC = () => {
                     </ScrollReveal>
                 ))}
             </div>
+            <SwipeDots count={familyMoments.length} index={familyIndex} onSelect={scrollFamily} label="브랜드 이야기 넘기기" />
         </section>
     );
 };
@@ -838,6 +846,14 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
     const { addLine } = useCart();
     const sectionRef = React.useRef<HTMLElement>(null);
     const [isVisible, setIsVisible] = React.useState(false);
+    const bundleRef = React.useRef<HTMLDivElement>(null);
+    const bestIndex = Math.max(0, BUNDLES.findIndex((b) => b.count === BEST_BUNDLE_COUNT));
+    const [bundleIndex, scrollBundle] = useSwipeIndex(bundleRef, bestIndex);
+
+    // Phones open on the best seller (20-pack, the one that can be subscribed); no effect when all three fit.
+    React.useEffect(() => {
+        scrollBundle(bestIndex, false);
+    }, [scrollBundle, bestIndex]);
 
     React.useEffect(() => {
         const observer = new IntersectionObserver(
@@ -878,7 +894,24 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
 
             <ShipEta hideRule className="oc-bundles-ship" />
 
-            <div className="oc-bundles-grid">
+            {/* Phones: one set at a time, chosen by tab or swipe (wide screens show all three side by side). */}
+            <div className="oc-swipe-tabs" role="tablist" aria-label="세트 선택">
+                {BUNDLES.map((b, i) => (
+                    <button
+                        key={b.count}
+                        type="button"
+                        role="tab"
+                        aria-selected={i === bundleIndex}
+                        className={i === bundleIndex ? 'is-active' : ''}
+                        onClick={() => scrollBundle(i)}
+                    >
+                        {BUNDLE_TAB[b.count] ?? `${b.count}개`}
+                        {b.count === BEST_BUNDLE_COUNT ? <em>BEST</em> : null}
+                    </button>
+                ))}
+            </div>
+
+            <div className="oc-bundles-grid oc-swipe oc-swipe--bundles" ref={bundleRef}>
                 {BUNDLES.map((b, index) => (
                     <ScrollReveal key={b.flavor} delay={0.3 + index * 0.12}>
                         <div
@@ -938,6 +971,7 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                     </ScrollReveal>
                 ))}
             </div>
+            <SwipeDots count={BUNDLES.length} index={bundleIndex} onSelect={scrollBundle} label="세트 넘기기" />
         </section>
     );
 };
@@ -1129,6 +1163,8 @@ export interface ContentTeaserProps {
 }
 
 export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle }) => {
+    const journalRef = React.useRef<HTMLDivElement>(null);
+    const [journalIndex, scrollJournal] = useSwipeIndex(journalRef);
     return (
         <div className="oc-band oc-band--tan">
             <section className="oc-section" id="content">
@@ -1144,7 +1180,7 @@ export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle })
                     </ScrollReveal>
                 </div>
 
-                <div className="oc-journal-grid">
+                <div className="oc-journal-grid oc-swipe" ref={journalRef}>
                     {JOURNAL_ARTICLES.map((article, index) => (
                         <ScrollReveal key={article.id} delay={0.3 + index * 0.12}>
                             <div
@@ -1172,6 +1208,7 @@ export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle })
                         </ScrollReveal>
                     ))}
                 </div>
+                <SwipeDots count={JOURNAL_ARTICLES.length} index={journalIndex} onSelect={scrollJournal} label="아침 이야기 넘기기" />
             </section>
         </div>
     );

@@ -5502,3 +5502,61 @@ body {
 .cart-cph { margin: 0.2rem 0 0.6rem; }
 .co-coupon-status { margin: 0 0 0.7rem; }
 .co-coupon-status .cph__up a { white-space: nowrap; }
+
+/* ============================================================================
+   Phone swipe rows: sets (tabs + swipe), brand story, morning journal.
+   One card at a time with the next one peeking in; wide screens keep their grids.
+   ========================================================================== */
+.oc-swipe-tabs,
+.oc-swipe-dots { display: none; }
+
+@media (max-width: 859px) {
+  .oc-swipe--bundles { margin-top: 0.4rem; }
+  .oc-swipe-tabs { display: flex; justify-content: center; gap: 0.4rem; margin: 1.1rem auto 0; }
+  .oc-swipe-tabs button { position: relative; padding: 0.55rem 0.85rem; border-radius: 999px; border: 1.5px solid rgba(92, 29, 36, 0.18); background: #fffaf0; color: var(--oc-brown); font: inherit; font-size: 0.86rem; font-weight: 800; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+  .oc-swipe-tabs button.is-active { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
+  .oc-swipe-tabs em { position: absolute; top: -0.55rem; right: -0.2rem; padding: 0.05rem 0.35rem; border-radius: 999px; background: var(--oc-gold); color: #fff; font-size: 0.6rem; font-style: normal; font-weight: 900; letter-spacing: 0.02em; }
+}
+
+@media (max-width: 859px) {
+  .oc-swipe.oc-swipe--bundles { display: flex; }
+}
+@media (max-width: 767px) {
+  .oc-family-grid.oc-swipe,
+  .oc-journal-grid.oc-swipe { display: flex; }
+  .oc-family-grid.oc-swipe .oc-family-card { padding: 1.4rem; height: 100%; }
+  .oc-journal-grid.oc-swipe .oc-journal-card { height: 100%; }
+}
+@media (max-width: 859px) {
+  .oc-swipe.oc-swipe--bundles,
+  .oc-swipe:is(.oc-family-grid, .oc-journal-grid) {
+    gap: 0.85rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* bleed to the screen edges so the next card peeks in */
+    margin-left: calc(-1 * clamp(1.25rem, 6vw, 6rem));
+    margin-right: calc(-1 * clamp(1.25rem, 6vw, 6rem));
+    padding: 0.9rem clamp(1.25rem, 6vw, 6rem) 0.6rem;
+    scroll-padding: 0 clamp(1.25rem, 6vw, 6rem);
+  }
+  .oc-swipe::-webkit-scrollbar { display: none; }
+  .oc-swipe.oc-swipe--bundles > *,
+  .oc-swipe:is(.oc-family-grid, .oc-journal-grid) > * { flex: 0 0 84%; min-width: 0; scroll-snap-align: center; }
+  .oc-swipe.oc-swipe--bundles > * { flex-basis: 89%; }
+  .oc-swipe.oc-swipe--bundles { gap: 0.6rem; }
+  .oc-swipe--bundles .oc-bundle-card { padding: 1.6rem 1.1rem 1.3rem; }
+  .oc-swipe--bundles .pc2__btn span { white-space: nowrap; }
+  .oc-swipe-dots { display: flex; justify-content: center; gap: 0.4rem; margin-top: 0.5rem; }
+  .oc-swipe-dots button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: rgba(92, 29, 36, 0.22); cursor: pointer; transition: width 0.25s, background 0.25s; }
+  .oc-swipe-dots button.is-active { width: 20px; background: var(--oc-maroon); }
+}
+@media (min-width: 768px) and (max-width: 859px) {
+  /* tablets: family/journal stay as grids, only the sets swipe */
+  .oc-swipe:is(.oc-family-grid, .oc-journal-grid) { overflow: visible; margin: 0 auto; padding: 0; }
+  .oc-swipe:is(.oc-family-grid, .oc-journal-grid) > * { flex: initial; }
+  .oc-family-grid ~ .oc-swipe-dots,
+  .oc-journal-grid ~ .oc-swipe-dots { display: none; }
+}
