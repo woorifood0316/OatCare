@@ -28,6 +28,7 @@ import {
 import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
 import { backToPrevious } from '../../lib/prev-page';
+import { ReturnPolicySummary } from '../returns/ReturnPhotoGuide';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -360,7 +361,7 @@ export function SetPage({ count }: { count: number }) {
                         </dd>
                         <dt>교환·반품</dt>
                         <dd>
-                            상품을 받은 날부터 7일 이내 청약철회(반품·환불)가 가능하나, 식품 특성상 포장 훼손·개봉 후에는 제한됩니다. 상품 하자·오배송은 받은 날부터 3개월 이내, 알게 된 날부터 30일 이내 고객센터(031-998-7234)로 연락 주시면 교환 또는 환불해 드리며 반품 비용은 회사가 부담합니다. 단순 변심 반품 비용은 고객 부담입니다. 환불은 반품 상품 확인 후 3영업일 이내 처리됩니다.
+                            <ReturnPolicySummary />
                         </dd>
                         <dt>반품처</dt>
                         <dd>경기도 김포시 양촌읍 황금1로 2-71 (우리종합식품)</dd>

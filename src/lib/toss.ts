@@ -78,13 +78,14 @@ export function confirmPayment(paymentKey: string, orderId: string, amount: numb
     return toss<TossPayment>('widget', 'POST', '/v1/payments/confirm', { paymentKey, orderId, amount }, `confirm-${orderId}`);
 }
 
-export function cancelPayment(keySet: KeySet, paymentKey: string, reason: string, amount?: number) {
+/** idem: pass a key of your own when the same amount may be refunded more than once on one payment (part refunds). */
+export function cancelPayment(keySet: KeySet, paymentKey: string, reason: string, amount?: number, idem?: string) {
     return toss<TossPayment>(
         keySet,
         'POST',
         `/v1/payments/${encodeURIComponent(paymentKey)}/cancel`,
         { cancelReason: reason, ...(amount !== undefined ? { cancelAmount: amount } : {}) },
-        `cancel-${paymentKey}-${amount ?? 'all'}`,
+        idem ?? `cancel-${paymentKey}-${amount ?? 'all'}`,
     );
 }
 

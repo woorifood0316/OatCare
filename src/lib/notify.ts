@@ -10,7 +10,11 @@ export type NotifyEvent =
     | 'subscription_paused'
     | 'subscription_canceled'
     | 'subscription_cancel_requested'
-    | 'billing_upcoming';
+    | 'billing_upcoming'
+    | 'return_requested'
+    | 'return_approved'
+    | 'return_rejected'
+    | 'return_completed';
 
 /**
  * Queue a notification. Senders (email / operator webhook, later KakaoTalk) pick rows up from here,

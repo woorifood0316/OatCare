@@ -28,6 +28,7 @@ export interface Order {
     carrier: string | null;
     trackingNo: string | null;
     shippedAt: string | null;
+    deliveredAt: string | null;
     canceledAt: string | null;
     cancelReason: string | null;
     failReason: string | null;
@@ -63,6 +64,7 @@ export function mapOrder(r: Record<string, unknown>): Order {
         carrier: (r.carrier as string | null) ?? null,
         trackingNo: (r.tracking_no as string | null) ?? null,
         shippedAt: iso(r.shipped_at),
+        deliveredAt: iso(r.delivered_at),
         canceledAt: iso(r.canceled_at),
         cancelReason: (r.cancel_reason as string | null) ?? null,
         failReason: (r.fail_reason as string | null) ?? null,

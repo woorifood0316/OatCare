@@ -115,6 +115,14 @@ export const REVIEW_REWARD_PHOTO = 2000;
 export const REVIEW_COUPON_NAME = '리뷰 이벤트 쿠폰';
 /** Violations (deleted for profanity / personal info / ads) after which review writing stops and the member can be expelled. */
 export const REVIEW_STRIKE_LIMIT = 3;
+
+// Exchange / return (전자상거래법 제17조: 단순 변심 7일, 표시·광고와 다르거나 계약과 다르게 이행된 경우 받은 날부터 3개월·안 날부터 30일).
+/** 단순 변심 반품 배송비, one way. The customer bears the round trip (6,000원) for a whole-order return. */
+export const RETURN_FEE_ONE_WAY = SHIPPING_FEE;
+export const RETURN_FEE_ROUND_TRIP = SHIPPING_FEE * 2;
+export const RETURN_CHANGE_OF_MIND_DAYS = 7;
+export const RETURN_DEFECT_MONTHS = 3;
+export const RETURN_MAX_PHOTOS = 5;
 export const WELCOME_COUPON_MIN_COUNT = BOX_SIZE;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;

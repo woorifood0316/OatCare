@@ -6,7 +6,7 @@ export const runtime = 'edge';
 const MAX_BYTES = 800 * 1024; // photos are shrunk in the browser first (about 150–400 KB); this is the hard cap
 const TYPES: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 
-/** Upload one review photo to R2 and return its public URL. */
+/** Upload one review photo (or, with purpose=return, an exchange/return evidence photo) to R2 and return its public URL. */
 export async function POST(request: Request) {
     if (!sameOrigin(request)) return jsonError('Forbidden', 403);
     const userId = await sessionUserId();
@@ -26,7 +26,8 @@ export async function POST(request: Request) {
     if (file.size > MAX_BYTES) return jsonError('사진 용량이 너무 커요');
 
     const month = new Date().toISOString().slice(0, 7);
-    const key = `reviews/${month}/${crypto.randomUUID()}.${ext}`;
+    const folder = form.get('purpose') === 'return' ? 'returns' : 'reviews';
+    const key = `${folder}/${month}/${crypto.randomUUID()}.${ext}`;
     try {
         const url = await r2Put(key, await file.arrayBuffer(), file.type);
         return Response.json({ url });

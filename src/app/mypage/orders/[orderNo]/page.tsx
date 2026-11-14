@@ -6,16 +6,43 @@ import { customerCanCancel, trackingUrl } from '../../../../lib/order-status';
 import { OrderBrief } from '../../../../components/checkout/OrderBrief';
 import { OrderCancelButton } from '../../../../components/mypage/OrderCancelButton';
 import { PageHead } from '../../../../components/mypage/ComingSoon';
+import { ReturnStatus } from '../../../../components/returns/ReturnStatus';
+import { listReturnsForOrder, returnWindow, returnableLines, type ReturnRequest } from '../../../../lib/returns';
+
+const md = (d: Date | null) => (d ? d.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric' }) : '');
 
 export const runtime = 'edge';
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ orderNo: string }> }) {
+export default async function OrderDetailPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ orderNo: string }>;
+    searchParams: Promise<{ return?: string }>;
+}) {
     const { orderNo } = await params;
+    const { return: returnFlag } = await searchParams;
     const user = await getCurrentUser(`/mypage/orders/${orderNo}`);
     const order = await getOrderByNo(orderNo, user.id);
     if (!order || order.status === 'pending') notFound();
 
     const url = trackingUrl(order.carrier, order.trackingNo);
+
+    let returns: ReturnRequest[] = [];
+    let returnsReady = true;
+    try {
+        returns = await listReturnsForOrder(order.id);
+    } catch {
+        returns = []; // table not created yet
+        returnsReady = false;
+    }
+    const win = returnWindow(order);
+    const canRequest =
+        returnsReady &&
+        win.open && !returns.some((r) => r.status === 'requested' || r.status === 'approved') && returnableLines(order, returns).length > 0;
+    const deadlines = win.open
+        ? `단순 변심(미개봉) ${win.changeOfMind ? `${md(win.changeOfMindUntil)}까지` : '기간 지남'} · 상품 하자·오배송 ${md(win.defectUntil)}까지`
+        : null;
 
     return (
         <>
@@ -61,6 +88,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     </p>
                 </section>
             ) : null}
+
+            <ReturnStatus orderNo={order.orderNo} requests={returns} canRequest={canRequest} deadlines={deadlines} justSent={returnFlag === 'done'} />
 
             {customerCanCancel(order.status) ? <OrderCancelButton orderNo={order.orderNo} /> : null}
             {order.status === 'failed' ? (

@@ -6,6 +6,7 @@ import { ORDER_STATUS_LABEL, trackingUrl } from '../../../../lib/order-status';
 import { FLAVORS } from '../../../../lib/catalog';
 import { AdminOrderActions } from '../../../../components/admin/AdminActions';
 import { dt, won } from '../../../../components/admin/format';
+import { listReturnsForOrder, RETURN_REASON_LABEL, RETURN_STATUS_LABEL, RETURN_TYPE_LABEL, type ReturnRequest } from '../../../../lib/returns';
 
 export const runtime = 'edge';
 
@@ -18,6 +19,12 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
         ? (await getSql()`select name, email from users where id = ${order.userId}`)[0]
         : undefined;
     const url = trackingUrl(order.carrier, order.trackingNo);
+    let returns: ReturnRequest[] = [];
+    try {
+        returns = await listReturnsForOrder(order.id);
+    } catch {
+        returns = [];
+    }
     const refundable = ['paid', 'preparing', 'shipped', 'delivered'].includes(order.status) && Boolean(order.paymentKey);
 
     return (
@@ -163,6 +170,26 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
                     ) : null}
                 </dl>
             </section>
+
+            {returns.length > 0 ? (
+                <section className="adm-card">
+                    <h2>교환·반품</h2>
+                    <ul className="adm-lines">
+                        {returns.map((r) => (
+                            <li key={r.id}>
+                                <div>
+                                    <strong>
+                                        {RETURN_TYPE_LABEL[r.type].split(' ')[0]} · {RETURN_REASON_LABEL[r.reason]} · {RETURN_STATUS_LABEL[r.status]}
+                                    </strong>
+                                    <span>{r.items.map((i) => `${i.name} ${i.qty}개`).join(', ')}</span>
+                                </div>
+                                <b>{r.refundAmount !== null ? `환불 ${won(r.refundAmount)}` : r.type === 'refund' ? `예상 ${won(r.refundEstimate)}` : '교환'}</b>
+                            </li>
+                        ))}
+                    </ul>
+                    <Link href="/admin/returns?status=all">교환·반품 관리로 →</Link>
+                </section>
+            ) : null}
 
             {order.status !== 'canceled' && order.status !== 'failed' && order.status !== 'pending' ? (
                 <AdminOrderActions

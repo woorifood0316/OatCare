@@ -37,6 +37,31 @@ export function customerMessage(event: NotifyEvent, p: P): Message | null {
 구독 관리: ${sub}` };
         case 'subscription_canceled':
             return { subject: '[참오트케어] 정기구독이 해지됐어요', text: `정기구독이 해지되어 이후 결제와 배송이 중단돼요. 언제든 다시 시작할 수 있어요.\n\n${SITE()}` };
+        case 'return_requested':
+            return { subject: `[참오트케어] ${p.typeLabel} 신청이 접수됐어요 (${p.orderNo})`, text: `${p.typeLabel} 신청(${p.reasonLabel})이 접수됐어요. 확인 후 회수 일정을 안내해 드릴게요.
+
+진행 상황: ${order}` };
+        case 'return_approved':
+            return { subject: `[참오트케어] ${p.typeLabel} 신청이 승인됐어요 (${p.orderNo})`, text: `${p.typeLabel} 신청이 승인되어 택배 기사님이 상품을 회수하러 방문할 예정이에요. 받으신 상자에 다시 포장해 두세요.${p.note ? `
+
+안내: ${p.note}` : ''}
+
+진행 상황: ${order}` };
+        case 'return_rejected':
+            return { subject: `[참오트케어] ${p.typeLabel} 신청이 반려됐어요 (${p.orderNo})`, text: `${p.typeLabel} 신청이 반려됐어요.
+사유: ${p.reason}
+
+궁금한 점은 고객센터(031-998-7234)로 문의해 주세요.
+
+${order}` };
+        case 'return_completed':
+            return { subject: `[참오트케어] ${p.typeLabel} 처리가 완료됐어요 (${p.orderNo})`, text: p.refund ? `반품이 완료되어 ${won(p.refund)}이 환불돼요. (카드사에 따라 영업일 기준 3~5일 소요)
+
+${order}` : `교환 상품을 다시 보내 드렸어요.${p.note ? `
+
+안내: ${p.note}` : ''}
+
+${order}` };
         case 'billing_upcoming':
             return { subject: '[참오트케어] 정기구독 결제 예정 안내', text: `${p.date}에 ${won(p.amount)}이 자동 결제될 예정이에요.\n주기 변경, 건너뛰기, 해지는 결제일 전날까지 가능해요.\n\n구독 관리: ${sub}` };
         default:
@@ -65,6 +90,14 @@ export function adminMessage(event: NotifyEvent, p: P): string {
             return `📝 정기구독 해지 예약 (최소 이용기간 중) · 다음 결제 ${p.nextDate ?? ''}`;
         case 'subscription_canceled':
             return `🛑 정기구독 해지 · ${p.reason ?? ''}`;
+        case 'return_requested':
+            return `📮 ${p.typeLabel} 신청 ${p.orderNo} · ${p.reasonLabel}`;
+        case 'return_approved':
+            return `🚚 ${p.typeLabel} 승인 ${p.orderNo}`;
+        case 'return_rejected':
+            return `🚫 ${p.typeLabel} 반려 ${p.orderNo} · ${p.reason}`;
+        case 'return_completed':
+            return `✅ ${p.typeLabel} 완료 ${p.orderNo}${p.refund ? ` · 환불 ${won(p.refund)}` : ''}`;
         case 'billing_upcoming':
             return `⏰ 결제 예정 안내 발송 · ${p.date}`;
         default:
