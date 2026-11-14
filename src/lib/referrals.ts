@@ -2,8 +2,8 @@
 //  1. Every member has a personal code; their share links carry ?ref=CODE.
 //  2. A visitor who arrives through such a link and signs up as a NEW member is recorded as that member's friend.
 //  3. When the friend's first order is confirmed (received + REFERRAL_CONFIRM_DAYS with no cancel/return), both get
-//     a REFERRAL_REWARD coupon - unless the friend looks like the same person or an existing member (duplicate phone,
-//     address, or the referrer's name). No limit on how many friends one member invites.
+//     a REFERRAL_REWARD coupon - unless two or more of name, phone, address and email are the same as one existing
+//     member's (the referrer included). No limit on how many friends one member invites.
 import { getSql } from './db';
 import { COUPON_VALID_DAYS, REFERRAL_CONFIRM_DAYS, REFERRAL_COUPON_NAME, REFERRAL_REWARD, WELCOME_COUPON_MIN_COUNT } from './catalog';
 
@@ -56,6 +56,7 @@ async function giveCoupon(userId: string) {
 }
 
 const digits = (s: unknown) => String(s ?? '').replace(/\D/g, '');
+const nm = (v: unknown) => String(v ?? '').replace(/\s/g, '');
 const addr = (a: unknown, b: unknown) => `${a ?? ''}${b ?? ''}`.replace(/\s/g, '').toLowerCase();
 
 /**
@@ -86,29 +87,30 @@ export async function runReferralRewards(limit = 50): Promise<{ rewarded: number
         let reason: string | null = returns.length > 0 ? '첫 주문에 교환·반품 신청이 있어요' : null;
 
         if (!reason) {
-            // Same person / existing member? phone or address used by any other member, or the referrer's own name.
+            // Same person under another account? Compare name, phone, address and email with each other member
+            // (the referrer included): two or more of them the same as one member = not a new friend.
+            const friend = await sql`select name, email from users where id = ${r.friend_id}`;
+            const names = [o.ship_name, friend[0]?.name].map(nm).filter(Boolean);
             const phone = digits(o.ship_phone);
             const address = addr(o.ship_address1, o.ship_address2);
-            const dup = await sql`
-                select 1 from (
-                    select user_id, phone, address1, address2 from addresses
-                    union all
-                    select user_id, ship_phone, ship_address1, ship_address2 from orders where status <> 'pending'
+            const email = String(friend[0]?.email ?? '').trim().toLowerCase();
+            const fid = r.friend_id as string;
+            const same = await sql`
+                select uid from (
+                    select id as uid, 'email' as kind from users where id <> ${fid} and ${email} <> '' and lower(email) = ${email}
+                    union select user_id, 'phone' from addresses where user_id <> ${fid} and ${phone} <> '' and regexp_replace(coalesce(phone, ''), '\\D', '', 'g') = ${phone}
+                    union select user_id, 'phone' from orders where user_id <> ${fid} and status <> 'pending' and ${phone} <> '' and regexp_replace(coalesce(ship_phone, ''), '\\D', '', 'g') = ${phone}
+                    union select user_id, 'address' from addresses where user_id <> ${fid} and ${address} <> '' and lower(regexp_replace(coalesce(address1, '') || coalesce(address2, ''), '\\s', '', 'g')) = ${address}
+                    union select user_id, 'address' from orders where user_id <> ${fid} and status <> 'pending' and ${address} <> '' and lower(regexp_replace(coalesce(ship_address1, '') || coalesce(ship_address2, ''), '\\s', '', 'g')) = ${address}
+                    union select id, 'name' from users where id <> ${fid} and regexp_replace(coalesce(name, ''), '\\s', '', 'g') = any(${names})
+                    union select user_id, 'name' from addresses where user_id <> ${fid} and regexp_replace(coalesce(recipient, ''), '\\s', '', 'g') = any(${names})
+                    union select user_id, 'name' from orders where user_id <> ${fid} and status <> 'pending' and regexp_replace(coalesce(ship_name, ''), '\\s', '', 'g') = any(${names})
                 ) x
-                where x.user_id <> ${r.friend_id}
-                  and ((${phone} <> '' and regexp_replace(coalesce(x.phone, ''), '\\D', '', 'g') = ${phone})
-                    or (${address} <> '' and lower(regexp_replace(coalesce(x.address1, '') || coalesce(x.address2, ''), '\\s', '', 'g')) = ${address}))
+                where uid is not null
+                group by uid having count(distinct kind) >= 2
                 limit 1
             `;
-            if (dup.length > 0) reason = '전화번호 또는 주소가 기존 회원과 같아요';
-        }
-        if (!reason) {
-            const names = await sql`
-                select name from users where id = ${r.referrer_id}
-                union select recipient from addresses where user_id = ${r.referrer_id}
-            `;
-            const friendName = String(o.ship_name ?? '').replace(/\s/g, '');
-            if (friendName && names.some((n) => String(n.name ?? '').replace(/\s/g, '') === friendName)) reason = '이름이 초대한 회원과 같아요';
+            if (same.length > 0) reason = '이름·전화번호·주소·이메일 중 2가지 이상이 기존 회원과 같아요';
         }
 
         if (reason) {
