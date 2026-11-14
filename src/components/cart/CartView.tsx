@@ -2,6 +2,7 @@
 
 import { FreeShipHint } from '../purchase/FreeShipHint';
 import { CouponHint } from '../purchase/CouponHint';
+import { MixBar } from '../purchase/MixPicker';
 import { ShipEta } from '../ShipEta';
 import React from 'react';
 import Link from 'next/link';
@@ -65,6 +66,7 @@ function MixEditor({ line }: { line: CartLine }) {
 
             {custom ? (
                 <div className="cart-mix__editor">
+                    <MixBar count={item.count} detail={detail} />
                     {FLAVORS.map((f) => (
                         <div key={f} className="cart-mix__row">
                             <span>{f}</span>
@@ -79,9 +81,6 @@ function MixEditor({ line }: { line: CartLine }) {
                             </div>
                         </div>
                     ))}
-                    <p className={`cart-mix__sum${err ? ' is-error' : ' is-ok'}`}>
-                        {err ?? `합계 ${total}/${item.count}개 · 맛 구성이 완료됐어요`}
-                    </p>
                     <p className="cart-mix__hint">맛은 {MIX_UNIT}개 단위로 고를 수 있어요.</p>
                 </div>
             ) : (

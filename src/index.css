@@ -5636,3 +5636,36 @@ body {
 a.sbar-sheet__nudge { display: block; text-decoration: none; }
 .sgl { display: grid; gap: 0.65rem; }
 .sgl .pd-actions { margin-top: 0.15rem; }
+
+/* Journal: references under an article */
+.oc-journal-modal__sources { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px dashed var(--oc-line); font-size: 0.78rem; line-height: 1.55; color: #7a6a5a; }
+.oc-journal-modal__sources b { display: block; margin-bottom: 0.4rem; font-size: 0.82rem; color: var(--oc-brown); }
+.oc-journal-modal__sources ol { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.oc-journal-modal__sources a { color: inherit; text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.sgl__from { display: block; margin-top: 0.15rem; font-size: 0.78rem; color: #8a7a6a; }
+/* Box progress: cart items vs. what is being picked now, shown separately */
+.sgl__head { margin: 0; font-weight: 800; }
+.sgl__sum { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0.45rem 0 0 !important; font-size: 0.86rem; }
+.sgl__sum b { font-size: 0.95rem; color: var(--oc-maroon); font-weight: 900; }
+.sgl__chip { display: inline-flex; align-items: center; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 800; white-space: nowrap; }
+.sgl__chip--cart { background: #e7dcc4; color: #5b4a3d; }
+.sgl__chip--now { background: var(--oc-gold); color: #fff; }
+.sgl__plus { font-weight: 900; color: #8a7a6a; }
+.sgl__bar { display: flex; }
+.sgl__bar > span { display: block; height: 100%; transition: width 0.25s ease; }
+.sgl__bar > .sgl__bar-cart { background: #b9a98f; border-radius: 0; }
+.sgl__bar > .sgl__bar-now { background: var(--oc-gold); border-radius: 0; }
+.sgl__grp { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+.sgl__more { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.3rem; width: 100%; padding: 0.7rem 0.8rem; border: 1.5px dashed var(--oc-maroon); border-radius: 12px; background: #fffaf3; color: var(--oc-maroon); font: inherit; font-size: 0.92rem; font-weight: 800; cursor: pointer; }
+.sgl__more small { font-size: 0.75rem; font-weight: 600; color: #8a7a6a; }
+.sgl__more--less { border-style: solid; border-color: var(--oc-line); color: #8a7a6a; font-size: 0.82rem; padding: 0.45rem; }
+
+/* Set flavour mix: "20개 채우기" bar, one cell per 5-pack painted in the flavour's colour */
+.mixbar { margin: 0.5rem 0 0.7rem; padding: 0.6rem 0.75rem; border-radius: 12px; background: #fbf5e8; border: 1px solid #ecdcb6; color: var(--oc-brown); }
+.mixbar__head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 0.45rem; font-size: 0.88rem; font-weight: 800; }
+.mixbar__head b { color: var(--oc-maroon); font-weight: 900; }
+.mixbar__cells { display: grid; gap: 3px; }
+.mixbar__cells span { display: grid; place-items: center; height: 26px; border-radius: 6px; background: #efe3c6; color: #fff; font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; transition: background 0.2s ease; }
+.mixbar__foot { margin: 0.45rem 0 0; font-size: 0.8rem; font-weight: 600; color: #6a5848; }
+.mixbar__foot b { color: var(--oc-maroon); font-weight: 900; }
+.mixbar__foot.is-done { color: #2f6b3a; font-weight: 800; }

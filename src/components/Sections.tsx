@@ -993,36 +993,61 @@ export interface JournalArticle {
         tip?: string;
     }[];
     conclusion: string;
+    /** Research cited in the article (shown under it as 참고 문헌). */
+    sources?: { label: string; url: string }[];
 }
 
 export const JOURNAL_ARTICLES: JournalArticle[] = [
     {
         id: 'journal-1',
-        title: '혈당 스파이크 없는 30초 아침 식단 가이드',
-        subtitle: '바쁜 아침, 속이 편하고 포만감이 오래가는 복합 탄수화물과 귀리의 영양학적 비밀.',
-        category: '혈당케어',
-        tag: '#혈당케어 #아침건강',
+        title: '든든하고 속 편한 아침, 귀리가 주목받는 이유',
+        subtitle: '연구로 살펴본 귀리 식이섬유(베타글루칸)와 참오트케어 한 끼 이야기.',
+        category: '귀리 영양',
+        tag: '#귀리영양 #아침습관',
         readTime: '3 min read',
         date: '2026.08.15',
         author: '참오트케어 영양 연구팀',
         img: '/assets/journal-healthy-morning.png',
-        intro: '아침 출근길, 빵 한 조각이나 시리얼로 대충 떼운 뒤 점심시간 전 미친 듯이 쏟아지는 졸음과 허기짐을 느껴보셨나요? 이는 정제 탄수화물이 초래하는 대표적인 혈당 스파이크 현상입니다.',
+        intro: '아침을 빵 한 조각이나 단 음료로 때우면 점심 전에 금세 허기가 지기 쉽습니다. 그래서 아침 식사로 귀리를 찾는 분들이 많아졌는데요. 귀리에 들어 있는 식이섬유 "베타글루칸"에 대해 연구로 알려진 내용을 정리했습니다.',
         sections: [
             {
-                title: '1. 정제 탄수화물 vs 복합 탄수화물의 차이',
-                body: '밀가루빵이나 달콤한 시리얼은 흡수가 빨라 혈당을 급격히 올렸다가 뚝 떨어뜨립니다. 반면 귀리(Oat)와 국산 9가지 통곡물은 복합 탄수화물로 흡수가 완만하여 온종일 안정적인 에너지 공급을 유지해 줍니다.',
-                tip: '💡 팁: 아침 식단에 수용성 식이섬유(베타글루칸)가 풍부한 통곡물을 섭취하면 점심 식사 후 혈당 반응까지 완화됩니다.'
+                title: '1. 귀리 속 수용성 식이섬유, 베타글루칸',
+                body: '귀리에는 물과 만나면 걸쭉한 젤처럼 변하는 수용성 식이섬유, 베타글루칸이 들어 있습니다. 이 점성 덕분에 귀리로 만든 음식은 천천히 소화되고 든든하게 느껴지는 것으로 알려져 있습니다.',
             },
             {
-                title: '2. 귀리의 수용성 식이섬유, 베타글루칸(Beta-Glucan)',
-                body: '참오트케어의 핵심 원료인 귀리에는 젤 형태로 변해 섭취한 음식을 감싸는 베타글루칸이 풍부합니다. 이 성분이 당 흡수 속도를 늦추고 장내 유익균의 먹이가 되어 아침 편안함을 유지해 줍니다.',
+                title: '2. 연구로 본 귀리와 포만감',
+                body: '성인 약 50명을 대상으로 한 비교 연구에서, 같은 열량의 아침을 먹었을 때 오트밀을 먹은 날이 일반 시리얼을 먹은 날보다 4시간 동안 포만감이 더 높고 배고픔을 덜 느꼈다고 보고되었습니다(Rebello 외, Nutrition Journal, 2014).',
+                tip: '참고: 귀리 제조사의 지원을 받은 소규모 연구이며, 몇 시간 동안의 포만감을 측정한 결과입니다.',
             },
             {
-                title: '3. 바쁜 아침 30초면 완성되는 혈당 케어 루틴',
-                body: '따뜻한 물이나 저지방 우유 180ml에 참오트케어 1포를 붓고 저어주기만 하면, 혈당 스파이크 부담 없는 완벽한 균형 한 끼가 완성됩니다.',
-            }
+                title: '3. 연구로 본 귀리와 식후 혈당',
+                body: '귀리 베타글루칸을 다룬 실험 103건을 종합한 분석에서, 탄수화물 식사에 베타글루칸을 더하면 식후 혈당이 오르는 폭이 평균 약 28% 낮았습니다(Zurbau 외, European Journal of Clinical Nutrition, 2021). 이 차이는 베타글루칸의 양과 분자 크기에 따라 달랐으며, 연구에서는 대체로 한 끼에 수 g(그램) 이상의 베타글루칸이 사용되었습니다.',
+            },
+            {
+                title: '4. 연구로 본 귀리와 콜레스테롤',
+                body: '귀리 베타글루칸을 하루 3g 이상, 2~12주 동안 섭취한 연구 28건을 종합한 결과, LDL 콜레스테롤 수치가 소폭 낮아진 것으로 나타났습니다(Whitehead 외, American Journal of Clinical Nutrition, 2014).',
+            },
+            {
+                title: '5. 참오트케어에는 귀리가 이렇게 들어 있어요',
+                body: '참오트케어 그레인 맛 한 포(50g)에는 귀리 16%와 9가지 곡물이 들어 있어, 물이나 우유 180ml에 타면 30초 만에 한 끼가 완성됩니다. 위 연구들은 베타글루칸을 일정량 이상 섭취한 경우의 결과이며, 참오트케어 한 포의 효과를 직접 확인한 연구는 아닙니다. 귀리를 더한 균형 잡힌 아침 식사의 한 부분으로 즐겨 주세요.',
+                tip: 'ℹ️ 참오트케어는 건강기능식품이 아닌 일반 식품이며, 질병의 예방이나 치료를 위한 제품이 아닙니다.',
+            },
         ],
-        conclusion: '내 몸을 부드럽게 깨우는 아침 리추얼, 참오트케어 한 포로 오늘 아침 혈당 밸런스를 지켜보세요.'
+        conclusion: '바쁜 아침, 귀리와 곡물로 채운 참오트케어 한 포로 든든하게 하루를 시작해 보세요.',
+        sources: [
+            {
+                label: 'Rebello CJ 외 (2014). The role of meal viscosity and oat β-glucan characteristics in human appetite control: a randomized crossover trial. Nutrition Journal 13:49',
+                url: 'https://nutritionj.biomedcentral.com/articles/10.1186/1475-2891-13-49',
+            },
+            {
+                label: 'Zurbau A 외 (2021). The effect of oat β-glucan on postprandial blood glucose and insulin responses: a systematic review and meta-analysis. European Journal of Clinical Nutrition 75:1540–1554',
+                url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8563417/',
+            },
+            {
+                label: 'Whitehead A 외 (2014). Cholesterol-lowering effects of oat β-glucan: a meta-analysis of randomized controlled trials. American Journal of Clinical Nutrition 100(6):1413–1421',
+                url: 'https://pubmed.ncbi.nlm.nih.gov/25411276/',
+            },
+        ],
     },
     {
         id: 'journal-2',
@@ -1122,6 +1147,21 @@ export const JournalArticleModal: React.FC<{
                     <div className="oc-journal-modal__conclusion">
                         <p>{article.conclusion}</p>
                     </div>
+
+                    {article.sources?.length ? (
+                        <div className="oc-journal-modal__sources">
+                            <b>참고 문헌</b>
+                            <ol>
+                                {article.sources.map((src) => (
+                                    <li key={src.url}>
+                                        <a href={src.url} target="_blank" rel="noopener noreferrer">
+                                            {src.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    ) : null}
                 </div>
 
                 <div className="oc-journal-modal__footer">

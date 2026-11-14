@@ -7,7 +7,7 @@ import { Minus, Plus, ShoppingBag, X, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { CouponHint } from './CouponHint';
-import { BOX_SIZE, FLAVORS, MAX_QTY_ONCE, getItem, type CartLine } from '../../lib/catalog';
+import { BOX_SIZE, COUPON_SET_MIN_COUNT, FLAVORS, MAX_QTY_ONCE, getItem, hasCouponSet, type CartLine } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const skuOf = (flavor: string) => `single:${flavor}`;
@@ -23,11 +23,21 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
     const { lines, addLine, buyNow, hydrated } = useCart();
     const [picks, setPicks] = useState<Record<string, number>>(() => Object.fromEntries(FLAVORS.map((f) => [f, f === flavor ? 1 : 0])));
     const [added, setAdded] = useState(false);
+    const [othersOpen, setOthersOpen] = useState(false);
 
     const price = getItem(skuOf(flavor))?.price ?? 0;
     const picked = FLAVORS.reduce((s, f) => s + (picks[f] ?? 0), 0);
-    const inCart = hydrated ? lines.filter((l) => l.mode === 'once' && getItem(l.sku)?.kind === 'single').reduce((s, l) => s + l.qty, 0) : 0;
-    const cartHasSet = hydrated && lines.some((l) => l.mode === 'once' && getItem(l.sku)?.kind === 'bundle');
+    const othersPicked = picked - (picks[flavor] ?? 0);
+    // One-time cart lines only (subscriptions are paid and shipped separately).
+    const cartOnce = hydrated ? lines.filter((l) => l.mode === 'once') : [];
+    const cartSingles = cartOnce.filter((l) => getItem(l.sku)?.kind === 'single').reduce((s, l) => s + l.qty, 0);
+    // The 10-pack taster set fills the same box as single sachets (10 + 10 singles = one box of 20).
+    const cartTaster = cartOnce
+        .filter((l) => { const it = getItem(l.sku); return it?.kind === 'bundle' && it.count < COUPON_SET_MIN_COUNT; })
+        .reduce((s, l) => s + (getItem(l.sku)?.count ?? 0) * l.qty, 0);
+    const inCart = cartSingles + cartTaster;
+    const cartHasSet = cartOnce.some((l) => getItem(l.sku)?.kind === 'bundle'); // any set ships free
+    const cartHasCouponSet = hasCouponSet(cartOnce); // a 20·30 set: coupon usable whatever the count
     const boxCount = inCart + picked;
     const inBox = boxCount > 0 && boxCount % BOX_SIZE === 0 ? BOX_SIZE : boxCount % BOX_SIZE;
     const boxes = Math.ceil(boxCount / BOX_SIZE);
@@ -56,17 +66,49 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
     return (
         <div className="sgl">
             <div className="sgl__box" aria-label={`한 박스 ${BOX_SIZE}개 중 ${inBox}개`}>
-                <p>
-                    📦 한 박스 <b>{BOX_SIZE}개</b> 중 <b>{inBox}개</b>
+                <p className="sgl__head">
+                    📦 한 박스 <b>{BOX_SIZE}개</b> 채우기
                     {boxes > 1 ? <span> ({boxes}박스째)</span> : null}
-                    {inCart > 0 ? <small> · 장바구니 {inCart}개 포함</small> : null}
                 </p>
-                <div className="sgl__bar">
-                    <span style={{ width: `${(inBox / BOX_SIZE) * 100}%` }} />
+                {/* Spell out where the count comes from: the visitor picked 1 here but the box may already hold cart items. */}
+                {inCart > 0 ? (
+                    <p className="sgl__sum">
+                        <span className="sgl__chip sgl__chip--cart">🛒 장바구니에 이미 {[cartSingles > 0 ? `낱개 ${cartSingles}개` : '', cartTaster > 0 ? `맛보기 세트 ${cartTaster}개` : ''].filter(Boolean).join(' + ')}</span>
+                        <span className="sgl__grp">
+                            <span className="sgl__plus">+</span>
+                            <span className="sgl__chip sgl__chip--now">지금 고른 {picked}개</span>
+                        </span>
+                        <span className="sgl__grp">
+                            <span className="sgl__plus">=</span>
+                            <b>
+                                {boxCount}개 / {BOX_SIZE}개
+                            </b>
+                        </span>
+                    </p>
+                ) : (
+                    <p className="sgl__sum">
+                        <span className="sgl__chip sgl__chip--now">지금 고른 {picked}개</span>
+                        <span className="sgl__plus">/</span>
+                        <b>{BOX_SIZE}개</b>
+                    </p>
+                )}
+                <div className="sgl__bar" aria-hidden="true">
+                    {boxes <= 1 ? (
+                        <>
+                            <span className="sgl__bar-cart" style={{ width: `${(Math.min(inCart, BOX_SIZE) / BOX_SIZE) * 100}%` }} />
+                            <span className="sgl__bar-now" style={{ width: `${(Math.min(picked, BOX_SIZE - Math.min(inCart, BOX_SIZE)) / BOX_SIZE) * 100}%` }} />
+                        </>
+                    ) : (
+                        <span className="sgl__bar-now" style={{ width: `${(inBox / BOX_SIZE) * 100}%` }} />
+                    )}
                 </div>
-                {cartHasSet && inBox < BOX_SIZE ? (
+                {cartHasCouponSet && inBox < BOX_SIZE ? (
                     <small className="sgl__left">
-                        장바구니에 세트가 있어 <b>무료배송</b> · <b>{BOX_SIZE - inBox}개</b> 더 담으면 한 박스 완성
+                        장바구니에 20·30개 세트가 있어 <b>무료배송 + 쿠폰 사용</b> 가능 · <b>{BOX_SIZE - inBox}개</b> 더 담으면 한 박스 완성
+                    </small>
+                ) : cartHasSet && inBox < BOX_SIZE ? (
+                    <small className="sgl__left">
+                        세트가 있어 <b>무료배송</b> · <b>{BOX_SIZE - inBox}개</b> 더 담으면 <b>쿠폰 사용</b>
                     </small>
                 ) : inBox < BOX_SIZE ? (
                     <small className="sgl__left">
@@ -77,12 +119,13 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
                 )}
             </div>
 
+            {/* The page's flavour first; the other four open on request (and stay open once any of them is picked). */}
             <ul className="sgl__list">
-                {FLAVORS.map((f) => (
+                {(othersOpen ? [flavor, ...FLAVORS.filter((f) => f !== flavor)] : [flavor]).map((f) => (
                     <li key={f} className={(picks[f] ?? 0) > 0 ? 'is-on' : ''}>
                         <span>
                             {f}
-                            {f === flavor ? <em>보던 맛</em> : null}
+                            {f === flavor && othersOpen ? <em>보던 맛</em> : null}
                         </span>
                         <div className="pd-qty__ctl">
                             <button type="button" onClick={() => setValue(f, (picks[f] ?? 0) - 1)} disabled={(picks[f] ?? 0) <= 0} aria-label={`${f} 1개 빼기`}>
@@ -96,6 +139,15 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
                     </li>
                 ))}
             </ul>
+            {!othersOpen ? (
+                <button type="button" className="sgl__more" onClick={() => setOthersOpen(true)}>
+                    <Plus size={15} aria-hidden="true" /> 다른 맛도 섞어 담기 <small>({FLAVORS.filter((f) => f !== flavor).join(' · ')})</small>
+                </button>
+            ) : othersPicked === 0 ? (
+                <button type="button" className="sgl__more sgl__more--less" onClick={() => setOthersOpen(false)}>
+                    다른 맛 접기
+                </button>
+            ) : null}
 
             <div className="sbar-sheet__total">
                 <span>
@@ -103,7 +155,7 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
                 </span>
                 <b>{won(amount)}</b>
             </div>
-            <CouponHint mode="once" count={boxCount} noMinimum={false} className="sgl__hint" />
+            <CouponHint mode="once" count={boxCount} noMinimum={cartHasCouponSet} className="sgl__hint" />
             {picked >= 15 ? (
                 <Link href="/sets/20" className="sbar-sheet__nudge" onClick={onDone}>
                     💡 맛을 <b>5개 단위</b>로 골라도 괜찮다면 <b className="oc-nowrap">20개 세트가 개당 {won(set20Unit)}</b> →
