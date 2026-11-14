@@ -4640,7 +4640,13 @@ body {
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 999px; background: var(--oc-maroon); color: #fff; font-size: 0.68rem; font-weight: 800;
 }
-@media (min-width: 860px) { .oc-nav__cart { display: inline-flex; } }
+/* The top-bar cart icon is shown on every screen size (on phones it replaces the floating cart button, which used to
+   sit on top of the buy buttons). */
+.oc-nav__cart { display: inline-flex; }
+@media (max-width: 859px) {
+  .oc-nav__cart { width: 2.2rem; height: 2.2rem; }
+  .cart-fab { display: none !important; }
+}
 
 .cart-fab {
   position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 60;
@@ -4656,7 +4662,7 @@ body {
   border-radius: 999px; background: var(--oc-gold); color: var(--oc-brown); font-size: 0.74rem; font-weight: 800;
 }
 .cart-toast {
-  position: fixed; left: 50%; bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); z-index: 70; transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); z-index: 70; transform: translateX(-50%);
   display: flex; align-items: center; gap: 0.9rem; max-width: calc(100vw - 2rem);
   padding: 0.8rem 1.1rem; border-radius: 999px;
   background: rgba(59, 42, 32, 0.95); color: #fff7e8; font-size: 0.85rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -5610,3 +5616,21 @@ body {
   .pd-inline-actions { display: none !important; }
 }
 .sbar-sheet__mixbox .pd-mix { margin: 0; }
+
+/* Single items: "mix flavours, one box = 20" sheet (phones) */
+.sgl__title { flex: 1; font-size: 1.05rem; font-weight: 900; color: var(--oc-brown); }
+.sgl__title small { display: block; margin-top: 0.1rem; font-size: 0.78rem; font-weight: 600; color: #8a7a6a; }
+.sgl__box { padding: 0.65rem 0.8rem; border-radius: 12px; background: #fbf5e8; border: 1px solid #ecdcb6; font-size: 0.88rem; color: var(--oc-brown); }
+.sgl__box p { margin: 0; font-weight: 700; }
+.sgl__box b { color: var(--oc-maroon); font-weight: 900; }
+.sgl__box small { font-weight: 600; color: #8a7a6a; }
+.sgl__bar { height: 8px; margin: 0.45rem 0 0.3rem; border-radius: 999px; background: #efe3c6; overflow: hidden; }
+.sgl__bar span { display: block; height: 100%; border-radius: inherit; background: var(--oc-gold); transition: width 0.25s ease; }
+.sgl__left { display: block; font-size: 0.78rem; }
+.sgl__left.is-full { color: #2f6b3a !important; font-weight: 800 !important; }
+.sgl__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.sgl__list li { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.6rem 0.35rem 0.8rem; border: 1px solid var(--oc-line); border-radius: 12px; background: #fff; font-size: 0.95rem; font-weight: 800; color: var(--oc-brown); }
+.sgl__list li.is-on { border-color: var(--oc-maroon); background: #fff8f5; }
+.sgl__list em { margin-left: 0.4rem; padding: 0.05rem 0.4rem; border-radius: 999px; background: var(--oc-gold); color: #fff; font-size: 0.65rem; font-style: normal; font-weight: 900; vertical-align: 2px; }
+.sgl__hint { margin: 0 !important; }
+a.sbar-sheet__nudge { display: block; text-decoration: none; }

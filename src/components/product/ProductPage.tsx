@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
+import { SinglesBar } from '../purchase/SinglesBar';
 import {
     FREE_SHIPPING_MIN,
     MIN_SUBSCRIPTION_CHARGES,
@@ -309,13 +310,7 @@ export function ProductPage({ slug }: { slug: string }) {
                 </section>
             </main>
 
-            <div className="pd-sticky">
-                <div className="pd-sticky__sum">
-                    <span>{qty}포</span>
-                    <b>{won(total)}</b>
-                </div>
-                {actions}
-            </div>
+            <SinglesBar flavor={page.flavor} qty={qty} setQty={setQty} />
         </div>
     );
 }
