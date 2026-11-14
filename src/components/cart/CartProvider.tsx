@@ -14,6 +14,7 @@ import {
     mergeCarts,
     sanitizeLines,
 } from '../../lib/catalog';
+import { SignupPrompt } from './SignupPrompt';
 
 const STORAGE_KEY = 'oc_cart_v1';
 const OWNER_KEY = 'oc_cart_owner';
@@ -66,6 +67,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const [lines, setLines] = useState<CartLine[]>([]);
     const [hydrated, setHydrated] = useState(false);
     const [toast, setToast] = useState('');
+    // Not signed in: adding to the cart or buying asks to sign up first (the line is kept in the cart meanwhile).
+    const [signupBack, setSignupBack] = useState<string | null>(null);
+    useEffect(() => {
+        // Signed in: forget the login page's "started Naver/Google and came back" hint and the app hand-off.
+        if (status !== 'authenticated') return;
+        try {
+            sessionStorage.removeItem('oc_tried');
+            sessionStorage.removeItem('oc_handoff');
+        } catch {
+            /* ignore */
+        }
+    }, [status]);
     const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const serverReady = useRef(false);
     const linesRef = useRef<CartLine[]>([]);
@@ -175,10 +188,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const addLine = useCallback(
         (line: CartLine) => {
             setLines((prev) => addTo(prev, line));
+            if (status === 'unauthenticated') {
+                setSignupBack('here');
+                return;
+            }
             const name = getItem(line.sku)?.name ?? '상품';
             showToast(`${name}을(를) 장바구니에 담았어요`);
         },
-        [showToast],
+        [showToast, status],
     );
 
     const setQty = useCallback((key: string, qty: number) => {
@@ -251,7 +268,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             const next = (Array.isArray(input) ? input : [input]).reduce(addTo, linesRef.current);
             linesRef.current = next;
             setLines(next);
-            // Guests (or before the first sync) review the cart first; it merges into their account on login.
+            // Guests sign up first (the cart merges into their account on login, then they continue from the cart).
+            if (status === 'unauthenticated') {
+                setSignupBack('/cart');
+                return 'cart';
+            }
             if (status !== 'authenticated' || !serverReady.current) return 'cart';
             try {
                 const res = await fetch('/api/cart', {
@@ -286,7 +307,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         [lines, hydrated, toast, addLine, setQty, setCycle, setMix, removeLine, convertToSubscription, clearMode, buyNow, flush],
     );
 
-    return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+    return (
+        <CartContext.Provider value={value}>
+            {children}
+            {signupBack ? <SignupPrompt back={signupBack} onClose={() => setSignupBack(null)} /> : null}
+        </CartContext.Provider>
+    );
 }
 
 export function useCart(): CartContextValue {

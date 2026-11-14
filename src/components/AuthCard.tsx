@@ -6,8 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
-import { inAppKind, isMobile, rememberedInApp, type InAppKind } from '../lib/app-switch';
-import { OpenInAppsBox } from './OpenInApps';
+import { CART_PARAM, encodeCart, inAppKind, isAndroid, isAndroidChrome, isMobile, isStandalone, openInAppHref, rememberedInApp, type InAppKind } from '../lib/app-switch';
 
 
 type Mode = 'login' | 'signup';
@@ -60,29 +59,94 @@ const ICONS: Record<Provider, React.ReactNode> = {
     google: <GoogleIcon />,
 };
 
+const HANDOFF_KEY = 'oc_handoff';
+const TRIED_KEY = 'oc_tried';
+/** Remember that Naver/Google login was started from this tab (null = clear). */
+function markTried(provider: Provider | null) {
+    try {
+        if (provider === 'naver' || provider === 'google') sessionStorage.setItem(TRIED_KEY, provider);
+        else sessionStorage.removeItem(TRIED_KEY);
+    } catch {
+        /* ignore */
+    }
+}
+
 function AuthCardInner({ mode }: { mode: Mode }) {
     const params = useSearchParams();
     const callbackUrl = safeCallbackPath(params.get('callbackUrl'));
     const [pending, setPending] = useState<Provider | null>(null);
-    // Phone browser (QR scanned with the camera): Kakao/Naver are not logged in there, so their pages may ask for an
-    // id and password. We only EXPLAIN how to come in through the KakaoTalk / Naver app instead (opening those apps
-    // from a web page is blocked or unreliable on many phones).
-    const [env, setEnv] = useState<{ inApp: InAppKind; mobile: boolean } | null>(null);
-    const [copied, setCopied] = useState(false);
-    const [guideOpen, setGuideOpen] = useState(false);
+    // Where the page runs decides how each button signs in without an id/password:
+    //  - 카카오: KakaoTalk "간편로그인" (the app opens for consent only), from any browser.
+    //  - 네이버: in a normal phone browser, hand this page over to the Naver app (logged in there), then start Naver login.
+    //  - 구글: on Android outside Chrome, hand over to Chrome (it picks the phone's Google account), then start Google login.
+    // The guest cart rides along in the URL. If the app isn't there (oc_noapp=…), that button falls back to the web login.
+    const [env, setEnv] = useState<{ inApp: InAppKind; mobile: boolean; android: boolean; chrome: boolean; standalone: boolean } | null>(null);
+    const [noApp, setNoApp] = useState<Provider[]>([]);
+    // Came here through our hand-off (Naver app / Chrome): only Kakao and that provider are offered (no further hops).
+    const [handoff, setHandoff] = useState<'naver' | 'google' | null>(null);
+    // Started Naver/Google login and came back without finishing (it asked for an id/password): point to Kakao.
+    const [cameBack, setCameBack] = useState<'naver' | 'google' | null>(null);
+    // Leaving for the Naver app / Chrome right now (the phone may ask "open?").
+    const [leaving, setLeaving] = useState<'naver' | 'google' | null>(null);
     useEffect(() => {
         preloadKakaoSdk();
-        setEnv({ inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile() });
-    }, []);
-    const copyAddress = async () => {
-        try {
-            await navigator.clipboard.writeText('chamoatcare.com');
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2500);
-        } catch {
-            /* clipboard blocked: the address is on screen anyway */
+        setEnv({ inApp: rememberedInApp() ?? inAppKind(), mobile: isMobile(), android: isAndroid(), chrome: isAndroidChrome(), standalone: isStandalone() });
+        const url = new URL(window.location.href);
+        const missing = url.searchParams.get('oc_noapp');
+        const start = url.searchParams.get('oc_start');
+        if (missing === 'naver') setNoApp(['naver']);
+        if (missing === 'chrome') setNoApp(['google']);
+        if (missing || start) {
+            url.searchParams.delete('oc_noapp');
+            url.searchParams.delete('oc_start');
+            window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
         }
-    };
+        try {
+            if (start === 'naver' || start === 'google') sessionStorage.setItem(HANDOFF_KEY, start);
+            const h = sessionStorage.getItem(HANDOFF_KEY);
+            if (h === 'naver' || h === 'google') setHandoff(h);
+        } catch {
+            /* ignore */
+        }
+        // Back from the provider's page without finishing (back button / back-forward cache).
+        const checkReturn = () => {
+            setPending(null);
+            setLeaving(null);
+            try {
+                const tried = sessionStorage.getItem(TRIED_KEY);
+                if (tried === 'naver' || tried === 'google') setCameBack(tried);
+            } catch {
+                /* ignore */
+            }
+        };
+        if (!start) checkReturn();
+        const onShow = (e: PageTransitionEvent) => {
+            if (e.persisted) checkReturn();
+        };
+        window.addEventListener('pageshow', onShow);
+        // Switched back to this browser from the Naver app / Chrome (app switcher, not the back button).
+        let wasHidden = false;
+        const onVisible = () => {
+            if (document.visibilityState === 'hidden') wasHidden = true;
+            else if (wasHidden) {
+                wasHidden = false;
+                checkReturn();
+            }
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        // Arrived in the Naver app / Chrome from our own button: go straight on to that login.
+        if (start === 'naver' || start === 'google') {
+            markTried(start);
+            setPending(start);
+            // A moment first, so the cart that came along in the URL is saved in this app's browser.
+            const back = safeCallbackPath(url.searchParams.get('callbackUrl'));
+            window.setTimeout(() => signIn(start, { redirectTo: back }), 400);
+        }
+        return () => {
+            window.removeEventListener('pageshow', onShow);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
+    }, []);
 
     // Sign-up and log-in are one flow now: both pages show the same "…로 시작하기" card.
     void mode;
@@ -106,12 +170,48 @@ function AuthCardInner({ mode }: { mode: Mode }) {
         const secure = window.location.protocol === 'https:' ? '; Secure' : '';
         document.cookie = `oc_after=${encodeURIComponent(callbackUrl)}; path=/; max-age=1200; SameSite=Lax${secure}`;
         if (provider === 'kakao') {
+            markTried(null);
+            setCameBack(null);
             // KakaoTalk app "간편로그인" (no id/password). If the SDK cannot start, use the regular web login.
             startKakaoLogin(callbackUrl)
                 .then(() => setTimeout(() => setPending(null), 4000)) // the app switch may bring the visitor back to this page
                 .catch(() => signIn('kakao', { redirectTo: callbackUrl }));
             return;
         }
+        const handOff =
+            env?.mobile &&
+            !env.standalone &&
+            env.inApp === null &&
+            !noApp.includes(provider) &&
+            (provider === 'naver' || (provider === 'google' && env.android && !env.chrome));
+        if (handOff) {
+            const target = provider === 'naver' ? 'naver' : 'chrome';
+            const url = new URL(window.location.href);
+            url.searchParams.set('oc_start', provider);
+            try {
+                const raw = window.localStorage.getItem('oc_cart_v1');
+                const lines = raw ? (JSON.parse(raw) as unknown[]) : [];
+                if (Array.isArray(lines) && lines.length > 0) url.searchParams.set(CART_PARAM, encodeCart(lines));
+            } catch {
+                /* no cart */
+            }
+            const href = openInAppHref(target, url.toString());
+            if (href) {
+                markTried(provider);
+                setLeaving(provider);
+                // App not installed / blocked: the page is still in front after a moment, so use the web login next time.
+                window.setTimeout(() => {
+                    if (document.visibilityState === 'visible') {
+                        setPending(null);
+                        setLeaving(null);
+                        setNoApp((list) => [...list, provider]);
+                    }
+                }, 2500);
+                window.location.href = href;
+                return;
+            }
+        }
+        markTried(provider);
         signIn(provider, { redirectTo: callbackUrl });
     };
 
@@ -139,84 +239,49 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     </p>
                 )}
 
+                {leaving ? (
+                    <p className="oc-auth__msg oc-auth__msg--info" role="status">
+                        {leaving === 'naver' ? '네이버 앱' : '크롬'}으로 이동해요. 휴대폰이 물어보면 <b>[열기]</b>를 눌러 주세요.
+                    </p>
+                ) : null}
+
+                {cameBack && !leaving ? (
+                    <div className="oc-auth__back" role="status">
+                        <b>{cameBack === 'naver' ? '네이버' : '구글'} 아이디·비밀번호를 물어봤나요?</b>
+                        <span>
+                            {cameBack === 'naver' ? '네이버 앱에 로그인돼 있지 않으면 그래요.' : '이 휴대폰에 구글 계정이 없으면 그래요.'} 아래{' '}
+                            <b>[카카오로 3초 만에 시작하기]</b>를 누르면 입력 없이 바로 가입돼요.
+                        </span>
+                    </div>
+                ) : null}
+
+                {noApp.length > 0 ? (
+                    <p className="oc-auth__msg oc-auth__msg--info" role="status">
+                        {noApp.includes('naver') ? '네이버 앱' : '크롬'}이 열리지 않아 이 화면에서 로그인해요. 버튼을 한 번 더 눌러 주세요.
+                    </p>
+                ) : null}
+
                 <div className="oc-auth__buttons">
-                    {(['kakao', 'naver', 'google'] as Provider[]).filter((p) => !(p === 'google' && env?.inApp)).map((p) => (
+                    {(['kakao', 'naver', 'google'] as Provider[])
+                        .filter((p) => !(p === 'google' && env?.inApp))
+                        .filter((p) => !handoff || p === 'kakao' || p === handoff)
+                        .map((p) => (
                         <button
                             key={p}
                             type="button"
-                            className={`oc-auth__btn oc-auth__btn--${p}`}
+                            className={`oc-auth__btn oc-auth__btn--${p}${cameBack && p === 'kakao' ? ' is-recommended' : ''}`}
                             onClick={() => handleClick(p)}
                             disabled={pending !== null}
                         >
                             <span className="oc-auth__btn-icon">{ICONS[p]}</span>
                             <span>
-                                {pending === p ? '이동 중...' : `${PROVIDER_LABEL[p]}로 시작하기`}
+                                {pending === p ? '이동 중...' : p === 'kakao' ? '카카오로 3초 만에 시작하기' : `${PROVIDER_LABEL[p]}로 시작하기`}
                             </span>
                         </button>
                     ))}
                 </div>
 
-                <OpenInAppsBox compact />
 
-                {env?.mobile && env.inApp === null ? (
-                    <button type="button" className="oc-auth__guide-open" onClick={() => setGuideOpen(true)}>
-                        아이디·비밀번호가 기억나지 않으세요?
-                        <small>카카오톡·네이버 앱으로 쉽게 가입하는 방법 보기 ›</small>
-                    </button>
-                ) : null}
-
-                {guideOpen ? (
-                    <div className="oc-guide" role="dialog" aria-modal="true" aria-labelledby="oc-guide-title" onClick={() => setGuideOpen(false)}>
-                        <section className="oc-guide__card" onClick={(e) => e.stopPropagation()}>
-                            <strong id="oc-guide-title">아이디·비밀번호 없이 가입하기</strong>
-                            <p>
-                                <b>카카오톡이나 네이버 앱</b>으로 들어오시면 <b>동의만 누르면</b> 바로 가입돼요.
-                            </p>
-                            <div className="oc-guide__app">
-                                <span className="oc-auth__guide-app oc-auth__guide-app--kakao">카카오톡</span>
-                                <ol>
-                                    <li>카카오톡 실행</li>
-                                    <li>
-                                        오른쪽 아래 <b>[···]</b> 누르기
-                                    </li>
-                                    <li>
-                                        오른쪽 위 <b>렌즈 모양</b> 누르기
-                                    </li>
-                                    <li>
-                                        <b>QR코드</b> 비추기
-                                    </li>
-                                </ol>
-                            </div>
-                            <div className="oc-guide__app">
-                                <span className="oc-auth__guide-app oc-auth__guide-app--naver">네이버 앱</span>
-                                <ol>
-                                    <li>네이버 앱 실행</li>
-                                    <li>
-                                        검색창 오른쪽 <b>렌즈 모양</b> 누르기
-                                    </li>
-                                    <li>
-                                        <b>QR코드</b> 비추기
-                                    </li>
-                                </ol>
-                            </div>
-                            <div className="oc-guide__app oc-guide__noqr">
-                                <span className="oc-auth__guide-app">QR코드가 없으면</span>
-                                <p>
-                                    <b>카카오톡:</b> 주소를 복사해 <b>나와의 채팅</b>에 보낸 뒤, 보낸 주소를 눌러 주세요.{' '}
-                                    <button type="button" className="oc-auth__copy" onClick={copyAddress}>
-                                        {copied ? '복사했어요 ✓' : '주소 복사'}
-                                    </button>
-                                </p>
-                                <p>
-                                    <b>네이버 앱:</b> 검색창에 <b>참오트케어</b>를 검색해 주세요.
-                                </p>
-                            </div>
-                            <button type="button" className="oc-guide__close" onClick={() => setGuideOpen(false)}>
-                                닫기
-                            </button>
-                        </section>
-                    </div>
-                ) : null}
 
                 {(
                     <div className="oc-auth__collect">
