@@ -17,7 +17,7 @@ export function FreeShipHint({ subtotal, hasBundle = false, className = '' }: { 
     let text: React.ReactNode;
     if (hasBundle) text = <>세트 포함 주문이라 <b>무료배송</b>이에요 ✓</>;
     else if (free) text = <><b>무료배송</b> 조건을 채웠어요 ✓</>;
-    else if (subtotal === 0) text = <>{won(FREE_SHIPPING_MIN)} 이상 구매 시 <b>무료배송</b> (미만 배송비 {won(SHIPPING_FEE)})</>;
+    else if (subtotal === 0) text = <>{won(FREE_SHIPPING_MIN)} 이상 구매 시 <b>무료배송</b> <span className="oc-nowrap">(미만 배송비 {won(SHIPPING_FEE)})</span></>;
     else text = <><b className="fsh__left">{won(left)}</b> 더 담으면 <b>무료배송</b></>;
 
     return (

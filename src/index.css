@@ -38,6 +38,15 @@ html {
   overflow-wrap: break-word;
 }
 
+/* Site-wide line breaks on narrow (mobile) screens: headings and short labels split into even lines, and body text
+   never leaves a single word alone on its last line (e.g. "...배송비 / 3,000원)"). Browsers without support ignore it. */
+h1, h2, h3, h4, h5, h6, button, strong, b, small, dt, label, figcaption {
+  text-wrap: balance;
+}
+p, li, dd, blockquote {
+  text-wrap: pretty;
+}
+
 /* ============================================================================
    Point Text Highlights
    ========================================================================== */
@@ -644,6 +653,7 @@ body {
   font-weight: 800;
   line-height: 1.25;
   margin: 0.5rem 0 0.8rem;
+  text-wrap: balance;
   color: var(--oc-brown);
 }
 
@@ -652,6 +662,7 @@ body {
   color: var(--oc-brown);
   opacity: 0.82;
   line-height: 1.6;
+  text-wrap: balance;
 }
 
 .oc-eyebrow {
@@ -5182,6 +5193,8 @@ body {
 
 /* headings that must break only where the markup says (no lone trailing word) */
 .oc-h2-keep { word-break: keep-all; text-wrap: balance; }
+.oc-nowrap { white-space: nowrap; }
+.oc-balance { text-wrap: balance; }
 
 /* ============================================================================
    ❹ 5-flavour 3D coverflow (landing): centred card = current flavour, ring loops endlessly

@@ -234,7 +234,7 @@ export function SetPage({ count }: { count: number }) {
                                     <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
                                         <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
                                         <b>{p.flavor}</b>
-                                        <span>{p.ingredient}</span>
+                                        <span className="oc-balance">{p.ingredient}</span>
                                         <em>1포 {p.calories}</em>
                                     </Link>
                                 ))}
@@ -365,7 +365,7 @@ export function SetPage({ count }: { count: number }) {
                                 <Link key={s.count} href={`/sets/${s.count}`} className="pd-rec__card">
                                     <img src={getAssetUrl(s.img)} alt={it.name} loading="lazy" />
                                     <b>{it.name}</b>
-                                    <span>{s.tagline}</span>
+                                    <span className="oc-balance">{s.tagline}</span>
                                     <em>{won(it.price)}</em>
                                 </Link>
                             );

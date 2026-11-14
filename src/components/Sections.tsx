@@ -573,11 +573,11 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
             <div className="oc-section-header">
                 <ScrollReveal>
                     <span className="oc-eyebrow">5 FLAVORS COLLECTION</span>
-                    <h2>다섯 가지 맛, <span className="oc-highlight-maroon">질리지 않는 아침</span></h2>
+                    <h2>다섯 가지 맛, <span className="oc-highlight-maroon oc-nowrap">질리지 않는 아침</span></h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        매일 아침 기분에 따라 선택하세요. <span className="oc-highlight-maroon">참오트케어 5종 라인업</span>입니다.
+                        매일 아침 기분에 따라 선택하세요. <span className="oc-nowrap"><span className="oc-highlight-maroon">참오트케어 5종 라인업</span>입니다.</span>
                     </p>
                 </ScrollReveal>
             </div>
@@ -871,7 +871,7 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        세트 구매 시 <span className="oc-highlight-gold">최대 30% 파격 할인</span>과 전 세트 <span className="oc-highlight-maroon">무료 배송 혜택</span>을 제공합니다.
+                        세트 구매 시 <span className="oc-highlight-gold oc-nowrap">최대 30% 파격 할인</span>과 전 세트 <span className="oc-nowrap"><span className="oc-highlight-maroon">무료 배송 혜택</span>을</span> 제공합니다.
                     </p>
                 </ScrollReveal>
             </div>
@@ -1272,7 +1272,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
                 </div>
 
                 <div className="oc-footer__info">
-                    <span>상호: 우리종합식품 | 대표자: 윤영필 | 개인정보보호책임자: 윤영필</span>
+                    <span>상호: 우리종합식품 | 대표자: 윤영필 | <span className="oc-nowrap">개인정보보호책임자: 윤영필</span></span>
                     <span>사업자등록번호: 850-27-00983 | 통신판매업신고: 2021-경기김포-3077</span>
                     <span>주소 (반품처): 경기도 김포시 양촌읍 황금1로 2-71</span>
                 </div>

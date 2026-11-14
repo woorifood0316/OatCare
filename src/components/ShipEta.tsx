@@ -62,7 +62,7 @@ export function ShipEta({
                     </span>
                 )}
             </p>
-            {compact || hideRule ? null : <p className="ship-eta__rule">평일 오후 1시까지 결제 완료 시 당일 발송 · 주말·공휴일 제외</p>}
+            {compact || hideRule ? null : <p className="ship-eta__rule">평일 오후 1시까지 결제 완료 시 당일 발송 · <span className="oc-nowrap">주말·공휴일 제외</span></p>}
         </div>
     );
 }

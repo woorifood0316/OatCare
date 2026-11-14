@@ -304,7 +304,7 @@ export function ProductPage({ slug }: { slug: string }) {
                             <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
                                 <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
                                 <b>{p.flavor}</b>
-                                <span>{p.tagline}</span>
+                                <span className="oc-balance">{p.tagline}</span>
                                 <em>{won(getItem(p.sku)!.price)}</em>
                             </Link>
                         ))}
