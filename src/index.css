@@ -5742,3 +5742,20 @@ a.sbar-sheet__nudge { display: block; text-decoration: none; }
 .adm-rv-del select, .adm-rv-del input { padding: 0.4rem 0.5rem; border: 1px solid #d9ccae; border-radius: 0.5rem; font: inherit; font-size: 0.82rem; }
 .adm-rv-del__btns { display: flex; gap: 0.3rem; }
 tr.is-muted td { opacity: 0.6; }
+
+/* My page detail rows: a long value (e.g. an address in a <select>) shrinks to the row instead of pushing the card
+   off the screen; on phones a row with a control wraps the control under its label when there is no room. */
+.my-dl > div { flex-wrap: wrap; align-items: center; min-width: 0; }
+.my-dl dd { flex: 1 1 12rem; min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0.4rem; }
+.my-dl dd > * { min-width: 0; max-width: 100%; }
+.sub-card { min-width: 0; max-width: 100%; }
+.sub-card select { width: auto; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Delivery address: written out in full (left aligned, wraps), the change control sits under it */
+.my-dl > div.sub-addr-row { align-items: flex-start; }
+.sub-addr-row dd { flex-basis: 100%; justify-content: flex-start; }
+.sub-addr-full { flex-basis: 100%; margin: 0; text-align: left; font-size: 0.9rem; font-weight: 600; line-height: 1.55; color: var(--oc-brown); word-break: keep-all; overflow-wrap: anywhere; }
+.sub-addr-full b { font-weight: 800; }
+.sub-addr-full span { font-weight: 500; color: rgba(59, 42, 32, 0.7); }
+.sub-card select.sub-addr-change { width: 100%; }
+.sub-addr-note { flex-basis: 100%; padding: 0.45rem 0.6rem; border-radius: 8px; background: #fbf5e8; font-size: 0.8rem; font-weight: 500; line-height: 1.5; color: #6a5848; text-align: left; }
+.sub-addr-note b { color: var(--oc-maroon); font-weight: 800; }

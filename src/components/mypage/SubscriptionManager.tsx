@@ -38,6 +38,9 @@ function Card({
     const [busy, setBusy] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
     const priced = priceCart(sub.lines, 'subscribe');
+    // This round's delivery: still changeable while "결제 완료"; fixed once the shop starts preparing / ships it.
+    const roundOpen = history.find((h) => h.status === 'paid') ?? null;
+    const roundLocked = history.find((h) => h.status === 'preparing' || h.status === 'shipped') ?? null;
     const canceled = sub.status === 'canceled';
     const inMin = !canceled && sub.paidCount < MIN_SUBSCRIPTION_CHARGES;
     const scheduled = !canceled && Boolean(sub.cancelRequestedAt);
@@ -169,27 +172,53 @@ function Card({
                         </dd>
                     </div>
                 ) : null}
-                <div>
+                <div className="sub-addr-row">
                     <dt>배송지</dt>
+                    {/* The full address is always written out (never cut short); changing it is a separate control. */}
                     <dd>
-                        {canceled || addresses.length === 0 ? (
-                            <span>
-                                {sub.shipName} · {sub.shipAddress1}
-                            </span>
-                        ) : (
+                        <p className="sub-addr-full">
+                            <b>{currentAddress ? currentAddress.recipient : sub.shipName}</b>
+                            {(currentAddress?.phone ?? sub.shipPhone) ? <span> · {currentAddress?.phone ?? sub.shipPhone}</span> : null}
+                            <br />
+                            {currentAddress ? (
+                                <>
+                                    {currentAddress.zipcode ? `(${currentAddress.zipcode}) ` : ''}
+                                    {currentAddress.address1}
+                                    {currentAddress.address2 ? ` ${currentAddress.address2}` : ''}
+                                </>
+                            ) : (
+                                <>
+                                    {sub.shipZip ? `(${sub.shipZip}) ` : ''}
+                                    {sub.shipAddress1}
+                                    {sub.shipAddress2 ? ` ${sub.shipAddress2}` : ''}
+                                </>
+                            )}
+                        </p>
+                        {!canceled && roundLocked ? (
+                            <small className="sub-addr-note">
+                                이번 회차는 <b>{ORDER_STATUS_LABEL[roundLocked.status as OrderStatus]}</b>이라 위 주소로 보내드려요. 배송지를 바꾸면 <b>다음 배송부터</b> 적용돼요.
+                            </small>
+                        ) : !canceled && roundOpen ? (
+                            <small className="sub-addr-note">이번 회차는 아직 상품 준비 전이라, 배송지를 바꾸면 이번 배송부터 바뀐 주소로 보내드려요.</small>
+                        ) : null}
+                        {!canceled && addresses.some((a) => a.id !== currentAddress?.id) ? (
                             <select
-                                value={currentAddress?.id ?? ''}
+                                className="sub-addr-change"
+                                value=""
                                 onChange={(e) => e.target.value && act({ action: 'set_address', addressId: e.target.value })}
                                 disabled={busy}
+                                aria-label="다른 배송지로 변경"
                             >
-                                {!currentAddress ? <option value="">{sub.shipName} · {sub.shipAddress1}</option> : null}
-                                {addresses.map((a) => (
-                                    <option key={a.id} value={a.id}>
-                                        {(a.label || a.recipient) + ' · ' + a.address1}
-                                    </option>
-                                ))}
+                                <option value="">{roundLocked ? '다음 배송부터 다른 배송지로 변경' : '다른 배송지로 변경'}</option>
+                                {addresses
+                                    .filter((a) => a.id !== currentAddress?.id)
+                                    .map((a) => (
+                                        <option key={a.id} value={a.id}>
+                                            {(a.label || a.recipient) + ' · ' + a.address1 + (a.address2 ? ' ' + a.address2 : '')}
+                                        </option>
+                                    ))}
                             </select>
-                        )}
+                        ) : null}
                     </dd>
                 </div>
                 {!canceled ? (

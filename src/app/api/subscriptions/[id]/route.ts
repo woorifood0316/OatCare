@@ -106,6 +106,11 @@ export async function PATCH(request: Request, ctx: Ctx) {
             if (!a) return jsonError('배송지를 찾을 수 없어요');
             await sql`update subscriptions set ship_name = ${a.recipient}, ship_phone = ${a.phone}, ship_zip = ${a.zipcode},
                       ship_address1 = ${a.address1}, ship_address2 = ${a.address2}, updated_at = now() where id = ${id}`;
+            // This round's order follows the change only while it is still "결제 완료" (the shop has not started
+            // preparing it). Once it is 상품 준비 중 / 배송 중 it keeps the old address; the change applies from the next one.
+            await sql`update orders set ship_name = ${a.recipient}, ship_phone = ${a.phone}, ship_zip = ${a.zipcode},
+                      ship_address1 = ${a.address1}, ship_address2 = ${a.address2}, updated_at = now()
+                      where subscription_id = ${id} and user_id = ${userId} and status = 'paid'`;
             return done();
         }
         case 'set_payment_method': {
