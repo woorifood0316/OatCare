@@ -62,7 +62,7 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
 |---|---|---|
 | 정기구독 할인 | 5% | `src/lib/catalog.ts` `SUBSCRIPTION_DISCOUNT_RATE` |
 | 배송 주기 선택 | 10~60일, 5일 단위 (기본: 20개입 20일, 30개입 30일) | `CYCLE_MIN/MAX/STEP` |
-| 배송비 | 세트 포함 시 무료, 단품만이면 3,000원 (30,000원 이상 무료) | `SHIPPING_FEE`, `FREE_SHIPPING_MIN` |
+| 배송비 | 세트 포함 시 무료, 낱개만이면 3,000원 (낱개 20개 = 한 박스 이상 무료) | `SHIPPING_FEE`, `FREE_SHIPPING_MIN_COUNT` (`BOX_SIZE`) |
 | 결제 실패 재시도 | 3일 간격, 3회 실패 시 구독 정지 | `src/lib/subscription-types.ts` |
 | 20·30개입 맛 구성 | 맛은 5개 단위, 합계가 정확히 20/30개 | `MIX_UNIT` |
 | 직접 취소 가능 시점 | 결제 완료(발송 전)까지 | `src/lib/order-status.ts` |
@@ -92,7 +92,7 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
 
 | 규칙 | 동작 | 코드 위치 |
 |---|---|---|
-| 가입 쿠폰 | 신규 가입(소셜 로그인으로 처음 계정 생성) 시 3,000원 · 30일 · 낱개·10개 맛보기 세트는 상품 금액 20,000원 이상(20·30개 세트·정기구독은 금액 무관) · 1인 1장 · 결제 화면에서 쓸 수 있는 쿠폰 자동 선택 | `catalog.ts` `WELCOME_COUPON_*`, 발급: `src/auth.ts` |
+| 가입 쿠폰 | 신규 가입(소셜 로그인으로 처음 계정 생성) 시 3,000원 · 30일 · 낱개·10개 맛보기 세트는 합계 20개(한 박스) 이상(20·30개 세트·정기구독은 개수 무관) · 1인 1장 · 결제 화면에서 쓸 수 있는 쿠폰 자동 선택 | `catalog.ts` `WELCOME_COUPON_*`, 발급: `src/auth.ts` |
 | 쿠폰 사용 | 주문 1건에 1장. 결제 전 보류 → 결제 성공 시 사용 처리. 실패·취소·30분 방치 시 자동 복원, 환불 시 기간이 남았으면 복원 | `src/lib/coupons.ts` |
 | 정기구독 쿠폰 | **첫 결제(가장 짧은 주기 구독의 첫 주문)에만** 적용 | `api/checkout/subscribe` |
 | 쉐이커 보틀 | 회원 **1인 1회**, 첫 구독 첫 주문에 0원 사은품 라인으로 포함(주문·관리자 화면에 표시). 그 주문을 환불하면 다시 받을 수 있음 | `catalog.ts` `GIFT_SHAKER_NAME`, `users.shaker_gifted_at` |
@@ -102,5 +102,5 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
 
 - 가입 쿠폰이 없는 회원에게 지급하려면:
   `insert into coupons (user_id, source, name, amount, min_order, expires_at) select id, 'welcome', '신규 가입 쿠폰', 3000, 20000, now() + interval '30 days' from users where id not in (select user_id from coupons);`
-- 정기구독 할인율(5%)은 `SUBSCRIPTION_DISCOUNT_RATE`, 쿠폰 최소 주문금액(20,000원)은 `WELCOME_COUPON_MIN_ORDER`에서 바꿉니다.
+- 정기구독 할인율(5%)은 `SUBSCRIPTION_DISCOUNT_RATE`, 쿠폰 최소 수량(20개)은 `WELCOME_COUPON_MIN_COUNT`에서 바꿉니다 (DB `coupons.min_order`에는 개수가 들어가요).
 - 이용약관 제4조(정기구독: 최소 이용기간, 결제일 기준, 증정품)와 제6조(쿠폰)에 같은 내용이 들어 있습니다. 법률 검토를 받으세요.

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
         const coupon = await getAvailableCoupon(userId, body.couponId);
         if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
-        discount = couponDiscount(coupon, firstPriced.subtotal, firstPriced.total, true);
+        discount = couponDiscount(coupon, firstPriced.sachets, firstPriced.total, true);
         if (discount <= 0) return jsonError('사용할 수 없는 쿠폰이에요');
         couponId = coupon.id;
     }

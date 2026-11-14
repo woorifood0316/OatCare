@@ -6,7 +6,7 @@ import { WELCOME_COUPON_AMOUNT, couponDiscount } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
-type CouponLite = { amount: number; minOrder: number };
+type CouponLite = { amount: number; minCount: number };
 type CouponState = { loggedIn: boolean; coupons: CouponLite[] };
 
 // Fetched once per page load and shared by every hint on the page.
@@ -24,12 +24,13 @@ function loadCoupons(): Promise<CouponState> {
  */
 export function CouponHint({
     mode,
-    subtotal,
+    count,
     noMinimum,
     className = '',
 }: {
     mode: 'once' | 'subscribe';
-    subtotal: number;
+    /** Sachets in the order (a 20-pack counts 20). */
+    count: number;
     /** The order has a 20·30 set (or is a subscription): no minimum. */
     noMinimum: boolean;
     className?: string;
@@ -57,7 +58,7 @@ export function CouponHint({
 
     const free = mode === 'subscribe' || noMinimum;
     const best = [...state.coupons].sort((a, b) => b.amount - a.amount)[0];
-    const usable = state.coupons.filter((c) => couponDiscount(c, subtotal, Number.MAX_SAFE_INTEGER, free) > 0);
+    const usable = state.coupons.filter((c) => couponDiscount(c, count, Number.MAX_SAFE_INTEGER, free) > 0);
     if (usable.length > 0) {
         const top = [...usable].sort((a, b) => b.amount - a.amount)[0];
         return (
@@ -68,13 +69,13 @@ export function CouponHint({
             </div>
         );
     }
-    const short = best.minOrder - subtotal;
+    const short = best.minCount - count;
     return (
         <div className={`cph ${className}`}>
             <p>
-                🎟️ <b>{won(best.amount)} 쿠폰</b>은 낱개·맛보기 세트 <span className="oc-nowrap">{won(best.minOrder)} 이상부터</span> 써요 ·{' '}
+                🎟️ <b>{won(best.amount)} 쿠폰</b>은 낱개·맛보기 세트 <span className="oc-nowrap">{best.minCount}개(한 박스)부터</span> 써요 ·{' '}
                 <span className="oc-nowrap">
-                    <b>{won(short)}</b> 더 담으면 적용
+                    <b>{short}개</b> 더 담으면 적용
                 </span>
             </p>
             <p className="cph__up">

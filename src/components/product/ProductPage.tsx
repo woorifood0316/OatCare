@@ -7,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
-import { SinglesBar } from '../purchase/SinglesBar';
+import { SinglesBar, SinglesPicker } from '../purchase/SinglesBar';
 import {
-    FREE_SHIPPING_MIN,
+    FREE_SHIPPING_MIN_COUNT,
     MIN_SUBSCRIPTION_CHARGES,
     SHIPPING_FEE,
     SUBSCRIPTION_DISCOUNT_RATE,
@@ -38,11 +38,7 @@ export function ProductPage({ slug }: { slug: string }) {
     const { addLine, buyNow, count, hydrated } = useCart();
     const page = getProductPage(slug)!;
     const item = getItem(page.sku)!;
-    // The product is already chosen on its own page: start at the minimum, 1 (again on every product).
-    const [qty, setQty] = useState(1);
-    useEffect(() => setQty(1), [slug]);
     const [tab, setTab] = useState<string>(TABS[0].id);
-    const [added, setAdded] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
@@ -59,39 +55,13 @@ export function ProductPage({ slug }: { slug: string }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const line: CartLine = { sku: page.sku, qty, mode: 'once' };
-    const total = item.price * qty;
     const pct = Math.round(((item.listPrice - item.price) / item.listPrice) * 100);
     const subPct = Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100);
-    const clamp = (n: number) => Math.min(99, Math.max(1, n));
 
     const goTab = (id: string) => {
         const el = document.getElementById(id);
         if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 112, behavior: 'smooth' });
     };
-    const handleCart = () => {
-        addLine(line);
-        setAdded(true);
-        setTimeout(() => setAdded(false), 2000);
-    };
-    const handleBuy = async () => {
-        const dest = await buyNow(line);
-        router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
-    };
-
-    const actions = (
-        <div className="pd-actions">
-            <button type="button" className="pd-btn pd-btn--cart" onClick={handleCart}>
-                <ShoppingBag size={17} />
-                <span>{added ? '담았어요 ✓' : '장바구니 담기'}</span>
-            </button>
-            <button type="button" className="pd-btn pd-btn--buy" onClick={handleBuy}>
-                <Zap size={17} />
-                <span>바로 구매</span>
-            </button>
-        </div>
-    );
-
     return (
         <div className="pd">
             <header className="pd-top">
@@ -155,35 +125,15 @@ export function ProductPage({ slug }: { slug: string }) {
                                 <b>열량</b> 1포 {page.calories}
                             </li>
                             <li>
-                                <b>배송비</b> {won(SHIPPING_FEE)} (세트 구매 또는 {won(FREE_SHIPPING_MIN)} 이상 무료)
+                                <b>배송비</b> {won(SHIPPING_FEE)} (세트 구매 또는 낱개 {FREE_SHIPPING_MIN_COUNT}개(한 박스) 이상 무료)
                             </li>
                         </ul>
 
-                        <div className="pd-qty">
-                            <span>수량</span>
-                            <div className="pd-qty__ctl">
-                                <button type="button" onClick={() => setQty((q) => clamp(q - 1))} aria-label="수량 줄이기">
-                                    <Minus size={15} />
-                                </button>
-                                <input
-                                    type="number"
-                                    inputMode="numeric"
-                                    min={1}
-                                    max={99}
-                                    value={qty}
-                                    onChange={(e) => setQty(clamp(Number(e.target.value) || 1))}
-                                    aria-label="수량"
-                                />
-                                <button type="button" onClick={() => setQty((q) => clamp(q + 1))} aria-label="수량 늘리기">
-                                    <Plus size={15} />
-                                </button>
-                            </div>
-                            <em>{won(total)}</em>
-                        </div>
-
                         <ShipEta />
-                        {/* Phones use the bottom bar's buttons (same actions), so these are for wide screens only. */}
-                        <div className="pd-inline-actions">{actions}</div>
+                        {/* Wide screens: mix flavours here. Phones: the same picker opens from the bottom bar. */}
+                        <div className="pd-inline-buy">
+                            <SinglesPicker flavor={page.flavor} />
+                        </div>
 
                         <div className="pd-sub">
                             <Repeat size={18} />
@@ -278,7 +228,7 @@ export function ProductPage({ slug }: { slug: string }) {
                     <dl className="pd-policy">
                         <dt>배송</dt>
                         <dd>
-                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 배송비 {won(SHIPPING_FEE)}이며 세트 구매 또는 {won(FREE_SHIPPING_MIN)} 이상 구매 시
+                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 배송비 {won(SHIPPING_FEE)}이며 세트 구매 또는 낱개 {FREE_SHIPPING_MIN_COUNT}개(한 박스) 이상 구매 시
                             무료입니다.
                         </dd>
                         <dt>정기구독</dt>
@@ -310,7 +260,7 @@ export function ProductPage({ slug }: { slug: string }) {
                 </section>
             </main>
 
-            <SinglesBar flavor={page.flavor} qty={qty} setQty={setQty} />
+            <SinglesBar flavor={page.flavor} />
         </div>
     );
 }

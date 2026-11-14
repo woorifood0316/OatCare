@@ -2,7 +2,7 @@ import { getSql } from './db';
 import {
     WELCOME_COUPON_AMOUNT,
     WELCOME_COUPON_DAYS,
-    WELCOME_COUPON_MIN_ORDER,
+    WELCOME_COUPON_MIN_COUNT,
     WELCOME_COUPON_NAME,
 } from './catalog';
 
@@ -10,7 +10,8 @@ export interface Coupon {
     id: string;
     name: string;
     amount: number;
-    minOrder: number;
+    /** Minimum sachets for single / taster-set orders (DB column min_order). */
+    minCount: number;
     expiresAt: string;
     usedAt: string | null;
     /** Usable right now (not used, not expired, not held by an order that is still being paid). */
@@ -32,7 +33,7 @@ function mapCoupon(r: Record<string, unknown>): Coupon {
         id: r.id as string,
         name: r.name as string,
         amount: r.amount as number,
-        minOrder: r.min_order as number,
+        minCount: r.min_order as number,
         expiresAt: new Date(r.expires_at as string).toISOString(),
         usedAt: r.used_at ? new Date(r.used_at as string).toISOString() : null,
         available: Boolean(r.available),
@@ -62,7 +63,7 @@ export async function issueWelcomeCoupon(userId: string): Promise<void> {
     try {
         await getSql()`
             insert into coupons (user_id, source, name, amount, min_order, expires_at)
-            values (${userId}, 'welcome', ${WELCOME_COUPON_NAME}, ${WELCOME_COUPON_AMOUNT}, ${WELCOME_COUPON_MIN_ORDER},
+            values (${userId}, 'welcome', ${WELCOME_COUPON_NAME}, ${WELCOME_COUPON_AMOUNT}, ${WELCOME_COUPON_MIN_COUNT},
                     now() + (${WELCOME_COUPON_DAYS} || ' days')::interval)
             on conflict do nothing
         `;

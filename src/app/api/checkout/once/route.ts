@@ -38,8 +38,8 @@ export async function POST(request: Request) {
         if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
         const coupon = await getAvailableCoupon(userId, body.couponId);
         if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
-        discount = couponDiscount(coupon, priced.subtotal, priced.total, hasCouponSet(priced.items));
-        if (discount <= 0) return jsonError(`낱개·맛보기 세트 주문은 ${won(coupon.minOrder)} 이상일 때 쿠폰을 쓸 수 있어요 (20·30개 세트나 정기구독은 금액 상관없이 사용 가능)`);
+        discount = couponDiscount(coupon, priced.sachets, priced.total, hasCouponSet(priced.items));
+        if (discount <= 0) return jsonError(`낱개·맛보기 세트 주문은 ${coupon.minCount}개(한 박스) 이상일 때 쿠폰을 쓸 수 있어요 (20·30개 세트나 정기구독은 금액 상관없이 사용 가능)`);
         couponId = coupon.id;
     }
     const amount = priced.total - discount;

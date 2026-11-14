@@ -128,7 +128,7 @@ export function SubscribeBar({
                                 <button type="button" className="sbar-sheet__nudge" onClick={() => setOpen('subscribe')}>
                                     💡 정기구독하면 <b className="oc-nowrap">매회 {won(saving)} 절약</b> <span className="oc-nowrap">+ 첫 회 쉐이커 보틀 →</span>
                                 </button>
-                                <CouponHint mode="once" subtotal={item.price * qty} noMinimum className="sbar-sheet__coupon" />
+                                <CouponHint mode="once" count={item.count * qty} noMinimum className="sbar-sheet__coupon" />
                                 <div className="pd-actions">
                                     <button type="button" className="pd-btn pd-btn--cart" onClick={addCart} disabled={!!mixErr}>
                                         <ShoppingBag size={17} />
@@ -169,7 +169,7 @@ export function SubscribeBar({
                                         <Check size={14} aria-hidden="true" /> 마이페이지에서 <b>주기 변경·건너뛰기</b>
                                     </li>
                                 </ul>
-                                <CouponHint mode="subscribe" subtotal={subPrice} noMinimum className="sbar-sheet__coupon" />
+                                <CouponHint mode="subscribe" count={item.count} noMinimum className="sbar-sheet__coupon" />
                                 <button type="button" className="pc2__start" onClick={subscribe} disabled={!!mixErr}>
                                     <Repeat size={16} />
                                     <span>정기구독 시작하기</span>

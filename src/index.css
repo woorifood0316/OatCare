@@ -5634,3 +5634,5 @@ body {
 .sgl__list em { margin-left: 0.4rem; padding: 0.05rem 0.4rem; border-radius: 999px; background: var(--oc-gold); color: #fff; font-size: 0.65rem; font-style: normal; font-weight: 900; vertical-align: 2px; }
 .sgl__hint { margin: 0 !important; }
 a.sbar-sheet__nudge { display: block; text-decoration: none; }
+.sgl { display: grid; gap: 0.65rem; }
+.sgl .pd-actions { margin-top: 0.15rem; }

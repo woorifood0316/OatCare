@@ -55,9 +55,9 @@ export function CheckoutSubscribe({
     const firstCycle = cycles[0]?.[0];
     const firstGroup = priced.items.filter((i) => (i.cycleDays ?? 30) === firstCycle).reduce((sum, i) => sum + i.amount, 0);
     // A fitting coupon is applied from the start (subscriptions have no minimum), so the discount shows right away.
-    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, firstGroup, firstGroup, true));
+    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.sachets, firstGroup, true));
     const selected = coupons.find((c) => c.id === couponId) ?? null;
-    const discount = selected ? couponDiscount(selected, firstGroup, firstGroup, true) : 0;
+    const discount = selected ? couponDiscount(selected, priced.sachets, firstGroup, true) : 0;
     const payable = priced.total - discount;
 
     const start = async () => {
@@ -109,7 +109,7 @@ export function CheckoutSubscribe({
                 coupons={coupons}
                 selectedId={couponId}
                 onSelect={setCouponId}
-                subtotal={firstGroup}
+                sachets={priced.sachets}
                 total={firstGroup}
                 noMinimum
                 note="쿠폰은 첫 회 결제에만 적용돼요."

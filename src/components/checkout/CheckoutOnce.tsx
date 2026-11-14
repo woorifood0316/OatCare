@@ -27,7 +27,7 @@ export function CheckoutOnce({
     const [memo, setMemo] = useState('');
     const noMinimum = hasCouponSet(priced.items);
     // A coupon that fits this order is applied from the start, so the customer sees the discount right away.
-    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.subtotal, priced.total, noMinimum));
+    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.sachets, priced.total, noMinimum));
     const [ready, setReady] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -35,7 +35,7 @@ export function CheckoutOnce({
     const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
 
     const selected = coupons.find((c) => c.id === couponId) ?? null;
-    const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total, noMinimum) : 0;
+    const discount = selected ? couponDiscount(selected, priced.sachets, priced.total, noMinimum) : 0;
     const payable = priced.total - discount;
     const payableRef = useRef(payable);
     payableRef.current = payable;
@@ -118,7 +118,7 @@ export function CheckoutOnce({
     return (
         <CheckoutShell title="주문·결제">
             <OrderSummary priced={priced} mode="once" discount={discount} />
-            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} noMinimum={noMinimum} />
+            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} sachets={priced.sachets} total={priced.total} noMinimum={noMinimum} />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">

@@ -381,11 +381,11 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                         )}
                     </div>
 
-                    {activeTab === 'single' ? <FreeShipHint subtotal={totalSinglePrice} className="oc-drawer__fsh" /> : null}
+                    {activeTab === 'single' ? <FreeShipHint count={totalSingleCount} className="oc-drawer__fsh" /> : null}
                     {activeTab === 'single' ? (
-                        <CouponHint mode="once" subtotal={totalSinglePrice} noMinimum={false} className="oc-drawer__fsh" />
+                        <CouponHint mode="once" count={totalSingleCount} noMinimum={false} className="oc-drawer__fsh" />
                     ) : (
-                        <CouponHint mode={isSubscribe ? 'subscribe' : 'once'} subtotal={totalBundlePrice} noMinimum={currentBundle.count >= COUPON_SET_MIN_COUNT} className="oc-drawer__fsh" />
+                        <CouponHint mode={isSubscribe ? 'subscribe' : 'once'} count={currentBundle.count} noMinimum={currentBundle.count >= COUPON_SET_MIN_COUNT} className="oc-drawer__fsh" />
                     )}
                     <ShipEta compact className="oc-drawer__ship" />
                     <div className="oc-drawer__actions">

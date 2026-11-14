@@ -90,17 +90,19 @@ export const CYCLE_OPTIONS: number[] = Array.from(
 export const MAX_QTY_ONCE = 99;
 export const MAX_QTY_SUBSCRIBE = 10;
 export const MIX_UNIT = 5;
-/** Shipping: free when the order has a bundle (site copy) or reaches the threshold. */
+/** One shipping box holds this many sachets. */
+export const BOX_SIZE = 20;
+/** Shipping: free when the order has a set, or holds at least FREE_SHIPPING_MIN_COUNT sachets (one full box). */
 export const SHIPPING_FEE = 3000;
-export const FREE_SHIPPING_MIN = 30000;
+export const FREE_SHIPPING_MIN_COUNT = BOX_SIZE;
 
 /** Subscriptions must be paid at least this many times (cancelling earlier only schedules the end). */
 export const MIN_SUBSCRIPTION_CHARGES = 2;
-/** Welcome coupon issued at sign-up. The minimum applies only to orders of single items (any set: no minimum). */
+/** Welcome coupon issued at sign-up. Its minimum (in sachets) applies only to singles / the taster set (20·30 sets and subscriptions: none). */
 export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
 export const WELCOME_COUPON_AMOUNT = 3000;
 export const WELCOME_COUPON_DAYS = 30;
-export const WELCOME_COUPON_MIN_ORDER = 20000;
+export const WELCOME_COUPON_MIN_COUNT = BOX_SIZE;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;
 export const GIFT_SHAKER_NAME = '참오트케어 쉐이커 보틀 (정기구독 첫 회 증정)';
@@ -256,8 +258,15 @@ export interface PricedCart {
     subtotal: number;
     shipping: number;
     total: number;
+    /** Number of sachets in the order (a 20-pack counts 20). */
+    sachets: number;
     /** First problem that blocks checkout (e.g. incomplete flavor mix), if any. */
     error: string | null;
+}
+
+/** Sachets in a list of lines/items: a single counts 1, a 20-pack counts 20 (gift lines are not sachets). */
+export function sachetCount(lines: { sku: string; qty: number }[]): number {
+    return lines.reduce((sum, l) => sum + (getItem(l.sku)?.count ?? 0) * l.qty, 0);
 }
 
 export function priceCart(lines: CartLine[], mode: PurchaseMode): PricedCart {
@@ -288,10 +297,11 @@ export function priceCart(lines: CartLine[], mode: PurchaseMode): PricedCart {
     }
 
     const subtotal = items.reduce((sum, i) => sum + i.amount, 0);
-    const free = hasBundle || subtotal >= FREE_SHIPPING_MIN || subtotal === 0;
+    const sachets = sachetCount(items);
+    const free = hasBundle || sachets >= FREE_SHIPPING_MIN_COUNT || subtotal === 0;
     const shipping = free ? 0 : SHIPPING_FEE;
     if (items.length === 0) error = '담긴 상품이 없어요';
-    return { items, subtotal, shipping, total: subtotal + shipping, error };
+    return { items, subtotal, shipping, total: subtotal + shipping, sachets, error };
 }
 
 export function orderNameOf(items: PricedItem[]): string {
@@ -310,16 +320,16 @@ export const COUPON_SET_MIN_COUNT = 20;
 
 /**
  * Coupon value for an order (the customer always pays at least MIN_PAYABLE).
- * `noMinimum`: the order has a 20·30 set, or is a subscription → any amount.
- * Otherwise (single items and/or the 10-pack taster) the goods must reach the coupon's minimum order.
+ * `noMinimum`: the order has a 20·30 set, or is a subscription → any size.
+ * Otherwise (single items and/or the 10-pack taster) the order must hold the coupon's minimum number of sachets.
  */
 export function couponDiscount(
-    coupon: { amount: number; minOrder: number },
-    subtotal: number,
+    coupon: { amount: number; minCount: number },
+    sachets: number,
     total: number,
     noMinimum = false,
 ): number {
-    if (!noMinimum && subtotal < coupon.minOrder) return 0;
+    if (!noMinimum && sachets < coupon.minCount) return 0;
     return Math.max(0, Math.min(coupon.amount, total - MIN_PAYABLE));
 }
 

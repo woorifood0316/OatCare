@@ -11,13 +11,13 @@ import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import { SubscribeBar } from '../purchase/SubscribeBar';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
-    FREE_SHIPPING_MIN,
+    FREE_SHIPPING_MIN_COUNT,
     MIN_SUBSCRIPTION_CHARGES,
     FLAVORS,
     COUPON_SET_MIN_COUNT,
     MIX_UNIT,
     WELCOME_COUPON_AMOUNT,
-    WELCOME_COUPON_MIN_ORDER,
+    WELCOME_COUPON_MIN_COUNT,
     SHIPPING_FEE,
     evenMix,
     getItem,
@@ -171,7 +171,7 @@ export function SetPage({ count }: { count: number }) {
                                 {item.count >= COUPON_SET_MIN_COUNT ? (
                                     <>🎟️ 가입 쿠폰 <b>{won(WELCOME_COUPON_AMOUNT)}</b> 금액 상관없이 바로 적용</>
                                 ) : (
-                                    <>🎟️ 가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}은 {won(WELCOME_COUPON_MIN_ORDER)} 이상 주문 시 적용 · <b>20·30개 세트는 금액 상관없이</b></>
+                                    <>🎟️ 가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}은 {WELCOME_COUPON_MIN_COUNT}개(한 박스) 이상 주문 시 적용 · <b>20·30개 세트는 바로 적용</b></>
                                 )}
                             </li>
                         </ul>
@@ -350,7 +350,7 @@ export function SetPage({ count }: { count: number }) {
                     <dl className="pd-policy">
                         <dt>배송</dt>
                         <dd>
-                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {won(FREE_SHIPPING_MIN)} 이상 무료)
+                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {FREE_SHIPPING_MIN_COUNT}개(한 박스) 이상 무료)
                         </dd>
                         <dt>정기구독</dt>
                         <dd>

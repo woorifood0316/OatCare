@@ -227,9 +227,9 @@ function Section({
                     <span>{priced.shipping === 0 ? '무료' : won(priced.shipping)}</span>
                 </div>
                 {mode === 'once' ? (
-                    <FreeShipHint subtotal={priced.subtotal} hasBundle={lines.some((l) => getItem(l.sku)?.kind === 'bundle')} className="cart-fsh" />
+                    <FreeShipHint count={priced.sachets} hasBundle={lines.some((l) => getItem(l.sku)?.kind === 'bundle')} className="cart-fsh" />
                 ) : null}
-                <CouponHint mode={mode} subtotal={priced.subtotal} noMinimum={hasCouponSet(lines)} className="cart-cph" />
+                <CouponHint mode={mode} count={priced.sachets} noMinimum={hasCouponSet(lines)} className="cart-cph" />
                 {mode === 'once' && listTotal > priced.subtotal ? (
                     <div className="cart-summary__row cart-summary__row--sub">
                         <span>할인 혜택</span>

@@ -270,7 +270,7 @@ export function FlavorCoverflow({
                         </span>
                     )}
                 </div>
-                <FreeShipHint subtotal={totalPrice} />
+                <FreeShipHint count={totalCount} />
                 <ShipEta compact />
                 <div className="cf__actions">
                     <button type="button" className="ca__btn ca__btn--cart" onClick={addAll}>

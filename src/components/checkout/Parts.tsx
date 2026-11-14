@@ -112,11 +112,11 @@ export function OrderSummary({
 }
 
 /** Best usable coupon for this order (largest discount), or null. Used to pre-select it at checkout. */
-export function bestCouponId(coupons: Coupon[], subtotal: number, total: number, noMinimum: boolean): string | null {
+export function bestCouponId(coupons: Coupon[], sachets: number, total: number, noMinimum: boolean): string | null {
     let best: { id: string; d: number } | null = null;
     for (const c of coupons) {
         if (!c.available) continue;
-        const d = couponDiscount(c, subtotal, total, noMinimum);
+        const d = couponDiscount(c, sachets, total, noMinimum);
         if (d > 0 && (!best || d > best.d)) best = { id: c.id, d };
     }
     return best?.id ?? null;
@@ -130,7 +130,7 @@ export function CouponPicker({
     coupons,
     selectedId,
     onSelect,
-    subtotal,
+    sachets,
     total,
     noMinimum = false,
     note,
@@ -138,7 +138,8 @@ export function CouponPicker({
     coupons: Coupon[];
     selectedId: string | null;
     onSelect: (id: string | null) => void;
-    subtotal: number;
+    /** Sachets in the order (a 20-pack counts 20). */
+    sachets: number;
     total: number;
     /** Order has a 20·30 set (or is a subscription): the coupon's minimum does not apply. */
     noMinimum?: boolean;
@@ -150,9 +151,9 @@ export function CouponPicker({
         const d = new Date(iso);
         return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}까지`;
     };
-    const fits = usable.filter((c) => couponDiscount(c, subtotal, total, noMinimum) > 0);
+    const fits = usable.filter((c) => couponDiscount(c, sachets, total, noMinimum) > 0);
     const selected = usable.find((c) => c.id === selectedId) ?? null;
-    const selectedOff = selected ? couponDiscount(selected, subtotal, total, noMinimum) : 0;
+    const selectedOff = selected ? couponDiscount(selected, sachets, total, noMinimum) : 0;
     const biggest = [...usable].sort((a, b) => b.amount - a.amount)[0];
 
     let status: React.ReactNode;
@@ -168,7 +169,7 @@ export function CouponPicker({
         status = (
             <div className="cph co-coupon-status" role="status">
                 <p>
-                    🎟️ 이 주문에 쓸 수 있는 쿠폰이 있어요 · <b>아래에서 선택</b>하면 {won(couponDiscount(fits[0], subtotal, total, noMinimum))} 할인돼요
+                    🎟️ 이 주문에 쓸 수 있는 쿠폰이 있어요 · <b>아래에서 선택</b>하면 {won(couponDiscount(fits[0], sachets, total, noMinimum))} 할인돼요
                 </p>
             </div>
         );
@@ -177,15 +178,15 @@ export function CouponPicker({
             <div className="cph co-coupon-status" role="status">
                 <p>
                     🎟️ <b>{won(biggest.amount)} 쿠폰</b>은 이 주문에 쓸 수 없어요 · 낱개·맛보기 세트는{' '}
-                    <span className="oc-nowrap">상품 금액 {won(biggest.minOrder)} 이상</span>부터 써요 (
+                    <span className="oc-nowrap">{biggest.minCount}개(한 박스)</span>부터 써요 (
                     <span className="oc-nowrap">
-                        <b>{won(biggest.minOrder - subtotal)}</b> 부족
+                        <b>{biggest.minCount - sachets}개</b> 부족
                     </span>
                     )
                 </p>
                 <p className="cph__up">
                     <span>
-                        <b>20·30개 세트</b>나 <b>정기구독</b>은 금액 상관없이 바로 적용돼요
+                        <b>20·30개 세트</b>나 <b>정기구독</b>은 개수 상관없이 바로 적용돼요
                     </span>
                     <Link href="/cart">장바구니에서 바꾸기 →</Link>
                 </p>
@@ -207,7 +208,7 @@ export function CouponPicker({
                     </label>
                 </li>
                 {usable.map((c) => {
-                    const ok = couponDiscount(c, subtotal, total, noMinimum) > 0;
+                    const ok = couponDiscount(c, sachets, total, noMinimum) > 0;
                     return (
                         <li key={c.id}>
                             <label className={`co-addr__item${selectedId === c.id ? ' is-active' : ''}${ok ? '' : ' is-disabled'}`}>
@@ -217,7 +218,7 @@ export function CouponPicker({
                                         {c.name} · {won(c.amount)} 할인
                                     </strong>
                                     <span>
-                                        {exp(c.expiresAt)} · 20·30개 세트·정기구독은 금액 상관없이, 낱개·맛보기 세트는 {won(c.minOrder)} 이상
+                                        {exp(c.expiresAt)} · 20·30개 세트·정기구독은 바로, 낱개·맛보기 세트는 {c.minCount}개(한 박스) 이상
                                         {ok ? '' : ' (현재 주문은 사용할 수 없어요)'}
                                     </span>
                                 </div>
