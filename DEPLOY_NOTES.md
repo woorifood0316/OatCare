@@ -104,3 +104,24 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
   `insert into coupons (user_id, source, name, amount, min_order, expires_at) select id, 'welcome', '신규 가입 쿠폰', 3000, 20000, now() + interval '30 days' from users where id not in (select user_id from coupons);`
 - 정기구독 할인율(5%)은 `SUBSCRIPTION_DISCOUNT_RATE`, 쿠폰 최소 수량(20개)은 `WELCOME_COUPON_MIN_COUNT`에서 바꿉니다 (DB `coupons.min_order`에는 개수가 들어가요).
 - 이용약관 제4조(정기구독: 최소 이용기간, 결제일 기준, 증정품)와 제6조(쿠폰)에 같은 내용이 들어 있습니다. 법률 검토를 받으세요.
+
+## 11. 리뷰 · 리뷰 이벤트 (추가)
+**DB:** `db/reviews.sql`을 Neon SQL 편집기에서 한 번 실행하세요 (새 테이블·컬럼만 추가, 기존 데이터 변경 없음). 실행 전에는 리뷰 화면이 "준비 중"으로 보여요.
+
+**사진 업로드 (Cloudflare R2):** Pages 환경변수에 아래 5개를 넣으면 리뷰 사진 올리기가 켜져요. 없으면 글 리뷰만 받아요.
+| 변수 | 값 |
+|---|---|
+| `R2_ACCOUNT_ID` | Cloudflare 계정 ID |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 → API 토큰 관리 → "객체 읽기 및 쓰기" 토큰 (해당 버킷만) |
+| `R2_BUCKET` | 버킷 이름 (지금 이미지에 쓰는 버킷이면 `reviews/` 폴더에 저장돼요) |
+| `R2_PUBLIC_URL` | 그 버킷의 공개 URL (예: `https://pub-….r2.dev`, 끝에 `/` 없이) |
+사진은 브라우저에서 긴 변 1280px · WebP로 줄여서(보통 150~400KB) 올리고, 서버는 800KB를 넘으면 거절해요.
+
+| 규칙 | 동작 | 코드 |
+|---|---|---|
+| 작성 자격 | 발송(배송중·배송완료)된 주문만. 일반 구매는 상품마다 1번, 정기구독은 구독마다 1번 | `lib/reviews.ts` `listReviewables` |
+| 자동 차단 | 욕설·개인정보·광고로 보이면 등록 안 됨 (작성자에게 이유 안내) | `lib/review-filter.ts` |
+| 관리자 삭제 | 유형(욕설/개인정보/광고/기타) + 사유 필수. 기타 외에는 위반 1회, 미사용 이벤트 쿠폰 회수 | `/admin/reviews` |
+| 위반 3회 | 리뷰 작성 제한 → 관리자 화면에 "회원 제명" 버튼 (구독 해지, 계정 삭제, 같은 소셜 계정 재가입 차단) | `REVIEW_STRIKE_LIMIT` |
+| 리뷰 이벤트 | 작성 시 선택. 글 1,000원 / 사진 2,000원 쿠폰 즉시 지급, 리뷰에 "리뷰 이벤트 참여 · 쿠폰 지급" 표시 | `REVIEW_REWARD_*` |
+| 쿠폰 유효기간 | 모든 쿠폰 90일 | `COUPON_VALID_DAYS` |

@@ -6,6 +6,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
+import { isBannedAccount } from './lib/reviews';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
 
@@ -133,6 +134,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 user.id = userId;
                 return true;
             }
+
+            // Expelled for breaking the review policy: the same social login cannot sign up again.
+            if (await isBannedAccount(provider, providerAccountId)) return '/login?error=banned';
 
             // New social account: no separate sign-up page. Keep its profile for 15 minutes and show the one-tap
             // consent screen; /welcome then creates the member and logs them in.

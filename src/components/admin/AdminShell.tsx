@@ -3,13 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff } from 'lucide-react';
+import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff, Star } from 'lucide-react';
 
 const NAV = [
     { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
     { href: '/admin/orders', label: '주문', icon: Package },
     { href: '/admin/subscriptions', label: '구독', icon: Repeat },
     { href: '/admin/members', label: '회원', icon: Users },
+    { href: '/admin/reviews', label: '리뷰', icon: Star },
     { href: '/admin/notifications', label: '알림', icon: Bell },
     { href: '/admin/holidays', label: '휴무일', icon: CalendarOff },
 ] as const;

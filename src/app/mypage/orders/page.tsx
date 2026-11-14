@@ -4,6 +4,8 @@ import { getCurrentUser } from '../../../lib/current-user';
 import { listOrders } from '../../../lib/orders';
 import { ORDER_STATUS_LABEL } from '../../../lib/order-status';
 import { PageHead } from '../../../components/mypage/ComingSoon';
+import { listReviewables } from '../../../lib/reviews';
+import { REVIEW_REWARD_PHOTO, REVIEW_REWARD_TEXT } from '../../../lib/catalog';
 
 export const runtime = 'edge';
 
@@ -12,10 +14,19 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 export default async function OrdersPage() {
     const user = await getCurrentUser();
     const orders = await listOrders(user.id);
+    const reviewable = await listReviewables(user.id).then((r) => r.length).catch(() => 0);
 
     return (
         <>
             <PageHead title="주문·배송" desc="주문 내역과 배송 현황을 확인해요." />
+            {reviewable > 0 ? (
+                <Link href="/mypage/reviews" className="my-card rv-banner">
+                    <b>⭐ 리뷰를 기다리는 상품이 {reviewable}개 있어요</b>
+                    <span>
+                        리뷰 이벤트 참여 시 글 리뷰 {won(REVIEW_REWARD_TEXT)} · 사진 리뷰 {won(REVIEW_REWARD_PHOTO)} 쿠폰 →
+                    </span>
+                </Link>
+            ) : null}
             {orders.length === 0 ? (
                 <section className="my-card my-placeholder">
                     <Package size={24} />

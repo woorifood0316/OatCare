@@ -5669,3 +5669,76 @@ a.sbar-sheet__nudge { display: block; text-decoration: none; }
 .mixbar__foot { margin: 0.45rem 0 0; font-size: 0.8rem; font-weight: 600; color: #6a5848; }
 .mixbar__foot b { color: var(--oc-maroon); font-weight: 900; }
 .mixbar__foot.is-done { color: #2f6b3a; font-weight: 800; }
+
+/* ============================================================================
+   Reviews: write form (my page), list (product pages), admin
+   ========================================================================== */
+.rv-form { display: grid; gap: 1rem; }
+.rv-field { display: grid; gap: 0.4rem; font-size: 0.9rem; font-weight: 800; color: var(--oc-brown); }
+.rv-field small { font-weight: 600; color: #8a7a6a; }
+.rv-field select, .rv-field textarea { width: 100%; padding: 0.65rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 10px; background: #fff; font: inherit; font-size: 0.92rem; font-weight: 500; color: var(--oc-brown); }
+.rv-field textarea { resize: vertical; line-height: 1.6; }
+.rv-count { justify-self: end; }
+.rv-count.is-ok { color: #2f6b3a !important; }
+.rv-stars { display: flex; gap: 0.2rem; }
+.rv-stars button { padding: 0.15rem; border: 0; background: none; color: #ddd0b4; cursor: pointer; }
+.rv-stars button.is-on { color: #e2a52b; }
+.rv-stars button.is-on svg { fill: currentColor; }
+.rv-photos { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.rv-photo { position: relative; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; border: 1px solid var(--oc-line); background: #fff; }
+.rv-photo img { width: 100%; height: 100%; object-fit: cover; }
+.rv-photo button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #fff; cursor: pointer; }
+.rv-photo--add { display: grid; place-items: center; align-content: center; gap: 0.2rem; border-style: dashed; color: var(--oc-maroon); cursor: pointer; font-weight: 700; }
+.rv-photo--add.is-busy { opacity: 0.6; cursor: wait; }
+.rv-box { display: grid; gap: 0.5rem; padding: 0.8rem 0.9rem; border-radius: 12px; background: #fbf5e8; border: 1px solid #ecdcb6; font-size: 0.85rem; color: var(--oc-brown); }
+.rv-box > b { font-size: 0.9rem; }
+.rv-box p { margin: 0; font-size: 0.8rem; line-height: 1.6; color: #6a5848; }
+.rv-box--event { background: #fff6dc; border-color: #f0dca0; }
+.rv-policy { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; font-size: 0.82rem; line-height: 1.55; color: #5b4a3d; }
+.rv-policy b { color: var(--oc-maroon); }
+.rv-submit { width: 100%; }
+.rv-done { display: grid; gap: 0.6rem; justify-items: start; }
+.rv-banner { display: grid; gap: 0.2rem; margin-bottom: 0.8rem; text-decoration: none; color: var(--oc-brown); background: #fff6dc; border-color: #f0dca0; }
+.rv-banner span { font-size: 0.85rem; color: var(--oc-maroon); font-weight: 700; }
+.rv-mine { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+.rv-mine li { padding-bottom: 0.8rem; border-bottom: 1px dashed var(--oc-line); }
+.rv-mine li.is-deleted { opacity: 0.7; }
+.rv-mine__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.88rem; }
+.rv-mine__stars { color: #e2a52b; letter-spacing: 1px; }
+.rv-mine p { margin: 0.35rem 0 0; font-size: 0.88rem; line-height: 1.6; white-space: pre-wrap; }
+
+.rv-list { display: grid; gap: 1rem; }
+.rv-summary { display: grid; grid-template-columns: auto 1fr; gap: 1.2rem; align-items: center; padding: 1rem; border-radius: 14px; background: #fbf5e8; }
+.rv-summary__avg { display: grid; justify-items: center; gap: 0.2rem; }
+.rv-summary__avg b { font-size: 2rem; font-weight: 900; color: var(--oc-brown); line-height: 1; }
+.rv-summary__avg small { font-size: 0.78rem; color: #8a7a6a; }
+.rv-summary__bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; font-size: 0.75rem; color: #6a5848; }
+.rv-summary__bars li { display: grid; grid-template-columns: 2rem 1fr 1.6rem; align-items: center; gap: 0.4rem; }
+.rv-summary__bars i { height: 6px; border-radius: 999px; background: #efe3c6; overflow: hidden; }
+.rv-summary__bars em { display: block; height: 100%; background: #e2a52b; }
+.rv-starline { display: inline-flex; gap: 1px; color: #ddd0b4; }
+.rv-starline .is-on { color: #e2a52b; fill: currentColor; }
+.rv-sort { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.rv-sort button { padding: 0.4rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; font: inherit; font-size: 0.8rem; font-weight: 700; color: #6a5848; cursor: pointer; }
+.rv-sort button.is-active { background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
+.rv-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.rv-items > li { padding-bottom: 0.9rem; border-bottom: 1px solid var(--oc-line); }
+.rv-item__head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; font-size: 0.85rem; }
+.rv-item__head small { margin-left: auto; color: #8a7a6a; }
+.rv-tag { padding: 0.05rem 0.45rem; border-radius: 999px; background: #f3e6e7; color: var(--oc-maroon); font-size: 0.7rem; font-weight: 800; }
+.rv-disclose { margin: 0.35rem 0 0; padding: 0.2rem 0.5rem; display: inline-block; border-radius: 6px; background: #f3efe6; color: #6a5848; font-size: 0.72rem; font-weight: 700; }
+.rv-item__body { margin: 0.45rem 0 0; font-size: 0.92rem; line-height: 1.65; color: var(--oc-brown); white-space: pre-wrap; }
+.rv-item__photos { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.rv-item__photos button { width: 76px; height: 76px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; cursor: zoom-in; }
+.rv-item__photos img { width: 100%; height: 100%; object-fit: cover; }
+.rv-external { margin: 0; font-size: 0.78rem; color: #8a7a6a; }
+.rv-zoom { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.8); cursor: zoom-out; }
+.rv-zoom img { max-width: 100%; max-height: 90vh; border-radius: 10px; }
+
+.adm-rv-body { max-width: 420px; white-space: pre-wrap; line-height: 1.5; }
+.adm-rv-photos { display: flex; gap: 0.3rem; margin-top: 0.4rem; }
+.adm-rv-photos img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
+.adm-rv-del { display: grid; gap: 0.35rem; min-width: 200px; }
+.adm-rv-del select, .adm-rv-del input { padding: 0.4rem 0.5rem; border: 1px solid #d9ccae; border-radius: 0.5rem; font: inherit; font-size: 0.82rem; }
+.adm-rv-del__btns { display: flex; gap: 0.3rem; }
+tr.is-muted td { opacity: 0.6; }

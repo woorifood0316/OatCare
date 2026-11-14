@@ -49,7 +49,7 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                     )}
                 </h1>
                 <p className="oc-auth__sub">{provider} 계정으로 처음 오셨어요. 아래에 동의하시면 가입이 끝나요.</p>
-                <p className="oc-auth__perk">🎟️ 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (30일 이내 사용)</p>
+                <p className="oc-auth__perk">🎟️ 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (90일 이내 사용)</p>
 
                 <label className={`oc-welcome__check oc-welcome__check--req${agreed ? ' is-on' : ''}`}>
                     <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); setError(''); }} />

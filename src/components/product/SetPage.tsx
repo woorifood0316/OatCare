@@ -9,6 +9,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap 
 import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import { SubscribeBar } from '../purchase/SubscribeBar';
+import { ReviewList } from '../reviews/ReviewList';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
     FREE_SHIPPING_MIN_COUNT,
@@ -335,7 +336,7 @@ export function SetPage({ count }: { count: number }) {
 
                 <section id="pd-review" className="pd-sec">
                     <h2>리뷰</h2>
-                    <p className="pd-empty">참오트케어 쇼핑몰에서 구매하신 고객님의 후기가 이곳에 모일 예정이에요.</p>
+                    <ReviewList sku={page.sku} externalNote="상품 상세 이미지 속 후기는 외부 판매처(쿠팡)에서 작성된 후기입니다." />
                 </section>
 
                 <section id="pd-qna" className="pd-sec">

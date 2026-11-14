@@ -25,6 +25,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     KakaoLogin: '카카오 로그인을 마치지 못했어요. 다시 시도해 주세요.',
     SignupExpired: '시간이 지나 가입이 취소됐어요. 버튼을 눌러 다시 시작해 주세요.',
     CredentialsSignin: '가입을 마치지 못했어요. 버튼을 눌러 다시 시작해 주세요.',
+    banned: '리뷰 운영정책 위반으로 제명된 계정이라 다시 가입할 수 없어요. 문의: 고객센터 031-998-7234',
     Default: '로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
 };
 
@@ -129,7 +130,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     처음이시면 동의 한 번으로 가입까지 끝나요.
                 </p>
 
-                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (30일 이내 사용)</p>
+                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (90일 이내 사용)</p>
 
                 {message && (
                     <p className={`oc-auth__msg oc-auth__msg--${message.tone}`} role="alert">

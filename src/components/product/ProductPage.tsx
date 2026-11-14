@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap, Repeat } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { SinglesBar, SinglesPicker } from '../purchase/SinglesBar';
+import { ReviewList } from '../reviews/ReviewList';
 import {
     FREE_SHIPPING_MIN_COUNT,
     MIN_SUBSCRIPTION_CHARGES,
@@ -210,10 +211,7 @@ export function ProductPage({ slug }: { slug: string }) {
 
                 <section id="pd-review" className="pd-sec">
                     <h2>리뷰</h2>
-                    <p className="pd-empty">
-                        참오트케어 쇼핑몰에서 구매하신 고객님의 후기가 이곳에 모일 예정이에요. 상세 이미지 속 후기는 외부 판매처에서 작성된
-                        후기입니다.
-                    </p>
+                    <ReviewList sku={page.sku} externalNote="상품 상세 이미지 속 후기는 외부 판매처(쿠팡)에서 작성된 후기입니다." />
                 </section>
 
                 <section id="pd-qna" className="pd-sec">

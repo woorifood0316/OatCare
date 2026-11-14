@@ -101,7 +101,20 @@ export const MIN_SUBSCRIPTION_CHARGES = 2;
 /** Welcome coupon issued at sign-up. Its minimum (in sachets) applies only to singles / the taster set (20·30 sets and subscriptions: none). */
 export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
 export const WELCOME_COUPON_AMOUNT = 3000;
-export const WELCOME_COUPON_DAYS = 30;
+/** Every coupon (sign-up, review event) is valid for this many days from issue. */
+export const COUPON_VALID_DAYS = 90;
+export const WELCOME_COUPON_DAYS = COUPON_VALID_DAYS;
+
+/** Reviews: one per one-time order item / per subscription, by buyers whose order has shipped. */
+export const REVIEW_MIN_LENGTH = 20;
+export const REVIEW_MAX_LENGTH = 1000;
+export const REVIEW_MAX_PHOTOS = 3;
+/** Review event (opt-in when writing): coupon for a text review / a review with photos. Same coupon rules as the sign-up coupon. */
+export const REVIEW_REWARD_TEXT = 1000;
+export const REVIEW_REWARD_PHOTO = 2000;
+export const REVIEW_COUPON_NAME = '리뷰 이벤트 쿠폰';
+/** Violations (deleted for profanity / personal info / ads) after which review writing stops and the member can be expelled. */
+export const REVIEW_STRIKE_LIMIT = 3;
 export const WELCOME_COUPON_MIN_COUNT = BOX_SIZE;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;
