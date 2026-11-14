@@ -288,6 +288,17 @@ export const QuickPurchaseDrawer: React.FC<QuickPurchaseDrawerProps> = ({
                                                 <div className="oc-drawer-bundle-card__unit">
                                                     개당 <strong>{b.unitPrice.toLocaleString('ko-KR')}원</strong> (정가 {single.listPrice.toLocaleString('ko-KR')}원)
                                                 </div>
+                                                <Link
+                                                    href={`/sets/${b.count}`}
+                                                    className="oc-drawer-item__more"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        rememberReturnPoint({ drawer: { tab: activeTab } });
+                                                        onClose();
+                                                    }}
+                                                >
+                                                    상세보기 →
+                                                </Link>
                                             </div>
 
                                             <div className="oc-drawer-bundle-card__price">

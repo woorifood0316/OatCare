@@ -5928,7 +5928,7 @@ tr.is-muted td { opacity: 0.6; }
 .pn-t th { width: 9.5rem; background: #f8f6f1; color: #6a5a4a; font-weight: 600; white-space: nowrap; }
 .pn-t td { color: var(--oc-brown); word-break: keep-all; overflow-wrap: anywhere; }
 .pn-t--4 th { width: 8.5rem; }
-.pn-warn { margin: 0.5rem 0 0; font-size: 0.8rem; font-weight: 700; color: #c8102e; line-height: 1.5; }
+.pn-warn { display: block; margin-top: 0.35rem; font-size: 0.8rem; font-weight: 700; color: #c8102e; line-height: 1.5; }
 .pn .pn-title { margin: 1.4rem 0 0.5rem; font-size: 0.98rem; }
 .pn-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.15rem; font-size: 0.83rem; line-height: 1.6; color: #5b4a3d; }
 .pn .pn-minor { margin: 0.5rem 0 0; font-size: 0.78rem; }
@@ -5939,7 +5939,7 @@ tr.is-muted td { opacity: 0.6; }
   .pn-t--4 tr { display: grid; grid-template-columns: 6.6rem 1fr; }
   .pn-t--4 th, .pn-t--4 td { display: block; width: auto; }
 }
-.pn--label { margin: 0 0 1.4rem; }
+.pn--label { margin: 1.8rem 0 1.4rem; }
 .pn--label .pn-title { margin-top: 0; }
 @media (min-width: 701px) { .pn-t--4 th { width: 10.5rem; white-space: normal; } .pn-t--4 td { width: calc(50% - 9rem); } }
 .pn-more { justify-self: center; display: inline-flex; align-items: center; gap: 0.25rem; margin-top: 0.6rem; padding: 0.4rem 0.8rem; border: 0; background: none; color: var(--oc-maroon); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
@@ -5978,3 +5978,17 @@ tr.is-muted td { opacity: 0.6; }
 .inv-st { font-weight: 700; color: #8a7a6a; }
 .inv-st--rewarded { color: #1f6f31; }
 .inv-st--rejected { color: #b00020; }
+/* 홈 친구 초대 띠 */
+.inv-band { padding: 1.4rem 1rem; background: var(--oc-maroon); }
+.inv-band__inner { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 1rem; color: #fff7e8; }
+.inv-band__icon { flex: none; color: #f2c14e; }
+.inv-band__text { flex: 1; display: grid; gap: 0.25rem; }
+.inv-band__text strong { font-size: 1.15rem; font-weight: 800; }
+.inv-band__text p { margin: 0; font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
+.inv-band__btn { flex: none; padding: 0.75rem 1.2rem; border: 0; border-radius: 999px; background: #f2c14e; color: #3b2a20; font: inherit; font-size: 0.95rem; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; }
+@media (max-width: 700px) {
+  .inv-band__inner { flex-wrap: wrap; gap: 0.6rem; }
+  .inv-band__icon { display: none; }
+  .inv-band__text strong { font-size: 1.02rem; }
+  .inv-band__btn { width: 100%; text-align: center; }
+}

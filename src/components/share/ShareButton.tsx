@@ -14,7 +14,20 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
  * 공유하기 on product pages. Members share a link carrying their invitation code; visitors who aren't signed in are
  * told that only a member's link earns the invitation coupons, and can sign up first or share without benefits.
  */
-export function ShareButton({ title, description, image }: { title: string; description: string; image: string }) {
+export function ShareButton({
+    title,
+    description,
+    image,
+    label,
+    className,
+}: {
+    title: string;
+    description: string;
+    image: string;
+    /** Text button instead of the share icon. */
+    label?: string;
+    className?: string;
+}) {
     const { status } = useSession();
     const [step, setStep] = useState<'closed' | 'guest' | 'sheet'>('closed');
     const [code, setCode] = useState<string | null>(null);
@@ -72,9 +85,15 @@ export function ShareButton({ title, description, image }: { title: string; desc
 
     return (
         <>
-            <button type="button" className="shr-btn" onClick={open} aria-label="공유하기">
-                <Share2 size={18} />
-            </button>
+            {label ? (
+                <button type="button" className={className} onClick={open}>
+                    {label}
+                </button>
+            ) : (
+                <button type="button" className="shr-btn" onClick={open} aria-label="공유하기">
+                    <Share2 size={18} />
+                </button>
+            )}
 
             {step !== 'closed' ? (
                 <div className="shr" role="dialog" aria-modal="true" aria-label="공유하기" onClick={() => setStep('closed')}>

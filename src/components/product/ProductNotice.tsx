@@ -86,13 +86,10 @@ export function ProductLabelInfo({ name, flavors, count }: { name: string; flavo
                     ['식품의 유형', LABEL_COMMON.foodType],
                     ['생산자 및 소재지', `제조원/${LABEL_COMMON.manufacturer}, 소분원 및 판매원/${LABEL_COMMON.seller}`],
                     ['제조연월일, 소비기한 또는 품질유지기한', '소비기한: 별도 표기일까지 (각 포장에 표기)'],
-                    ['포장단위별 내용물의 용량(중량), 수량', count === 1 ? '50g, 1개(파우치)' : `50g, ${count}개(파우치)`],
                     ['원재료명 및 함량', per((fl) => PRODUCT_FACTS[fl].ingredients)],
                     ['영양성분', per(nutrition)],
                     ['유전자변형식품에 해당하는 경우의 표시', `해당 표시 없음 · 알레르기 유발물질: ${LABEL_COMMON.allergens}`],
                     ['소비자안전을 위한 주의사항', [...crossNotes, LABEL_COMMON.storage].join(' ')],
-                    ['수입식품 문구', '해당 없음 (국내 제조)'],
-                    ['소비자상담관련 전화번호', BUSINESS.phone],
                 ]}
             />
             <button type="button" className={`pn-more${open ? ' is-open' : ''}`} onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -112,18 +109,25 @@ export function ProductNotice({ set }: { set?: boolean }) {
                         '배송',
                         <>
                             평일 오후 1시까지 결제 시 당일 발송 (이후·주말·공휴일은 다음 영업일) ·{' '}
-                            {set ? '세트 상품 무료배송' : `배송비 ${won(SHIPPING_FEE)}, 세트 포함 또는 ${FREE_SHIPPING_MIN_COUNT}개 이상 무료`}
+                            {set ? '세트 상품 무료배송' : `배송비 ${won(SHIPPING_FEE)}, 세트 포함 또는 낱개 ${FREE_SHIPPING_MIN_COUNT}개 이상 무료`}
                         </>,
                     ],
                     ['정기구독', `결제일에 결제·발송 · 최소 ${MIN_SUBSCRIPTION_CHARGES}회 이용 · 주기 변경·해지 예약은 마이페이지에서`],
                     ['교환·반품 신청', '마이페이지 > 주문·배송 > 주문 상세 > [교환·반품 신청] · 승인되면 택배 기사님이 회수 방문'],
                     ['단순 변심', `받은 날부터 ${RETURN_CHANGE_OF_MIND_DAYS}일 이내 · 미개봉 상품만 · 반품 배송비 전체 ${won(RETURN_FEE_ROUND_TRIP)}(왕복) / 일부 ${won(RETURN_FEE_ONE_WAY)}(편도), 환불 금액에서 차감`],
-                    ['상품 하자·오배송', '받은 날부터 3개월, 안 날부터 30일 이내 · 배송비 회사 부담 · 문제 부분 사진과 찍은 날짜를 확인할 수 있는 사진 필수'],
+                    [
+                        '상품 하자·오배송',
+                        <>
+                            받은 날부터 3개월, 안 날부터 30일 이내 · 배송비 회사 부담 · 문제 부분 사진과 찍은 날짜를 확인할 수 있는 사진 필수
+                            <span className="pn-warn">
+                                ※ 교환·반품 신청 시 사진의 날짜·내용을 편집하거나 AI 등으로 조작하면 업무방해·사기 등으로 형사 고발될 수 있으며, 민사상 손해배상을 청구할 수 있습니다.
+                            </span>
+                        </>,
+                    ],
                     ['환불', '반품 상품 확인 후 3영업일 이내, 결제하신 수단으로'],
                     ['반품처', `${BUSINESS.address} (${BUSINESS.name})`],
                 ]}
             />
-            <p className="pn-warn">사진의 날짜·내용을 편집하거나 AI 등으로 조작해 신청하면 업무방해·사기 등으로 형사 고발될 수 있으며, 민사상 손해배상을 청구할 수 있습니다.</p>
 
             <h3 className="pn-title">교환/반품 제한사항</h3>
             <ul className="pn-list">

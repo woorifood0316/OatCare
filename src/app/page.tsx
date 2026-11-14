@@ -9,6 +9,7 @@ import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
 import { LegalModal, LegalModalType } from '../components/LegalModal';
 import { LegalPage } from '../components/LegalPage';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { InviteBanner } from '../components/share/InviteBanner';
 import {
     BoldStatement,
     Bundles,
@@ -146,6 +147,8 @@ export default function Home() {
             <ScrollReveal className="oc-band oc-band--tan">
                 <ProductGrid onSelectProduct={setSelectedProduct} />
             </ScrollReveal>
+
+            <InviteBanner />
 
             <QuickPurchaseDrawer
                 isOpen={isDrawerOpen}
