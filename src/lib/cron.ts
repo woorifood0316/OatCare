@@ -66,18 +66,31 @@ async function sendAdmin(text: string): Promise<'sent' | 'skipped' | string> {
     return errors.length ? errors.join('; ') : 'sent';
 }
 
-/** Customer email through Resend (https://resend.com). Skipped until configured. */
+/** "참오트케어 <no-reply@chamoatcare.com>" or a bare address -> Brevo's sender object. */
+export function parseSender(from: string): { name?: string; email: string } | null {
+    const m = from.match(/^\s*(.*?)\s*<\s*([^>\s]+@[^>\s]+)\s*>\s*$/);
+    if (m) return m[1] ? { name: m[1].replace(/^"|"$/g, ''), email: m[2] } : { email: m[2] };
+    const bare = from.trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bare) ? { email: bare } : null;
+}
+
+/**
+ * Customer email through Brevo's transactional API (https://www.brevo.com, free plan: 300 emails a day).
+ * Needs BREVO_API_KEY and EMAIL_FROM (a sender verified in Brevo). Skipped until configured.
+ */
 async function sendEmail(to: string, subject: string, text: string): Promise<'sent' | 'skipped' | string> {
-    const key = process.env.RESEND_API_KEY;
-    const from = process.env.EMAIL_FROM;
-    if (!key || !from) return 'skipped';
+    const key = process.env.BREVO_API_KEY;
+    const sender = parseSender(process.env.EMAIL_FROM ?? '');
+    if (!key || !sender) return 'skipped';
     try {
-        const res = await fetch('https://api.resend.com/emails', {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from, to: [to], subject, text }),
+            headers: { 'api-key': key, accept: 'application/json', 'content-type': 'application/json' },
+            body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text }),
         });
-        return res.ok ? 'sent' : `HTTP ${res.status}`;
+        if (res.ok) return 'sent';
+        const body = await res.text().catch(() => '');
+        return `HTTP ${res.status} ${body.slice(0, 200)}`;
     } catch (e) {
         return (e as Error).message;
     }

@@ -58,7 +58,7 @@ export const PrivacyContent: React.FC = () => (
             <ul>
                 <li><strong>배송 위탁 업체:</strong> 택배사 (CJ대한통운, 롯데택배 등) - 물품 배송 업무</li>
                 <li><strong>결제 처리:</strong> 토스페이먼츠(주) - 결제 승인·취소, 정기결제(자동결제) 처리</li>
-                <li><strong>알림 발송:</strong> Resend, Inc. - 주문·결제·배송 안내 메일 발송 (카카오 알림톡 등 메시지 발송 대행사를 이용하게 되는 경우 본 방침에 먼저 알려드립니다)</li>
+                <li><strong>알림 발송:</strong> Sendinblue SAS (Brevo) - 주문·결제·배송 안내 메일 발송 (카카오 알림톡 등 메시지 발송 대행사를 이용하게 되는 경우 본 방침에 먼저 알려드립니다)</li>
                 <li><strong>회원정보 보관(DB):</strong> Neon, Inc. - 회원정보 저장 및 관리</li>
                 <li><strong>웹사이트 호스팅:</strong> Cloudflare, Inc. - 서비스 운영 및 접속 처리, 상품 문의 자동 답변(AI) 처리</li>
             </ul>
@@ -70,7 +70,7 @@ export const PrivacyContent: React.FC = () => (
             <ul>
                 <li><strong>Neon, Inc.</strong> (서버 위치: 싱가포르) - 회원·주문·구독 정보의 저장 및 관리 / 회원 탈퇴 또는 보유기간 종료 시까지</li>
                 <li><strong>Cloudflare, Inc.</strong> (전 세계 네트워크) - 웹사이트 호스팅 및 접속 정보 처리, 상품 문의 내용의 자동 답변 처리(전화번호·주소 등 개인정보가 포함된 문의는 AI 처리에서 제외) / 서비스 이용 기간 (AI 처리 내용은 답변 생성 후 보관하지 않음)</li>
-                <li><strong>Resend, Inc.</strong> (미국) - 이메일 주소, 주문·결제·배송 안내 내용 / 안내 메일 발송 시 네트워크를 통해 전송 / 발송 완료 후 대행사 정책에 따른 기간</li>
+                <li><strong>Sendinblue SAS (Brevo)</strong> (프랑스) - 이메일 주소, 주문·결제·배송 안내 내용 / 안내 메일 발송 시 네트워크를 통해 전송 / 발송 완료 후 대행사 정책에 따른 기간</li>
             </ul>
             <p>국외 이전에 동의하지 않으실 경우 서비스 가입·이용이 제한될 수 있으며, 이전을 원하지 않는 경우 개인정보 보호책임자에게 문의해 주세요.</p>
         </section>

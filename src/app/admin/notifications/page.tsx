@@ -20,7 +20,7 @@ export default async function AdminNotifications() {
                 <ul className="adm-config">
                     <li className={cfg.adminWebhook ? 'is-on' : ''}>운영자 웹훅(슬랙·디스코드 등): {cfg.adminWebhook ? '연결됨' : '미설정 (ADMIN_WEBHOOK_URL)'}</li>
                     <li className={cfg.telegram ? 'is-on' : ''}>운영자 텔레그램: {cfg.telegram ? '연결됨' : '미설정 (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)'}</li>
-                    <li className={cfg.email ? 'is-on' : ''}>고객 이메일(Resend): {cfg.email ? '연결됨' : '미설정 (RESEND_API_KEY, EMAIL_FROM)'}</li>
+                    <li className={cfg.email ? 'is-on' : ''}>고객 이메일(Brevo): {cfg.email ? '연결됨' : '미설정 (BREVO_API_KEY, EMAIL_FROM)'}</li>
                     <li>고객 카카오 알림톡: 준비 중 (발송 대행사 계약 후 같은 대기열에 연결)</li>
                 </ul>
                 <p className="adm-muted">설정되지 않은 채널의 알림은 &apos;건너뜀&apos;으로 기록돼요.</p>

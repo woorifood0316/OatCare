@@ -248,6 +248,6 @@ export function channelConfig() {
     return {
         adminWebhook: Boolean(process.env.ADMIN_WEBHOOK_URL),
         telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
-        email: Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM),
+        email: Boolean(process.env.BREVO_API_KEY && process.env.EMAIL_FROM),
     };
 }

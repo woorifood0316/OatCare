@@ -33,7 +33,7 @@
 | `SITE_URL` | 알림 속 링크 기준 주소 (기본값 https://chamoatcare.com) |
 | `ADMIN_WEBHOOK_URL` | 운영자 알림용 웹훅 (슬랙·디스코드 호환) |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | 운영자 텔레그램 알림 |
-| `RESEND_API_KEY`, `EMAIL_FROM` | 고객 이메일 발송 (resend.com) |
+| `BREVO_API_KEY`, `EMAIL_FROM` | 고객 이메일 발송 (brevo.com 무료 플랜, 하루 300통). `EMAIL_FROM` 예: `참오트케어 <no-reply@chamoatcare.com>` (Brevo에서 인증한 보내는 주소) |
 
 기존 로그인 키(`AUTH_*`, `DATABASE_URL`)는 그대로 둡니다. `TOSS_SECURITY_KEY`는 현재 코드에서 쓰지 않습니다.
 
@@ -146,4 +146,4 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
   - AI가 연결되지 않아도 동작해요: 질문과 FAQ의 글자가 확실히 비슷할 때만 자동 답변하고, 나머지는 담당자 답변 대기로 가요.
 - 동작: AI는 FAQ 중 하나를 번호로 고르기만 하고, 손님에게는 FAQ 답변 문장이 그대로 보여요 ("AI 자동 답변" 표시). 불만·하자·건강/질병 관련 문의와 개인정보가 들어간 문의는 AI에 보내지 않고 담당자에게 넘겨요.
 - 관리자: `/admin/inquiries` (답변 대기 → 답변하면서 [FAQ에 추가]), `/admin/faqs` (FAQ 추가·수정·중지, [시험하기]로 어떤 답이 나가는지 확인).
-- 회원만 작성, 비밀글 가능, 하루 10건 제한. 답변이 달리면 고객에게 이메일 알림 (RESEND_API_KEY·EMAIL_FROM 설정 후부터. 그 전에는 마이페이지에서만 확인).
+- 회원만 작성, 비밀글 가능, 하루 10건 제한. 답변이 달리면 고객에게 이메일 알림 (BREVO_API_KEY·EMAIL_FROM 설정 후부터. 그 전에는 마이페이지에서만 확인).
