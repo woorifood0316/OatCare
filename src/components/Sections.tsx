@@ -1256,7 +1256,7 @@ export const FinalCta: React.FC<FinalCtaProps> = ({ onOpenDrawer }) => {
                         <span className="oc-chunk"><span className="oc-highlight-gold">참오트케어</span>와 함께</span> <span className="oc-chunk">시작하세요</span>
                     </h2>
                     <p style={{ color: 'rgba(247,241,228,0.92)', fontSize: '1.1rem', marginBottom: '2rem' }}>
-                        첫 구매 시 전용 쉐이커 전원 증정 & 무료 배송 혜택
+                        정기구독 첫 회 쉐이커 보틀 증정 · 세트는 무료배송
                     </p>
                     <button
                         className="oc-cta-fill"
