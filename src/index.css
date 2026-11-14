@@ -4554,6 +4554,11 @@ body {
 .my-hero { display: flex; flex-direction: column; gap: 1rem; background: var(--oc-maroon); border-color: var(--oc-maroon); color: #fff7e8; }
 .my-hero h2 { margin: 0 0 0.35rem; font-size: 1.1rem; font-weight: 800; }
 .my-hero p { margin: 0; font-size: 0.88rem; line-height: 1.55; opacity: 0.88; }
+.my-hero__perks { list-style: none; margin: 0.55rem 0 0; padding: 0; display: grid; gap: 0.4rem; font-size: 0.95rem; line-height: 1.4; }
+.my-hero__perks li { display: flex; align-items: flex-start; gap: 0.45rem; }
+.my-hero__perks svg { flex: none; margin-top: 0.15rem; padding: 2px; width: 19px; height: 19px; border-radius: 999px; background: var(--oc-gold); color: var(--oc-maroon); stroke-width: 3; }
+.my-hero__perks b { color: #ffd77a; font-weight: 900; }
+.my-hero .my-hero__note { margin-top: 0.55rem; font-size: 0.78rem; opacity: 0.7; }
 .my-grid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
 .my-tile { display: flex; flex-direction: column; gap: 0.3rem; margin: 0; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .my-tile:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(59, 42, 32, 0.08); }
@@ -5196,6 +5201,9 @@ body {
 .oc-h2-keep { word-break: keep-all; text-wrap: balance; }
 .oc-nowrap { white-space: nowrap; }
 .oc-balance { text-wrap: balance; }
+/* A phrase that moves to the next line as a whole: lines break only between chunks (at commas / sentence ends),
+   and a chunk wider than the screen still wraps inside itself. */
+.oc-chunk { display: inline-block; }
 
 /* ============================================================================
    ❹ 5-flavour 3D coverflow (landing): centred card = current flavour, ring loops endlessly

@@ -403,7 +403,7 @@ export const QuickReviews: React.FC = () => {
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        12만+ 봉지로 검증된 참오트케어 실제 구매자들의 생생한 리뷰입니다.
+                        <span className="oc-chunk">12만+ 봉지로 검증된 참오트케어</span> <span className="oc-chunk">실제 구매자들의 생생한 리뷰입니다.</span>
                     </p>
                 </ScrollReveal>
             </div>
@@ -573,11 +573,11 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
             <div className="oc-section-header">
                 <ScrollReveal>
                     <span className="oc-eyebrow">5 FLAVORS COLLECTION</span>
-                    <h2>다섯 가지 맛, <span className="oc-highlight-maroon oc-nowrap">질리지 않는 아침</span></h2>
+                    <h2><span className="oc-chunk">다섯 가지 맛,</span> <span className="oc-chunk"><span className="oc-highlight-maroon">질리지 않는 아침</span></span></h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        매일 아침 기분에 따라 선택하세요. <span className="oc-nowrap"><span className="oc-highlight-maroon">참오트케어 5종 라인업</span>입니다.</span>
+                        <span className="oc-chunk">매일 아침 기분에 따라 선택하세요.</span> <span className="oc-chunk"><span className="oc-highlight-maroon">참오트케어 5종 라인업</span>입니다.</span>
                     </p>
                 </ScrollReveal>
             </div>
@@ -603,9 +603,9 @@ export const Nutrition: React.FC = () => {
         <section className="oc-section" id="nutrition">
             <div className="oc-section-header">
                 <span className="oc-eyebrow">SATISFACTION & NUTRITION</span>
-                <h2>약 195 kcal로 채우는 <span className="oc-highlight-maroon">4시간의 속 편한 포만감</span></h2>
+                <h2><span className="oc-chunk">약 195 kcal로 채우는</span> <span className="oc-chunk"><span className="oc-highlight-maroon">4시간의 속 편한 포만감</span></span></h2>
                 <p className="oc-section-subhead">
-                    귀리(Oat) 속 핵심 수용성 식이섬유 <span className="oc-highlight-gold">'베타글루칸'</span>과 9가지 곡물 레시피로 장시간 공복감을 싹 없애줍니다.
+                    <span className="oc-chunk">귀리(Oat) 속 핵심 수용성 식이섬유 <span className="oc-highlight-gold">'베타글루칸'</span>과</span> <span className="oc-chunk">9가지 곡물 레시피로</span> <span className="oc-chunk">장시간 공복감을 싹 없애줍니다.</span>
                 </p>
             </div>
 
@@ -736,12 +736,12 @@ export const FamilyStory: React.FC = () => {
                 <ScrollReveal>
                     <span className="oc-eyebrow">OUR BRAND STORY</span>
                     <h2>
-                        나와 내가 사랑하는 사람들이 매일 아침 <span className="oc-highlight-maroon">안심하고 먹는 정직함</span>
+                        <span className="oc-chunk">나와 내가 사랑하는 사람들이</span> <span className="oc-chunk">매일 아침</span> <span className="oc-chunk"><span className="oc-highlight-maroon">안심하고 먹는 정직함</span></span>
                     </h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        간편함 그 이상의 가치. <span className="oc-highlight-gold">정직한 귀리 영양</span>으로 소중한 사람들의 하루를 힘차게 시작하세요.
+                        <span className="oc-chunk">간편함 그 이상의 가치.</span> <span className="oc-chunk"><span className="oc-highlight-gold">정직한 귀리 영양</span>으로</span> <span className="oc-chunk">소중한 사람들의 하루를 힘차게 시작하세요.</span>
                     </p>
                 </ScrollReveal>
             </div>
@@ -866,12 +866,12 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                 <ScrollReveal>
                     <span className="oc-eyebrow">Starter Bundles</span>
                     <h2>
-                        세트로 더 알차게 <span className="oc-highlight-maroon">챙기는 아침</span>
+                        <span className="oc-chunk">세트로 더 알차게</span> <span className="oc-chunk"><span className="oc-highlight-maroon">챙기는 아침</span></span>
                     </h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
                     <p className="oc-section-subhead">
-                        세트 구매 시 <span className="oc-highlight-gold oc-nowrap">최대 30% 파격 할인</span>과 전 세트 <span className="oc-nowrap"><span className="oc-highlight-maroon">무료 배송 혜택</span>을</span> 제공합니다.
+                        <span className="oc-chunk">세트 구매 시 <span className="oc-highlight-gold">최대 30% 파격 할인</span>과</span> <span className="oc-chunk">전 세트 <span className="oc-highlight-maroon">무료 배송 혜택</span>을 제공합니다.</span>
                     </p>
                 </ScrollReveal>
             </div>
@@ -1135,11 +1135,11 @@ export const ContentTeaser: React.FC<ContentTeaserProps> = ({ onSelectArticle })
                 <div className="oc-section-header">
                     <ScrollReveal>
                         <span className="oc-eyebrow">From the Morning Journal</span>
-                        <h2>참오트케어의 <span className="oc-highlight-maroon">아침 이야기</span></h2>
+                        <h2><span className="oc-chunk">참오트케어의</span> <span className="oc-chunk"><span className="oc-highlight-maroon">아침 이야기</span></span></h2>
                     </ScrollReveal>
                     <ScrollReveal delay={0.15}>
                         <p className="oc-section-subhead">
-                            바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과 <span className="oc-highlight-maroon">참오트케어 활용 레시피</span>를 전합니다.
+                            <span className="oc-chunk">바쁜 현대인을 위한 <span className="oc-highlight-gold">건강한 아침 식단 팁</span>과</span> <span className="oc-chunk"><span className="oc-highlight-maroon">참오트케어 활용 레시피</span>를 전합니다.</span>
                         </p>
                     </ScrollReveal>
                 </div>
@@ -1216,7 +1216,7 @@ export const FinalCta: React.FC<FinalCtaProps> = ({ onOpenDrawer }) => {
                     </span>
                     <h2>
                         당신의 아침을,<br />
-                        <span className="oc-highlight-gold">참오트케어</span>와 함께 시작하세요
+                        <span className="oc-chunk"><span className="oc-highlight-gold">참오트케어</span>와 함께</span> <span className="oc-chunk">시작하세요</span>
                     </h2>
                     <p style={{ color: 'rgba(247,241,228,0.92)', fontSize: '1.1rem', marginBottom: '2rem' }}>
                         첫 구매 시 전용 쉐이커 전원 증정 & 무료 배송 혜택

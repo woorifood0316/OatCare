@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Repeat, Package, CreditCard, Ticket } from 'lucide-react';
+import { Repeat, Package, CreditCard, Ticket, Check } from 'lucide-react';
+import { MIN_SUBSCRIPTION_CHARGES, SUBSCRIPTION_DISCOUNT_RATE } from '../../lib/catalog';
 import { listCoupons } from '../../lib/coupons';
 import { getCurrentUser } from '../../lib/current-user';
 import { PageHead } from '../../components/mypage/ComingSoon';
@@ -9,6 +10,9 @@ export const runtime = 'edge';
 export default async function MyHomePage() {
     const user = await getCurrentUser();
     const usable = (await listCoupons(user.id)).filter((c) => c.available);
+    const subPct = Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100);
+    const coupon = [...usable].sort((x, y) => y.amount - x.amount)[0] ?? null;
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
     return (
         <>
@@ -16,8 +20,38 @@ export default async function MyHomePage() {
 
             <section className="my-card my-hero">
                 <div>
-                    <h2>정기구독으로 매일 아침을 든든하게</h2>
-                    <p>20일·30일 단위로 알아서 보내드려요. 5% 추가 할인 + 첫 회 쉐이커 보틀 증정! (최소 2회 이용)</p>
+                    <h2>
+                        <span className="oc-chunk">정기구독으로</span> <span className="oc-chunk">매일 아침을 든든하게</span>
+                    </h2>
+                    <ul className="my-hero__perks">
+                        <li>
+                            <Check size={15} aria-hidden="true" />
+                            <span>
+                                <b>20일·30일</b> 단위로 알아서 배송
+                            </span>
+                        </li>
+                        <li>
+                            <Check size={15} aria-hidden="true" />
+                            <span>
+                                매회 <b>{subPct}% 추가 할인</b>
+                            </span>
+                        </li>
+                        <li>
+                            <Check size={15} aria-hidden="true" />
+                            <span>
+                                첫 회 <b>쉐이커 보틀 증정</b>
+                            </span>
+                        </li>
+                        {coupon ? (
+                            <li>
+                                <Check size={15} aria-hidden="true" />
+                                <span>
+                                    보유한 <b>{won(coupon.amount)} 쿠폰</b>도 <span className="oc-chunk">첫 결제에 바로 적용</span>
+                                </span>
+                            </li>
+                        ) : null}
+                    </ul>
+                    <p className="my-hero__note">최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건이에요</p>
                 </div>
                 <Link href="/#bundles" className="my-btn my-btn--primary">
                     정기구독 알아보기
