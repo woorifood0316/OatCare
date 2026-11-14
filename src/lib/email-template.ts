@@ -6,6 +6,9 @@ import { customerMessage } from './notify-messages';
 import { getOrderByNo, type Order } from './orders';
 import { FLAVORS } from './catalog';
 import { trackingUrl } from './order-status';
+import { REFERRAL_REWARD } from './catalog';
+import { getReferralCode } from './referrals';
+import { getSql } from './db';
 
 const SITE = () => (process.env.SITE_URL || 'https://chamoatcare.com').replace(/\/$/, '');
 const won = (n: unknown) => `${Number(n ?? 0).toLocaleString('ko-KR')}원`;
@@ -105,6 +108,8 @@ export function layout(opts: {
     extraHtml?: string;
     button?: { label: string; url: string };
     note?: string;
+    /** Friend-invitation box with the member's own link. */
+    invite?: string;
 }): string {
     const logo = `${SITE()}/assets/oatcare-logo.png`;
     const meta = opts.meta?.length
@@ -116,6 +121,15 @@ export function layout(opts: {
 </td></tr>`
         : '';
     const note = opts.note ? `<tr><td style="padding:14px 28px 0;font-size:13px;line-height:1.7;color:${C.muted};">${esc(opts.note)}</td></tr>` : '';
+    const invite = opts.invite
+        ? `<tr><td style="padding:22px 28px 0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff8e6;border:1.5px solid #e9c46a;border-radius:14px;"><tr><td style="padding:16px 18px;">
+    <div style="font-size:15px;font-weight:800;color:${C.brown};">🎁 친구에게도 알려 주세요</div>
+    <div style="margin-top:4px;font-size:13px;line-height:1.6;color:#6a5848;">내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰</b>을 드려요.</div>
+    <div style="margin-top:12px;"><a href="${esc(opts.invite)}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:${C.maroon};color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">친구 초대하기 →</a></div>
+  </td></tr></table>
+</td></tr>`
+        : '';
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(opts.title)}</title></head>
 <body style="margin:0;padding:0;background:#f3eee4;font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3eee4;padding:24px 10px;"><tr><td align="center">
@@ -127,6 +141,7 @@ export function layout(opts: {
   ${opts.extraHtml ?? ''}
   ${button}
   ${note}
+  ${invite}
   <tr><td style="padding:28px 28px 24px;border-top:1px solid ${C.line};font-size:12px;line-height:1.7;color:${C.muted};">
     고객센터 ${BUSINESS.phone} (평일 09:00~18:00) · ${BUSINESS.email}<br>
     상호 ${BUSINESS.name} · 대표 ${BUSINESS.ceo} · 사업자등록번호 ${BUSINESS.regNo} · 통신판매업 ${BUSINESS.mailOrderNo}<br>
@@ -160,6 +175,7 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
     let note: string | undefined;
     let meta = orderMeta;
     let extra = detail?.html ?? '';
+    let inviteUrl: string | undefined;
 
     switch (event) {
         case 'order_paid':
@@ -181,6 +197,15 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
             const track = trackingUrl(carrier, no);
             button = track ? { label: '배송 조회하기', url: track } : button;
             note = '받으신 상품에 문제가 있으면 마이페이지 > 주문·배송 > 주문 상세에서 교환·반품을 신청해 주세요.';
+            // The invitation is promotional: only for members who agreed to marketing messages (정보통신망법).
+            if (o?.userId) {
+                try {
+                    const m = await getSql()`select marketing_agreed from users where id = ${o.userId}`;
+                    if (m[0]?.marketing_agreed) inviteUrl = `${SITE()}/?ref=${await getReferralCode(o.userId)}`;
+                } catch {
+                    /* no invitation box */
+                }
+            }
             break;
         }
         case 'subscription_started':
@@ -238,7 +263,7 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
             extra = '';
     }
 
-    const html = layout({ title, lead, meta, extraHtml: extra, button, note });
+    const html = layout({ title, lead, meta, extraHtml: extra, button, note, invite: inviteUrl });
     const text = [
         title,
         '',
@@ -248,6 +273,7 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
         ...(event === 'inquiry_answered' ? ['', `문의: ${p.question}`, `답변: ${p.answer}`] : []),
         ...(button ? ['', `${button.label}: ${button.url}`] : []),
         ...(note ? ['', note] : []),
+        ...(inviteUrl ? ['', `친구에게도 알려 주세요: 내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰을 드려요.`, `친구 초대하기: ${inviteUrl}`] : []),
     ].join('\n');
     return { subject: base.subject, html, text: text + textFooter() };
 }
