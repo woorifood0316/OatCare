@@ -62,6 +62,12 @@ ${order}` : `교환 상품을 다시 보내 드렸어요.${p.note ? `
 안내: ${p.note}` : ''}
 
 ${order}` };
+        case 'inquiry_answered':
+            return { subject: '[참오트케어] 남기신 상품 문의에 답변이 달렸어요', text: `문의: ${p.question}
+
+답변: ${p.answer}
+
+내 문의 보기: ${SITE()}/mypage/inquiries` };
         case 'billing_upcoming':
             return { subject: '[참오트케어] 정기구독 결제 예정 안내', text: `${p.date}에 ${won(p.amount)}이 자동 결제될 예정이에요.\n주기 변경, 건너뛰기, 해지는 결제일 전날까지 가능해요.\n\n구독 관리: ${sub}` };
         default:
@@ -98,6 +104,10 @@ export function adminMessage(event: NotifyEvent, p: P): string {
             return `🚫 ${p.typeLabel} 반려 ${p.orderNo} · ${p.reason}`;
         case 'return_completed':
             return `✅ ${p.typeLabel} 완료 ${p.orderNo}${p.refund ? ` · 환불 ${won(p.refund)}` : ''}`;
+        case 'inquiry_pending':
+            return `❓ 답변이 필요한 상품 문의 · ${p.note ?? ''} → ${SITE()}/admin/inquiries`;
+        case 'inquiry_answered':
+            return `💬 상품 문의 답변 완료`;
         case 'billing_upcoming':
             return `⏰ 결제 예정 안내 발송 · ${p.date}`;
         default:

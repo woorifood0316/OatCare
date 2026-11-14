@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck, Ticket, Star } from 'lucide-react';
+import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck, Ticket, Star, MessageCircleQuestion } from 'lucide-react';
 import { LogoutButton } from '../LogoutButton';
 
 const NAV = [
@@ -60,6 +60,10 @@ export function MyShell({
                     <Link href="/mypage/reviews" className={`my-side__link${pathname.startsWith('/mypage/reviews') ? ' is-active' : ''}`}>
                         <Star size={18} />
                         <span>리뷰 쓰기</span>
+                    </Link>
+                    <Link href="/mypage/inquiries" className={`my-side__link${pathname.startsWith('/mypage/inquiries') ? ' is-active' : ''}`}>
+                        <MessageCircleQuestion size={18} />
+                        <span>상품 문의</span>
                     </Link>
                     {isAdmin ? (
                         <Link href="/admin" className="my-side__link">

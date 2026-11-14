@@ -3,13 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff, Star, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff, Star, RotateCcw, MessageCircleQuestion, BookOpen } from 'lucide-react';
 
 const NAV = [
     { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
     { href: '/admin/orders', label: '주문', icon: Package },
     { href: '/admin/subscriptions', label: '구독', icon: Repeat },
     { href: '/admin/returns', label: '교환·반품', icon: RotateCcw },
+    { href: '/admin/inquiries', label: '상품 문의', icon: MessageCircleQuestion },
+    { href: '/admin/faqs', label: 'FAQ (자동 답변)', icon: BookOpen },
     { href: '/admin/members', label: '회원', icon: Users },
     { href: '/admin/reviews', label: '리뷰', icon: Star },
     { href: '/admin/notifications', label: '알림', icon: Bell },

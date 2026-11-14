@@ -10,6 +10,7 @@ import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import { SubscribeBar } from '../purchase/SubscribeBar';
 import { ReviewList } from '../reviews/ReviewList';
+import { InquiryBoard } from '../inquiries/InquiryBoard';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
     FREE_SHIPPING_MIN_COUNT,
@@ -342,9 +343,7 @@ export function SetPage({ count }: { count: number }) {
 
                 <section id="pd-qna" className="pd-sec">
                     <h2>상품문의</h2>
-                    <p className="pd-empty">
-                        상품에 대해 궁금한 점은 고객센터 이메일(yyp0606@naver.com)로 문의해 주세요. 평일 순차적으로 답변드립니다.
-                    </p>
+                    <InquiryBoard sku={page.sku} />
                 </section>
 
                 <section id="pd-ship" className="pd-sec">

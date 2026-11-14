@@ -135,3 +135,15 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
   - "받은 날" = 배송 완료로 바꾼 날, 없으면 발송일 + 2일.
 - 관리자: `/admin/returns` — 승인(택배사 회수 접수는 직접) → 검수 후 [환불 실행](토스 부분 취소) 또는 [교환 재발송 완료], 또는 사유를 적어 반려. 고객에게 알림이 가요.
 - 사진은 R2 `returns/` 폴더에 저장돼요 (리뷰 사진과 같은 업로드 경로, purpose=return).
+
+## 13. 상품 문의 · FAQ 자동 답변 (Cloudflare Workers AI 무료 모델)
+
+- DB: `db/inquiries.sql` 실행 (새 테이블 `faqs`, `inquiries`만 추가). 그다음 관리자 > FAQ (자동 답변)에서 [기본 FAQ 넣기]로 기본 답변을 넣어요 (FAQ가 비어 있을 때만).
+- AI 연결 (둘 중 하나):
+  1. **추천:** Cloudflare Pages > 프로젝트 > Settings > Bindings > Add > **Workers AI**, Variable name `AI` (Production, Preview 모두). 키가 필요 없어요.
+  2. 또는 환경변수 `CF_AI_TOKEN` (Workers AI 권한 API 토큰) + `CF_ACCOUNT_ID` (없으면 `R2_ACCOUNT_ID` 사용).
+  - 모델: 기본 `@cf/zai-org/glm-4.7-flash`, 바꾸려면 `AI_MODEL` 환경변수.
+  - AI가 연결되지 않아도 동작해요: 질문과 FAQ의 글자가 확실히 비슷할 때만 자동 답변하고, 나머지는 담당자 답변 대기로 가요.
+- 동작: AI는 FAQ 중 하나를 번호로 고르기만 하고, 손님에게는 FAQ 답변 문장이 그대로 보여요 ("AI 자동 답변" 표시). 불만·하자·건강/질병 관련 문의와 개인정보가 들어간 문의는 AI에 보내지 않고 담당자에게 넘겨요.
+- 관리자: `/admin/inquiries` (답변 대기 → 답변하면서 [FAQ에 추가]), `/admin/faqs` (FAQ 추가·수정·중지, [시험하기]로 어떤 답이 나가는지 확인).
+- 회원만 작성, 비밀글 가능, 하루 10건 제한. 답변이 달리면 고객에게 이메일 알림 (RESEND_API_KEY·EMAIL_FROM 설정 후부터. 그 전에는 마이페이지에서만 확인).
