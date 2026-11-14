@@ -197,7 +197,7 @@ export function ReturnForm({
                     <label className="addr-check">
                         <input type="checkbox" checked={unopened} onChange={(e) => setUnopened(e.target.checked)} />
                         <span>
-                            <b>개봉하지 않은 상품</b>이에요 (필수) · 식품 특성상 개봉하거나 드신 상품은 단순 변심 반품이 안 돼요
+                            <b>개봉하지 않은 상품</b>이에요 (필수) · 개별 포장(포)을 뜯었거나 드신 상품은 단순 변심 반품이 안 돼요. 택배 상자를 열어 확인한 것은 괜찮아요. 사은품을 받으셨다면 함께 보내 주세요
                         </span>
                     </label>
                 </div>

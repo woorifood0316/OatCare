@@ -105,3 +105,56 @@ export function parseChoice(text: string, count: number): number | null {
     if (!Number.isInteger(n) || n < 0 || n > count) return null;
     return n;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Writing the answer from the shop's information (the FAQ table is the AI's reference material, not a list of
+// ready-made answers). The AI reads the most relevant entries and writes a short answer using only them.
+
+export interface InfoEntry {
+    question: string; // topic
+    answer: string; // the information itself
+}
+
+export function buildAnswerPrompt(question: string, infos: InfoEntry[], productName: string | null): { system: string; user: string } {
+    const system = [
+        '당신은 오트밀 쇼핑몰 "참오트케어"의 상품 문의 답변 담당자입니다.',
+        '규칙:',
+        '1. 반드시 아래 [참고 정보]에 있는 내용만 사용해 답하세요. 참고 정보에 없는 사실·숫자·약속은 절대 지어내지 마세요.',
+        '2. 참고 정보로 답할 수 없는 질문이면 다른 말 없이 "모름" 한 단어만 쓰세요.',
+        '3. 질병의 예방·치료, 다이어트·혈당·면역 같은 효능은 말하지 마세요.',
+        '4. 존댓말(~요)로 1~3문장, 200자 안으로 핵심만 답하세요. 인사말, 서명, 목록 기호는 쓰지 마세요.',
+        '5. 고객이 보고 있는 상품이 있으면 그 상품 기준으로 답하세요. 여러 상품을 비교하는 질문이면 참고 정보의 숫자로 비교하세요.',
+    ].join('\n');
+    const info = infos.map((i) => `- 주제: ${i.question}\n  내용: ${i.answer}`).join('\n');
+    const product = productName ? `고객이 보고 있는 상품: ${productName} ("이 상품"은 이 상품을 뜻해요)\n\n` : '';
+    const user = `${product}[참고 정보]\n${info}\n\n[고객 질문]\n${question}\n\n[답변]`;
+    return { system, user };
+}
+
+const CLAIMS = /치료|예방|완치|효능|특효|살이\s*빠|체중\s*감량|혈당을?\s*(낮|조절|관리)|면역력|혈압을?\s*(낮|조절)/;
+
+/**
+ * The AI's text, cleaned, or why it can't be posted: "모름", a health/efficacy claim, or a number that appears
+ * nowhere in the reference information (or the question) - a sign it made something up.
+ */
+export function checkGenerated(raw: string, infos: InfoEntry[], question: string): { answer: string } | { reject: string } {
+    let t = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    t = t.replace(/^\[?답변\]?\s*[:：]?\s*/, '').replace(/^["“'「]+|["”'」]+$/g, '').trim();
+    if (!t || /^모름/.test(t) || (t.includes('모름') && t.length < 15)) return { reject: 'AI: 정보로 답할 수 없음' };
+    if (t.length < 4) return { reject: 'AI 답변이 너무 짧음' };
+    if (t.length > 500) t = t.slice(0, 500).replace(/[^.!?요]*$/, '');
+    if (CLAIMS.test(t)) return { reject: 'AI 답변에 효능 표현이 있어 보류' };
+    // Numbers are compared with their unit ("5g" is not "5%" or "15g"); a bare number must exist on its own.
+    const UNIT = 'kcal|mg|ml|g|%|원|개|포|일|회|시|분|년|월|주';
+    const tokens = (x: string) =>
+        new Set(
+            Array.from(x.replace(/(\d),(\d{3})/g, '$1$2').matchAll(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(${UNIT})?`, 'g')), (m) => `${m[1]}${m[2] ?? ''}`),
+        );
+    const known = tokens(`${infos.map((i) => `${i.question} ${i.answer}`).join(' ')} ${question}`);
+    const bare = new Set([...known].map((k) => k.replace(/[^\d.]/g, '')));
+    for (const tok of tokens(t)) {
+        const ok = /\D$/.test(tok) ? known.has(tok) : bare.has(tok);
+        if (!ok) return { reject: `AI 답변의 숫자(${tok})가 참고 정보에 없어 보류` };
+    }
+    return { answer: t };
+}

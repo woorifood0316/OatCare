@@ -9,6 +9,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap,
 import { useCart } from '../cart/CartProvider';
 import { SinglesBar, SinglesPicker } from '../purchase/SinglesBar';
 import { ReviewList } from '../reviews/ReviewList';
+import { ProductNotice } from './ProductNotice';
 import { InquiryBoard } from '../inquiries/InquiryBoard';
 import {
     FREE_SHIPPING_MIN_COUNT,
@@ -241,6 +242,8 @@ export function ProductPage({ slug }: { slug: string }) {
                         <dt>반품처</dt>
                         <dd>경기도 김포시 양촌읍 황금1로 2-71 (우리종합식품)</dd>
                     </dl>
+
+                    <ProductNotice name={item.name} flavors={[page.flavor]} count={1} />
                 </section>
 
                 <section className="pd-sec pd-rec">

@@ -16,15 +16,8 @@ const kst = (iso: string | null) =>
 /** 010-1234-5678 → 010-****-5678 (the email may be forwarded or read on a shared screen). */
 const maskPhone = (p: string | null) => (p ? p.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, '$1-****-$3') : '');
 
-export const BUSINESS = {
-    name: '우리종합식품',
-    ceo: '윤영필',
-    regNo: '850-27-00983',
-    mailOrderNo: '2021-경기김포-3077',
-    address: '경기도 김포시 양촌읍 황금1로 2-71',
-    phone: '031-998-7234',
-    email: 'yyp0606@naver.com',
-};
+export { BUSINESS } from './business';
+import { BUSINESS } from './business';
 
 export interface Email {
     subject: string;

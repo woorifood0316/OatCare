@@ -1,6 +1,6 @@
 import { getSql } from './db';
 import { maskName, screenReview } from './review-filter';
-import { ESCALATION_NOTE, buildPrompt, clearMatch, escalationFor, parseChoice, rankFaqs, type FaqLite } from './inquiry-match';
+import { ESCALATION_NOTE, buildAnswerPrompt, checkGenerated, clearMatch, escalationFor, rankFaqs, type FaqLite, type InfoEntry } from './inquiry-match';
 import { runChat, workersAiReady } from './workers-ai';
 import { enqueue } from './notify';
 import { getItem } from './catalog';
@@ -30,6 +30,8 @@ export interface Faq extends FaqLite {
     active: boolean;
     hits: number;
     updatedAt: string;
+    /** Set on answers written from the package label (lib/product-facts). */
+    autoKey: string | null;
 }
 
 const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
@@ -44,6 +46,7 @@ function mapFaq(r: Record<string, unknown>): Faq {
         active: Boolean(r.active),
         hits: (r.hits as number) ?? 0,
         updatedAt: iso(r.updated_at) as string,
+        autoKey: (r.auto_key as string | null) ?? null,
     };
 }
 
@@ -95,30 +98,50 @@ export async function listMyInquiries(userId: string) {
 }
 
 /** The automatic answer: an FAQ the shop wrote, chosen by the AI (or by a clear text match), or null for a person. */
-export async function pickAnswer(question: string, sku: string): Promise<{ faq: FaqLite | null; note: string }> {
+export interface AutoAnswer {
+    answer: string | null;
+    /** Set when the answer is an FAQ entry used word for word (no AI). */
+    faqId: string | null;
+    note: string;
+    /** Topics of the information the answer was written from. */
+    sources: string[];
+}
+
+/**
+ * The automatic answer to a question asked on the page of product `sku`:
+ * the AI reads the most relevant pieces of the shop's information (FAQ table: label facts, rules, notes) and writes
+ * a short answer from them only. Checks reject made-up numbers and health claims. Without the AI, only an entry that
+ * clearly matches the question is used as it is. null answer = a person answers.
+ */
+export async function makeAnswer(question: string, sku: string): Promise<AutoAnswer> {
     const escalation = escalationFor(question);
-    if (escalation) return { faq: null, note: ESCALATION_NOTE[escalation] };
+    if (escalation) return { answer: null, faqId: null, note: ESCALATION_NOTE[escalation], sources: [] };
 
     const faqs = await listFaqs(true);
-    const ranked = rankFaqs(question, faqs, sku, 10);
-    if (ranked.length === 0) return { faq: null, note: '등록된 FAQ 없음' };
+    if (faqs.length === 0) return { answer: null, faqId: null, note: '참고 정보 없음', sources: [] };
+    const ranked = rankFaqs(question, faqs, sku, 8);
+    // The product's own label facts always come along, so "이 상품 …" questions have the numbers at hand.
+    const own = faqs.filter((f) => f.sku === sku && /:(nutrition|ingredients|allergy)$/.test(f.autoKey ?? ''));
+    const picked: FaqLite[] = [];
+    for (const f of [...ranked.filter((r) => r.score > 0).map((r) => r.faq), ...own]) {
+        if (!picked.some((p) => p.id === f.id)) picked.push(f);
+    }
 
-    if (workersAiReady()) {
-        const candidates = ranked.map((r) => r.faq);
-        const { system, user } = buildPrompt(question, candidates, getItem(sku)?.name ?? null);
-        const text = await runChat(system, user);
+    if (workersAiReady() && picked.length > 0) {
+        const infos: InfoEntry[] = picked.map((f) => ({ question: f.question, answer: f.answer }));
+        const { system, user } = buildAnswerPrompt(question, infos, getItem(sku)?.name ?? null);
+        const text = await runChat(system, user, 350);
         if (text !== null) {
-            const n = parseChoice(text, candidates.length);
-            if (n === null) {
-                const fallback = clearMatch(ranked);
-                return { faq: fallback, note: fallback ? 'AI 응답 해석 실패 → 글자 일치로 답변' : `AI 응답 해석 실패 (${text.slice(0, 60)})` };
-            }
-            if (n === 0) return { faq: null, note: 'AI: 맞는 FAQ 없음' };
-            return { faq: candidates[n - 1], note: `AI 선택 (#${n})` };
+            const checked = checkGenerated(text, infos, question);
+            const sources = picked.map((f) => f.question);
+            if ('answer' in checked) return { answer: checked.answer, faqId: null, note: `AI 작성 (참고 정보 ${picked.length}개)`, sources };
+            return { answer: null, faqId: null, note: checked.reject, sources };
         }
     }
     const match = clearMatch(ranked);
-    return { faq: match, note: match ? '글자 일치로 답변 (AI 미연결)' : 'AI 미연결 · 확실한 FAQ 없음' };
+    return match
+        ? { answer: match.answer, faqId: match.id, note: workersAiReady() ? 'AI 응답 없음 → 일치하는 정보 그대로' : '일치하는 정보 그대로 (AI 미연결)', sources: [match.question] }
+        : { answer: null, faqId: null, note: workersAiReady() ? 'AI 응답 없음' : 'AI 미연결 · 일치하는 정보 없음', sources: [] };
 }
 
 export async function todaysCount(userId: string): Promise<number> {
@@ -174,13 +197,14 @@ export async function answerInquiry(id: string): Promise<void> {
     const rows = await sql`select id, user_id, sku, body from inquiries where id = ${id} and status = 'pending' and answered_by is null and ai_note = ${AUTO_PENDING}`;
     const q = rows[0];
     if (!q) return;
-    const { faq, note } = await pickAnswer(q.body as string, q.sku as string);
-    if (faq) {
+    const { answer, faqId, note, sources } = await makeAnswer(q.body as string, q.sku as string);
+    if (answer) {
+        const fullNote = sources.length ? `${note} · 참고: ${sources.slice(0, 5).join(' / ')}`.slice(0, 500) : note;
         const done = await sql`
-            update inquiries set status = 'answered', answer = ${faq.answer}, answered_by = 'ai', faq_id = ${faq.id}, ai_note = ${note}, answered_at = now()
+            update inquiries set status = 'answered', answer = ${answer}, answered_by = 'ai', faq_id = ${faqId}, ai_note = ${fullNote}, answered_at = now()
             where id = ${id} and status = 'pending' and answered_by is null returning id
         `;
-        if (done.length > 0) await sql`update faqs set hits = hits + 1 where id = ${faq.id}`;
+        if (done.length > 0 && faqId) await sql`update faqs set hits = hits + 1 where id = ${faqId}`;
         return;
     }
     const moved = await sql`update inquiries set ai_note = ${note} where id = ${id} and ai_note = ${AUTO_PENDING} returning id`;

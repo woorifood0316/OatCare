@@ -75,11 +75,11 @@ export function InquiryAnswerBox({ id, question, current, status }: { id: string
             <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={4} placeholder="답변 (상품 페이지와 고객의 마이페이지에 보여요)" maxLength={1000} />
             <label className="adm-check">
                 <input type="checkbox" checked={saveFaq} onChange={(e) => setSaveFaq(e.target.checked)} />
-                이 답변을 FAQ에 추가 (다음부터 비슷한 질문에 AI가 바로 답해요)
+                이 답변을 AI 참고 정보에 추가 (다음부터 비슷한 질문에 AI가 이 정보로 답해요)
             </label>
             {saveFaq ? (
                 <>
-                    <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="FAQ 질문 (대표 질문으로 다듬어 주세요)" maxLength={200} />
+                    <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="주제 (대표 질문으로 다듬어 주세요)" maxLength={200} />
                     <input value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="비슷한 표현·키워드 (선택, 띄어쓰기로 구분)" maxLength={300} />
                 </>
             ) : null}
@@ -124,9 +124,9 @@ export function FaqEditor({ faq, onDone }: { faq?: FaqRow; onDone?: () => void }
 
     return (
         <div className="adm-qa-box">
-            <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="대표 질문 (예: 찬물에 타도 되나요?)" maxLength={200} />
+            <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="주제 (예: 찬물에 타 먹어도 되나요? / 전자레인지 사용)" maxLength={200} />
             <input value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="비슷한 표현·키워드 (띄어쓰기로 구분, 예: 냉수 정수기 차가운물)" maxLength={300} />
-            <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder="답변 (고객에게 이 문장 그대로 보여요)" maxLength={1000} />
+            <textarea value={answer} onChange={(e) => setAnswer(e.target.value)} rows={3} placeholder="정보 내용 (AI가 이 내용을 바탕으로 답변을 써요)" maxLength={1000} />
             <div className="adm-row">
                 {onDone ? (
                     <button type="button" className="adm-btn" onClick={onDone} disabled={busy}>
@@ -134,7 +134,7 @@ export function FaqEditor({ faq, onDone }: { faq?: FaqRow; onDone?: () => void }
                     </button>
                 ) : null}
                 <button type="button" className="adm-btn adm-btn--primary" onClick={save} disabled={busy}>
-                    {busy ? '저장 중...' : faq ? '저장' : 'FAQ 추가'}
+                    {busy ? '저장 중...' : faq ? '저장' : '정보 추가'}
                 </button>
             </div>
             {error ? <small className="adm-error">{error}</small> : null}
@@ -176,7 +176,7 @@ export function FaqTester({ products }: { products: { sku: string; name: string 
     const [question, setQuestion] = useState('');
     const [sku, setSku] = useState(products[0]?.sku ?? '');
     const [busy, setBusy] = useState(false);
-    const [result, setResult] = useState<{ answer: string | null; faqQuestion: string | null; note: string; aiReady: boolean } | null>(null);
+    const [result, setResult] = useState<{ answer: string | null; sources: string[]; note: string; aiReady: boolean } | null>(null);
     const [error, setError] = useState('');
 
     const test = async () => {
@@ -211,12 +211,13 @@ export function FaqTester({ products }: { products: { sku: string; name: string 
                     </small>
                     {result.answer ? (
                         <>
-                            <b>고른 FAQ: {result.faqQuestion}</b>
+                            <b>손님에게 나갈 답변</b>
                             <p>{result.answer}</p>
                         </>
                     ) : (
                         <p>자동 답변 없음 → 담당자 답변 대기로 접수돼요.</p>
                     )}
+                    {result.sources.length ? <small>참고한 정보: {result.sources.join(' / ')}</small> : null}
                 </div>
             ) : null}
         </div>

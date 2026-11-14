@@ -2,7 +2,7 @@ import { getSql } from '../../../../lib/db';
 import { isUuid, jsonError, requireAdmin, sameOrigin } from '../../../../lib/api';
 import { getItem } from '../../../../lib/catalog';
 import { FAQ_SEED } from '../../../../lib/faq-seed';
-import { pickAnswer, syncFactFaqs } from '../../../../lib/inquiries';
+import { makeAnswer, syncFactFaqs } from '../../../../lib/inquiries';
 import { workersAiReady } from '../../../../lib/workers-ai';
 
 export const runtime = 'edge';
@@ -66,8 +66,8 @@ export async function POST(request: Request) {
         case 'test': {
             const question = text(body.question, 500);
             if (question.length < 2) return jsonError('시험할 질문을 적어 주세요');
-            const { faq, note } = await pickAnswer(question, sku ?? 'single:그레인');
-            return Response.json({ answer: faq?.answer ?? null, faqQuestion: faq?.question ?? null, note, aiReady: workersAiReady() });
+            const { answer, note, sources } = await makeAnswer(question, sku ?? 'single:그레인');
+            return Response.json({ answer, sources, note, aiReady: workersAiReady() });
         }
         default:
             return jsonError('알 수 없는 요청이에요');

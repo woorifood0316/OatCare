@@ -31,8 +31,8 @@ export default async function AdminInquiries({ searchParams }: { searchParams: P
                 ))}
             </div>
             <p className="adm-muted">
-                자주 묻는 질문은 FAQ로 AI가 바로 답해요. 여기에는 AI가 답하지 못한 문의(불만·하자, 건강 관련, 개인정보 포함, 맞는 FAQ 없음)가 쌓여요. 답변할 때{' '}
-                <b>FAQ에 추가</b>를 켜 두면 다음부터 같은 질문은 AI가 답해요. AI 답변이 틀렸다면 <b>답변 완료</b>에서 고치고, <Link href="/admin/faqs">FAQ</Link>도 함께 다듬어 주세요.
+                AI가 ‘AI 참고 정보’를 바탕으로 답변을 써요. 여기에는 AI가 답하지 못한 문의(불만·하자, 건강 관련, 개인정보 포함, 정보로 답할 수 없음)가 쌓여요. 답변할 때{' '}
+                <b>정보에 추가</b>를 켜 두면 다음부터 비슷한 질문에 AI가 그 정보로 답해요. AI 답변이 틀렸다면 <b>답변 완료</b>에서 고치고, <Link href="/admin/faqs">FAQ</Link>도 함께 다듬어 주세요.
             </p>
 
             {!ready ? (

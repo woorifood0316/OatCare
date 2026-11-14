@@ -10,6 +10,7 @@ import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import { SubscribeBar } from '../purchase/SubscribeBar';
 import { ReviewList } from '../reviews/ReviewList';
+import { ProductNotice } from './ProductNotice';
 import { InquiryBoard } from '../inquiries/InquiryBoard';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
@@ -365,6 +366,8 @@ export function SetPage({ count }: { count: number }) {
                         <dt>반품처</dt>
                         <dd>경기도 김포시 양촌읍 황금1로 2-71 (우리종합식품)</dd>
                     </dl>
+
+                    <ProductNotice name={item.name} flavors={[...FLAVORS]} count={page.count} />
                 </section>
 
                 <section className="pd-sec pd-rec">

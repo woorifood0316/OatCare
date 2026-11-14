@@ -22,6 +22,8 @@ export interface ProductFacts {
     protein: Nutrient;
     /** "같은 제조시설" / "혼입가능" notice, as printed. */
     crossContact: string;
+    /** 원재료명, as printed. */
+    ingredients: string;
 }
 
 export const LABEL_COMMON = {
@@ -30,6 +32,7 @@ export const LABEL_COMMON = {
     shelfLife: '별도 표기일까지 (포장에 적힌 날짜)',
     allergens: '우유, 대두, 밀 함유',
     storage: '직사광선을 피하여 건조하고 서늘한 곳에 밀봉 보관하세요. 개봉 후에는 바로 섭취하시기 바랍니다.',
+    packaging: '폴리에틸렌 (내포장재질)',
     manufacturer: '농업회사법인㈜두리두리 (충남 논산시 성동면 산업단지로 4길 33)',
     seller: '우리종합식품 (경기도 김포시 양촌읍 황금1로 2-71)',
 };
@@ -40,6 +43,7 @@ const MAY_CONTAIN = '알류, 메밀, 땅콩, 게, 새우, 돼지고기, 복숭�
 export const PRODUCT_FACTS: Record<Flavor, ProductFacts> = {
     그레인: {
         flavor: '그레인',
+        ingredients: '가공전지분[물엿, 유청분말(외국산), 가공유지(야자경화유, 외국산), 유크림, 유당], 압착귀리(귀리:캐나다산), 혼합곡물플러스[현미(국산), 보리(국산), 찰현미, 밀, 맵쌀, 볶음아몬드분말, 분리대두단백, 난소화성말토덱스트린, 설탕, 현미볶음, 볶음콩가루, 수크랄로스(감미료)',
         kcal: 203,
         sodium: { amount: '120mg', pct: 6 },
         carbs: { amount: '30g', pct: 9 },
@@ -54,6 +58,7 @@ export const PRODUCT_FACTS: Record<Flavor, ProductFacts> = {
     },
     고구마: {
         flavor: '고구마',
+        ingredients: '가공전지분[물엿, 유청분말(외국산), 가공유지(야자경화유, 외국산), 유크림, 유당], 눌린귀리(캐나다산), 분리대두단백(중국산), 난소화성말토덱스트린, 설탕, 고구마분말[고구마분말(고구마:국산), 덱스트린], 혼합곡물플러스, 치커리추출물, 현미볶음, 향료, 볶음아몬드분말, 혼합제제[덱스트린, 혼합제제(글리세린, 향료, 주정, 프로필렌글리콜), 아라비아검], 수크랄로스(감미료)',
         kcal: 186,
         sodium: { amount: '170mg', pct: 9 },
         carbs: { amount: '32g', pct: 10 },
@@ -68,6 +73,7 @@ export const PRODUCT_FACTS: Record<Flavor, ProductFacts> = {
     },
     단백질: {
         flavor: '단백질',
+        ingredients: '분리대두단백(중국산), 압착귀리(귀리:캐나다산), 가공전지분[물엿, 유청분말(외국산), 가공유지{야자경화유(야자유:외국산)}, 유크림, 유당], 혼합곡물플러스(현미, 보리, 찰현미, 밀, 멥쌀), 볶음아몬드분말, 설탕, 현미볶음, 볶음콩가루, 농축유청단백분말, 수크랄로스(감미료), 혼합제제(L-이소로이신, L-발린, L-로이신)',
         kcal: 213,
         sodium: { amount: '275mg', pct: 14 },
         carbs: { amount: '22g', pct: 7 },
@@ -82,6 +88,7 @@ export const PRODUCT_FACTS: Record<Flavor, ProductFacts> = {
     },
     서리태: {
         flavor: '서리태',
+        ingredients: '가공전지분[물엿, 유청분말(외국산), 가공유지{야자경화유(야자유:외국산)}, 유크림, 유당], 압착귀리(귀리:캐나다산), 분리대두단백(중국산), 서리태가루(국산), 난소화성말토덱스트린, 설탕, 혼합곡물플러스(현미, 보리, 찰현미, 밀, 멥쌀), 볶음아몬드분말, 흑미볶음, 수크랄로스(감미료)',
         kcal: 198,
         sodium: { amount: '166mg', pct: 8 },
         carbs: { amount: '29g', pct: 9 },
@@ -96,6 +103,7 @@ export const PRODUCT_FACTS: Record<Flavor, ProductFacts> = {
     },
     초코: {
         flavor: '초코',
+        ingredients: '분리대두단백(중국산), 가공전지분[물엿, 유청분말(외국산), 가공유지{야자경화유(야자유:외국산)}, 유크림, 유당], 눌린귀리(캐나다산), 설탕, 코코아분말(네덜란드산), 치커리추출물, 초코맛분말, 오트크런치볼, 혼합제제[덱스트린, 혼합제제(글리세린, 향료, 주정, 프로필렌글리콜), 아라비아검], 향료1, 향료2, 수크랄로스(감미료)',
         kcal: 199,
         sodium: { amount: '228mg', pct: 11 },
         carbs: { amount: '28g', pct: 9 },
@@ -144,6 +152,7 @@ export function factFaqs(): { key: string; sku: string | null; question: string;
             '영양성분 영양정보 성분표 영양',
             `${one} 기준: 열량 ${f.kcal}kcal, 나트륨 ${n(f.sodium)}, 탄수화물 ${n(f.carbs)}, 당류 ${n(f.sugars)}, 식이섬유 ${n(f.fiber)}, 지방 ${n(f.fat)}, 트랜스지방 ${f.transFat.amount}, 포화지방 ${n(f.saturatedFat)}, 콜레스테롤 ${n(f.cholesterol)}, 단백질 ${n(f.protein)}. (1일 영양성분 기준치 2,000kcal 기준)`,
         );
+        add('ingredients', '원재료가 뭐예요? 국산이에요?', '원재료 원재료명 성분 원산지 국산 수입 들어간 재료 첨가물', `${fl} 원재료명: ${f.ingredients}. (${LABEL_COMMON.allergens})`);
         add(
             'allergy',
             '알레르기 성분이 있나요? 우유나 대두 들어가요?',

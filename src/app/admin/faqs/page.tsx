@@ -1,8 +1,9 @@
 import { listFaqs } from '../../../lib/inquiries';
 import { workersAiReady } from '../../../lib/workers-ai';
 import { FAQ_SEED } from '../../../lib/faq-seed';
-import { FaqEditor, FaqRowActions, FaqSeedButton, FaqSyncButton, FaqTester } from '../../../components/admin/InquiryAdminActions';
-import { CATALOG } from '../../../lib/catalog';
+import { FaqEditor, FaqSeedButton, FaqSyncButton, FaqTester } from '../../../components/admin/InquiryAdminActions';
+import { FaqList } from '../../../components/admin/FaqList';
+import { CATALOG, getItem } from '../../../lib/catalog';
 
 export const runtime = 'edge';
 
@@ -18,15 +19,15 @@ export default async function AdminFaqs() {
 
     return (
         <>
-            <h1 className="adm-h1">FAQ (자동 답변)</h1>
+            <h1 className="adm-h1">AI 참고 정보 (자동 답변)</h1>
             <p className="adm-muted">
-                손님이 상품 문의를 남기면 AI가 이 목록에서 맞는 답변을 골라 <b>적힌 문장 그대로</b> 바로 답해요. AI는 새 문장을 지어내지 않고, 맞는 답이 없으면 &lsquo;상품 문의&rsquo;의 답변
-                대기로 넘겨요. 답변을 고치면 바로 반영돼요.
+                손님이 상품 문의를 남기면 AI가 이 목록에서 <b>질문과 관련된 정보를 찾아 읽고, 그 내용만으로 답변을 직접 써요.</b> 여러 정보를 조합하는 질문(예: 맛별 당류 비교)도 답할 수 있어요.
+                정보에 없는 내용이면 지어내지 않고 &lsquo;상품 문의&rsquo;의 답변 대기로 넘기고, 답변에 정보에 없는 숫자나 효능 표현이 있으면 자동으로 보류해요. 정보를 추가하거나 고치면 바로 반영돼요.
             </p>
             <p className={aiReady ? 'adm-muted' : 'adm-error'}>
                 {aiReady
                     ? 'AI 연결됨 (Cloudflare Workers AI 무료 모델)'
-                    : 'AI가 아직 연결되지 않았어요. 지금은 질문과 FAQ의 글자가 확실히 비슷할 때만 자동 답변해요. Cloudflare Pages > 설정 > 바인딩에서 Workers AI를 이름 AI로 추가해 주세요.'}
+                    : 'AI가 아직 연결되지 않았어요. 지금은 질문과 정보의 글자가 확실히 비슷할 때만 그 정보를 그대로 답해요. Cloudflare Pages > 설정 > 바인딩에서 Workers AI를 이름 AI로 추가해 주세요.'}
             </p>
 
             {!ready ? (
@@ -35,6 +36,7 @@ export default async function AdminFaqs() {
                 <>
                     <section className="adm-card">
                         <h2>답변 시험하기</h2>
+                        <p className="adm-muted">손님처럼 질문하면 AI가 실제로 쓸 답변과 참고한 정보를 보여줘요. 저장되지 않아요.</p>
                         <FaqTester products={CATALOG.map((c) => ({ sku: c.sku, name: c.name }))} />
                     </section>
 
@@ -47,7 +49,8 @@ export default async function AdminFaqs() {
                     </section>
 
                     <section className="adm-card">
-                        <h2>새 FAQ 추가</h2>
+                        <h2>정보 추가</h2>
+                        <p className="adm-muted">주제와 내용을 적어 두면 AI가 답변할 때 참고해요. 예: 주제 &ldquo;전자레인지 사용&rdquo; / 내용 &ldquo;전자레인지에 짧게 데워 드셔도 돼요&rdquo;</p>
                         <FaqEditor />
                     </section>
 
@@ -57,40 +60,20 @@ export default async function AdminFaqs() {
                             <FaqSeedButton />
                         </section>
                     ) : (
-                        <div className="adm-table-wrap">
-                            <table className="adm-table">
-                                <thead>
-                                    <tr>
-                                        <th>질문 · 키워드</th>
-                                        <th>답변</th>
-                                        <th>사용</th>
-                                        <th>관리</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {faqs.map((f) => (
-                                        <tr key={f.id} className={f.active ? '' : 'is-muted'}>
-                                            <td className="adm-rv-body">
-                                                <b>{f.question}</b>
-                                                {f.keywords ? (
-                                                    <small>
-                                                        <br />
-                                                        {f.keywords}
-                                                    </small>
-                                                ) : null}
-                                            </td>
-                                            <td className="adm-rv-body">{f.answer}</td>
-                                            <td>
-                                                {f.hits}회{f.active ? '' : ' · 중지'}
-                                            </td>
-                                            <td>
-                                                <FaqRowActions faq={f} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <FaqList
+                            scopes={['전체 상품', ...CATALOG.map((c) => c.name)]}
+                            faqs={faqs.map((f) => ({
+                                id: f.id,
+                                question: f.question,
+                                keywords: f.keywords,
+                                answer: f.answer,
+                                sku: f.sku,
+                                scope: f.sku ? (getItem(f.sku)?.name ?? f.sku) : '전체 상품',
+                                active: f.active,
+                                hits: f.hits,
+                                auto: Boolean(f.autoKey),
+                            }))}
+                        />
                     )}
                 </>
             )}

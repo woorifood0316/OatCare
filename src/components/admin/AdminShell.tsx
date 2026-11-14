@@ -11,7 +11,7 @@ const NAV = [
     { href: '/admin/subscriptions', label: '구독', icon: Repeat },
     { href: '/admin/returns', label: '교환·반품', icon: RotateCcw },
     { href: '/admin/inquiries', label: '상품 문의', icon: MessageCircleQuestion },
-    { href: '/admin/faqs', label: 'FAQ (자동 답변)', icon: BookOpen },
+    { href: '/admin/faqs', label: 'AI 참고 정보', icon: BookOpen },
     { href: '/admin/members', label: '회원', icon: Users },
     { href: '/admin/reviews', label: '리뷰', icon: Star },
     { href: '/admin/notifications', label: '알림', icon: Bell },
