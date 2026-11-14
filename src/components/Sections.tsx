@@ -80,7 +80,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
 
                 <nav className="oc-nav__links">
                     <a className="oc-nav__link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
-                        WHY CHAMOATCARE
+                        참오트케어 소개
                     </a>
                     <a className="oc-nav__link" href="#reviews" onClick={(e) => handleNavClick(e, 'reviews')}>
                         고객 후기
@@ -140,7 +140,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                         </div>
                         <nav className="oc-mobile-menu-nav">
                             <a className="oc-mobile-menu-link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
-                                <span>WHY CHAMOATCARE</span>
+                                <span>참오트케어 소개</span>
                                 <ArrowRight size={18} />
                             </a>
                             <a className="oc-mobile-menu-link" href="#reviews" onClick={(e) => handleNavClick(e, 'reviews')}>
