@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Repeat, Package, CreditCard, Ticket, Check } from 'lucide-react';
+import { Repeat, Package, CreditCard, Ticket, Check, Star, User } from 'lucide-react';
 import { MIN_SUBSCRIPTION_CHARGES, SUBSCRIPTION_DISCOUNT_RATE } from '../../lib/catalog';
 import { listCoupons } from '../../lib/coupons';
 import { getCurrentUser } from '../../lib/current-user';
@@ -64,11 +64,6 @@ export default async function MyHomePage() {
                     <strong>정기구독</strong>
                     <span>이용 중인 구독이 없어요</span>
                 </Link>
-                <Link href="/mypage/coupons" className="my-card my-tile">
-                    <Ticket size={22} />
-                    <strong>쿠폰</strong>
-                    <span>{usable.length > 0 ? `사용 가능한 쿠폰 ${usable.length}장` : '사용 가능한 쿠폰이 없어요'}</span>
-                </Link>
                 <Link href="/mypage/orders" className="my-card my-tile">
                     <Package size={22} />
                     <strong>주문·배송</strong>
@@ -78,6 +73,21 @@ export default async function MyHomePage() {
                     <CreditCard size={22} />
                     <strong>결제수단·배송지</strong>
                     <span>등록된 정보가 없어요</span>
+                </Link>
+                <Link href="/mypage/profile" className="my-card my-tile">
+                    <User size={22} />
+                    <strong>내 정보</strong>
+                    <span>이름·연락처·회원 탈퇴</span>
+                </Link>
+                <Link href="/mypage/coupons" className="my-card my-tile">
+                    <Ticket size={22} />
+                    <strong>쿠폰</strong>
+                    <span>{usable.length > 0 ? `사용 가능한 쿠폰 ${usable.length}장` : '사용 가능한 쿠폰이 없어요'}</span>
+                </Link>
+                <Link href="/mypage/reviews" className="my-card my-tile">
+                    <Star size={22} />
+                    <strong>리뷰 쓰기</strong>
+                    <span>리뷰 남기고 쿠폰 받기</span>
                 </Link>
             </div>
         </>
