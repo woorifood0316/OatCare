@@ -5560,3 +5560,45 @@ body {
   .oc-family-grid ~ .oc-swipe-dots,
   .oc-journal-grid ~ .oc-swipe-dots { display: none; }
 }
+
+/* ============================================================================
+   Set page bottom bar for subscribable sets (phones): [일반 구매] [정기구독 5%↓] + option sheet
+   ========================================================================== */
+.sbar { display: none; }
+@media (max-width: 800px) {
+  .sbar { display: grid; grid-template-columns: 1fr 1.35fr; gap: 0.5rem; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--oc-line); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06); }
+  .sbar button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; height: 48px; border-radius: 0.8rem; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .sbar__once { background: #fff; border: 1.5px solid var(--oc-maroon); color: var(--oc-maroon); }
+  .sbar__sub { background: var(--oc-maroon); border: 1.5px solid var(--oc-maroon); color: #fff7e8; box-shadow: 0 4px 12px rgba(122, 35, 49, 0.25); }
+  .sbar__sub b { color: #ffd77a; font-weight: 900; }
+  .sbar__badge { position: absolute; top: -0.6rem; right: 0.5rem; padding: 0.1rem 0.45rem; border-radius: 999px; background: var(--oc-gold); color: #fff; font-size: 0.65rem; font-weight: 900; }
+}
+
+.sbar-sheet { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; background: rgba(0, 0, 0, 0.45); animation: sbar-fade 0.2s ease; }
+.sbar-sheet__card { width: 100%; max-height: 88vh; overflow-y: auto; padding: 1rem 1.1rem calc(1rem + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; background: #fffdf8; display: grid; gap: 0.75rem; animation: sbar-up 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes sbar-fade { from { opacity: 0; } }
+@keyframes sbar-up { from { transform: translateY(40px); opacity: 0.6; } }
+.sbar-sheet__head { display: flex; align-items: center; gap: 0.5rem; }
+.sbar-sheet__modes { flex: 1; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: #f3ead9; }
+.sbar-sheet__modes button { height: 38px; border: 0; border-radius: 999px; background: transparent; color: var(--oc-brown); font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.sbar-sheet__modes button.is-active { background: var(--oc-maroon); color: #fff7e8; }
+.sbar-sheet__close { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 999px; background: transparent; color: var(--oc-brown); cursor: pointer; }
+.sbar-sheet__row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; font-size: 0.92rem; font-weight: 700; color: var(--oc-brown); }
+.sbar-sheet__row > span { flex: none; }
+.sbar-sheet__row select { height: 40px; padding: 0 0.6rem; border: 1px solid var(--oc-line); border-radius: 10px; background: #fff; font: inherit; font-size: 0.9rem; font-weight: 700; }
+.sbar-sheet__mix { min-width: 0; border: 0; background: none; padding: 0; font: inherit; font-size: 0.85rem; font-weight: 600; color: #6a5848; text-align: right; cursor: pointer; }
+.sbar-sheet__mix em { color: #b3261e; font-style: normal; font-weight: 700; }
+.sbar-sheet__mix u { margin-left: 0.3rem; color: var(--oc-maroon); font-weight: 800; text-underline-offset: 2px; }
+.sbar-sheet__total { display: flex; align-items: baseline; justify-content: space-between; padding-top: 0.6rem; border-top: 1px dashed var(--oc-line); font-size: 0.9rem; color: #6a5848; }
+.sbar-sheet__total b { font-size: 1.3rem; font-weight: 900; color: var(--oc-maroon); }
+.sbar-sheet__total s { margin-right: 0.3rem; font-size: 0.85rem; font-weight: 600; color: #a89888; }
+.sbar-sheet__nudge { padding: 0.6rem 0.75rem; border: 1px dashed #d9b46a; border-radius: 12px; background: #fff6dc; font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--oc-brown); text-align: left; cursor: pointer; }
+.sbar-sheet__nudge b { color: var(--oc-maroon); font-weight: 900; }
+.sbar-sheet__perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; font-size: 0.9rem; color: var(--oc-brown); }
+.sbar-sheet__perks li { display: flex; align-items: center; gap: 0.4rem; }
+.sbar-sheet__perks svg { flex: none; padding: 2px; width: 18px; height: 18px; border-radius: 999px; background: var(--oc-maroon); color: #fff; stroke-width: 3; }
+.sbar-sheet__perks b { color: var(--oc-maroon); font-weight: 900; }
+.sbar-sheet__coupon { margin: 0; }
+.sbar-sheet .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.sbar-sheet .pd-btn { height: 48px; }
+.sbar-sheet .pc2__min { margin: 0; text-align: center; }

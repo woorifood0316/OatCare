@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { ArrowLeft, ChevronDown, ChevronUp, Minus, Plus, ShoppingBag, User, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
+import { SubscribeBar } from '../purchase/SubscribeBar';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
     FREE_SHIPPING_MIN,
@@ -201,7 +202,7 @@ export function SetPage({ count }: { count: number }) {
                             <em>{won(total)}</em>
                         </div>
 
-                        {picker}
+                        <div id="pd-mix-anchor">{picker}</div>
 
                         <ShipEta />
                         {subscribable ? (
@@ -392,7 +393,9 @@ export function SetPage({ count }: { count: number }) {
                     </div>
                     {actions}
                 </div>
-            ) : null}
+            ) : (
+                <SubscribeBar sku={page.sku} qty={qty} setQty={setQty} mixChoice={mixChoice} mixErr={mixErr} mixAnchorId="pd-mix-anchor" />
+            )}
         </div>
     );
 }
