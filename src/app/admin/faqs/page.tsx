@@ -1,7 +1,8 @@
 import { listFaqs } from '../../../lib/inquiries';
 import { workersAiReady } from '../../../lib/workers-ai';
 import { FAQ_SEED } from '../../../lib/faq-seed';
-import { FaqEditor, FaqRowActions, FaqSeedButton, FaqTester } from '../../../components/admin/InquiryAdminActions';
+import { FaqEditor, FaqRowActions, FaqSeedButton, FaqSyncButton, FaqTester } from '../../../components/admin/InquiryAdminActions';
+import { CATALOG } from '../../../lib/catalog';
 
 export const runtime = 'edge';
 
@@ -34,7 +35,15 @@ export default async function AdminFaqs() {
                 <>
                     <section className="adm-card">
                         <h2>답변 시험하기</h2>
-                        <FaqTester />
+                        <FaqTester products={CATALOG.map((c) => ({ sku: c.sku, name: c.name }))} />
+                    </section>
+
+                    <section className="adm-card">
+                        <h2>제품 정보 답변</h2>
+                        <p className="adm-muted">
+                            영양정보·알레르기·보관 방법·제조원 답변은 포장 표기사항(상세페이지 마지막 장)으로 자동으로 만들어져요. 표기사항이 바뀌면 코드의 제품 정보를 고친 뒤 이 버튼을 눌러 주세요.
+                        </p>
+                        <FaqSyncButton />
                     </section>
 
                     <section className="adm-card">

@@ -3,6 +3,8 @@ import { maskName, screenReview } from './review-filter';
 import { ESCALATION_NOTE, buildPrompt, clearMatch, escalationFor, parseChoice, rankFaqs, type FaqLite } from './inquiry-match';
 import { runChat, workersAiReady } from './workers-ai';
 import { enqueue } from './notify';
+import { getItem } from './catalog';
+import { factFaqs } from './product-facts';
 
 export const INQUIRY_MIN_LENGTH = 5;
 export const INQUIRY_MAX_LENGTH = 500;
@@ -20,6 +22,8 @@ export interface PublicInquiry {
     answeredBy: 'ai' | 'admin' | null;
     answeredAt: string | null;
     createdAt: string;
+    /** Not answered yet: 'auto' = the automatic answer is still being looked for, 'staff' = a person will answer. */
+    waiting: 'auto' | 'staff' | null;
 }
 
 export interface Faq extends FaqLite {
@@ -70,6 +74,7 @@ export async function listProductInquiries(sku: string, viewerId: string | null)
             answeredBy: (r.answered_by as 'ai' | 'admin' | null) ?? null,
             answeredAt: iso(r.answered_at),
             createdAt: iso(r.created_at) as string,
+            waiting: r.status === 'pending' ? (r.ai_note === AUTO_PENDING ? 'auto' : 'staff') : null,
         };
     });
 }
@@ -85,6 +90,7 @@ export async function listMyInquiries(userId: string) {
         answer: (r.answer as string | null) ?? null,
         answeredBy: (r.answered_by as 'ai' | 'admin' | null) ?? null,
         createdAt: iso(r.created_at) as string,
+        waiting: (r.status === 'pending' ? (r.ai_note === AUTO_PENDING ? 'auto' : 'staff') : null) as 'auto' | 'staff' | null,
     }));
 }
 
@@ -99,7 +105,7 @@ export async function pickAnswer(question: string, sku: string): Promise<{ faq: 
 
     if (workersAiReady()) {
         const candidates = ranked.map((r) => r.faq);
-        const { system, user } = buildPrompt(question, candidates);
+        const { system, user } = buildPrompt(question, candidates, getItem(sku)?.name ?? null);
         const text = await runChat(system, user);
         if (text !== null) {
             const n = parseChoice(text, candidates.length);
@@ -121,7 +127,7 @@ export async function todaysCount(userId: string): Promise<number> {
 }
 
 export type CreateResult =
-    | { ok: true; answered: boolean }
+    | { ok: true; id: string; auto: boolean }
     | { ok: false; message: string };
 
 export async function createInquiry(input: { userId: string; userName: string | null; sku: string; body: string; secret: boolean }): Promise<CreateResult> {
@@ -139,19 +145,77 @@ export async function createInquiry(input: { userId: string; userName: string | 
         return { ok: false, message: '전화번호·주소 같은 개인정보는 공개글에 쓸 수 없어요. 꼭 필요하면 비밀글로 남겨 주세요.' };
     }
 
-    // Personal information never goes to the AI: those (secret) questions go straight to a person.
-    const { faq, note } = violation === 'privacy' ? { faq: null, note: ESCALATION_NOTE.privacy } : await pickAnswer(body, input.sku);
-    const sql = getSql();
-    const rows = await sql`
-        insert into inquiries (user_id, sku, body, secret, author_name, status, answer, answered_by, faq_id, ai_note, answered_at)
-        values (${input.userId}, ${input.sku}, ${body}, ${input.secret}, ${maskName(input.userName)},
-                ${faq ? 'answered' : 'pending'}, ${faq?.answer ?? null}, ${faq ? 'ai' : null}, ${faq?.id ?? null}, ${note},
-                ${faq ? new Date().toISOString() : null})
+    // The question is saved at once; the automatic answer is looked for afterwards (answerInquiry, in the background),
+    // so the visitor never waits for the AI. Personal information never goes to the AI: those (secret) questions and
+    // the ones a person must answer are handed to the shop right away.
+    const escalation = violation === 'privacy' ? ESCALATION_NOTE.privacy : (() => {
+        const e = escalationFor(body);
+        return e ? ESCALATION_NOTE[e] : null;
+    })();
+    const rows = await getSql()`
+        insert into inquiries (user_id, sku, body, secret, author_name, status, ai_note)
+        values (${input.userId}, ${input.sku}, ${body}, ${input.secret}, ${maskName(input.userName)}, 'pending', ${escalation ?? AUTO_PENDING})
         returning id
     `;
-    if (faq) await sql`update faqs set hits = hits + 1 where id = ${faq.id}`;
-    else await enqueue('inquiry_pending', { inquiryId: rows[0].id, sku: input.sku, note }, { userId: input.userId, customer: false });
-    return { ok: true, answered: Boolean(faq) };
+    const id = rows[0].id as string;
+    if (escalation) await enqueue('inquiry_pending', { inquiryId: id, sku: input.sku, note: escalation }, { userId: input.userId, customer: false });
+    return { ok: true, id, auto: !escalation };
+}
+
+/** ai_note of a question still waiting for its automatic answer. */
+export const AUTO_PENDING = '자동 답변 준비 중';
+
+/**
+ * Look for the automatic answer of one waiting question (background job after it was posted, or the scheduler's retry).
+ * Never overwrites an answer the shop already wrote.
+ */
+export async function answerInquiry(id: string): Promise<void> {
+    const sql = getSql();
+    const rows = await sql`select id, user_id, sku, body from inquiries where id = ${id} and status = 'pending' and answered_by is null and ai_note = ${AUTO_PENDING}`;
+    const q = rows[0];
+    if (!q) return;
+    const { faq, note } = await pickAnswer(q.body as string, q.sku as string);
+    if (faq) {
+        const done = await sql`
+            update inquiries set status = 'answered', answer = ${faq.answer}, answered_by = 'ai', faq_id = ${faq.id}, ai_note = ${note}, answered_at = now()
+            where id = ${id} and status = 'pending' and answered_by is null returning id
+        `;
+        if (done.length > 0) await sql`update faqs set hits = hits + 1 where id = ${faq.id}`;
+        return;
+    }
+    const moved = await sql`update inquiries set ai_note = ${note} where id = ${id} and ai_note = ${AUTO_PENDING} returning id`;
+    if (moved.length > 0) await enqueue('inquiry_pending', { inquiryId: id, sku: q.sku, note }, { userId: (q.user_id as string | null) ?? null, customer: false });
+}
+
+/** Scheduler: questions whose background answer never ran (or failed) get another try. */
+export async function runInquiryAnswers(limit = 10): Promise<{ tried: number }> {
+    try {
+        const rows = await getSql()`
+            select id from inquiries where status = 'pending' and answered_by is null and ai_note = ${AUTO_PENDING}
+            and created_at < now() - interval '1 minute' order by created_at asc limit ${limit}
+        `;
+        for (const r of rows) await answerInquiry(r.id as string);
+        return { tried: rows.length };
+    } catch {
+        return { tried: 0 };
+    }
+}
+
+/**
+ * Write the label-based answers (lib/product-facts) into the FAQ table: added when missing, updated when the label
+ * data changed. Rows the shop added by hand are never touched (they have no auto_key).
+ */
+export async function syncFactFaqs(): Promise<number> {
+    const sql = getSql();
+    const items = factFaqs();
+    for (const f of items) {
+        await sql`
+            insert into faqs (question, keywords, answer, sku, auto_key) values (${f.question}, ${f.keywords}, ${f.answer}, ${f.sku}, ${f.key})
+            on conflict (auto_key) do update set question = excluded.question, keywords = excluded.keywords, answer = excluded.answer,
+                sku = excluded.sku, updated_at = now()
+        `;
+    }
+    return items.length;
 }
 
 export async function adminListInquiries(status: 'pending' | 'answered' | 'hidden' | 'all') {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Lock, MessageCircleQuestion } from 'lucide-react';
 import type { PublicInquiry } from '../../lib/inquiries';
@@ -12,8 +12,10 @@ const day = (iso: string) => {
 };
 
 const PAGE = 5;
+/** After posting, look again a few times so the automatic answer shows up without a reload. */
+const RECHECK_MS = [5000, 12000, 25000, 45000];
 
-/** 상품문의 tab: rules, the question box (members only), and the questions with their answers. */
+/** 상품문의 tab: rules, the question box (members only), and the questions with their answers (질문 / 답변 rows). */
 export function InquiryBoard({ sku }: { sku: string }) {
     const [list, setList] = useState<PublicInquiry[] | null>(null);
     const [signedIn, setSignedIn] = useState(false);
@@ -24,22 +26,26 @@ export function InquiryBoard({ sku }: { sku: string }) {
     const [notice, setNotice] = useState('');
     const [shown, setShown] = useState(PAGE);
     const [here, setHere] = useState('/');
+    const timers = useRef<number[]>([]);
+
+    const load = useCallback(async () => {
+        try {
+            const r = await fetch(`/api/inquiries?sku=${encodeURIComponent(sku)}`, { cache: 'no-store' });
+            const d = r.ok ? await r.json() : null;
+            if (!d) return;
+            setList(d.inquiries as PublicInquiry[]);
+            setSignedIn(Boolean(d.signedIn));
+        } catch {
+            setList((l) => l ?? []);
+        }
+    }, [sku]);
 
     useEffect(() => {
         setHere(`${location.pathname}#pd-qna`);
-        let alive = true;
-        fetch(`/api/inquiries?sku=${encodeURIComponent(sku)}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then((d) => {
-                if (!alive || !d) return;
-                setList(d.inquiries as PublicInquiry[]);
-                setSignedIn(Boolean(d.signedIn));
-            })
-            .catch(() => setList([]));
-        return () => {
-            alive = false;
-        };
-    }, [sku]);
+        load();
+        const pending = timers.current;
+        return () => pending.forEach((t) => window.clearTimeout(t));
+    }, [load]);
 
     const submit = async () => {
         if (busy) return;
@@ -61,7 +67,9 @@ export function InquiryBoard({ sku }: { sku: string }) {
                 setBody('');
                 setSecret(false);
                 setShown(PAGE);
-                setNotice(data.answered ? '답변이 바로 등록됐어요. 아래에서 확인해 주세요.' : '문의가 접수됐어요. 담당자가 확인 후 답변드려요. 답변은 이곳과 마이페이지 > 상품 문의에서 확인할 수 있어요.');
+                setNotice('문의가 등록됐어요. 답변이 달리면 이곳과 마이페이지 > 상품 문의에서 확인할 수 있어요.');
+                timers.current.forEach((t) => window.clearTimeout(t));
+                timers.current = RECHECK_MS.map((ms) => window.setTimeout(load, ms));
             }
         } catch {
             setError('네트워크 오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
@@ -74,7 +82,7 @@ export function InquiryBoard({ sku }: { sku: string }) {
         <div className="qa">
             <ul className="qa-rules">
                 <li>
-                    자주 묻는 질문은 <b>AI가 등록된 답변으로 바로 안내</b>해 드려요. 그 밖의 문의는 담당자가 확인 후 답변드려요.
+                    문의는 바로 등록되고, 자주 묻는 질문은 <b>AI가 등록된 답변으로 빠르게 안내</b>해 드려요. 그 밖의 문의는 담당자가 확인 후 답변드려요.
                 </li>
                 <li>
                     <b>취소·교환·반품</b>은 문의로 처리되지 않아요. <b>마이페이지 &gt; 주문·배송 &gt; 주문 상세</b>에서 신청해 주세요.
@@ -116,14 +124,11 @@ export function InquiryBoard({ sku }: { sku: string }) {
                         <Lock size={16} /> 상품 문의는 회원만 작성할 수 있어요
                     </p>
                     <p>
-                        회원가입 후 궁금한 점을 남겨 주시면 <b>AI가 바로 답변</b>해 드려요. 지금 가입하면 <b>{WELCOME_COUPON_AMOUNT.toLocaleString('ko-KR')}원 웰컴 쿠폰</b>도 드려요.
+                        회원가입 후 궁금한 점을 남겨 주시면 <b>AI가 빠르게 답변</b>해 드려요. 지금 가입하면 <b>{WELCOME_COUPON_AMOUNT.toLocaleString('ko-KR')}원 웰컴 쿠폰</b>도 드려요.
                     </p>
                     <div className="qa-join__btns">
-                        <Link href={`/signup?callbackUrl=${encodeURIComponent(here)}`} className="my-btn my-btn--primary">
+                        <Link href={`/login?callbackUrl=${encodeURIComponent(here)}`} className="my-btn my-btn--primary">
                             회원가입하고 문의하기
-                        </Link>
-                        <Link href={`/login?callbackUrl=${encodeURIComponent(here)}`} className="my-btn">
-                            로그인
                         </Link>
                     </div>
                 </div>
@@ -138,10 +143,10 @@ export function InquiryBoard({ sku }: { sku: string }) {
             ) : (
                 <ul className="qa-list">
                     {items.slice(0, shown).map((q) => (
-                        <li key={q.id} className="qa-item">
-                            <div className="qa-q">
+                        <li key={q.id} className="qa-row">
+                            <div className="qa-row__q">
                                 <span className="qa-tag">질문</span>
-                                <div>
+                                <div className="qa-row__main">
                                     <p>
                                         {q.body === null ? (
                                             <span className="qa-secret">
@@ -156,30 +161,31 @@ export function InquiryBoard({ sku }: { sku: string }) {
                                     </p>
                                     <small>
                                         {q.authorName}
-                                        {q.mine ? ' (나)' : ''} · {day(q.createdAt)}
+                                        {q.mine ? ' (나)' : ''}
                                     </small>
                                 </div>
+                                <time className="qa-row__date">{day(q.createdAt)}</time>
                             </div>
-                            {q.status === 'answered' ? (
-                                q.answer !== null ? (
-                                    <div className="qa-a">
-                                        <span className={`qa-tag qa-tag--a${q.answeredBy === 'ai' ? ' qa-tag--ai' : ''}`}>
-                                            {q.answeredBy === 'ai' ? 'AI 자동 답변' : '참오트케어'}
-                                        </span>
-                                        <div>
-                                            <p>{q.answer}</p>
-                                            {q.answeredBy === 'ai' ? (
-                                                <small>등록된 답변을 AI가 골라 안내했어요. 더 궁금한 점은 다시 문의해 주세요.</small>
-                                            ) : q.answeredAt ? (
-                                                <small>{day(q.answeredAt)}</small>
-                                            ) : null}
-                                        </div>
+
+                            {q.status === 'answered' && q.answer !== null ? (
+                                <div className="qa-row__a">
+                                    <span className="qa-row__arrow" aria-hidden="true">
+                                        ↳
+                                    </span>
+                                    <span className="qa-tag qa-tag--a">답변</span>
+                                    <div className="qa-row__main">
+                                        <b className="qa-row__who">
+                                            참오트케어
+                                            {q.answeredBy === 'ai' ? <span className="qa-ai">AI 자동 답변</span> : null}
+                                        </b>
+                                        <p>{q.answer}</p>
                                     </div>
-                                ) : (
-                                    <p className="qa-wait is-done">답변 완료</p>
-                                )
+                                    {q.answeredAt ? <time className="qa-row__date">{day(q.answeredAt)}</time> : null}
+                                </div>
+                            ) : q.status === 'answered' ? (
+                                <p className="qa-row__wait is-done">↳ 답변 완료 (비밀글)</p>
                             ) : (
-                                <p className="qa-wait">담당자가 확인 후 답변드릴게요</p>
+                                <p className="qa-row__wait">↳ {q.waiting === 'auto' ? '답변을 준비하고 있어요' : '담당자가 확인 후 답변드릴게요'}</p>
                             )}
                         </li>
                     ))}

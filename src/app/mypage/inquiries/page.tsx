@@ -56,13 +56,17 @@ export default async function MyInquiriesPage() {
                             <small className="qa-my__date">{day(q.createdAt)}</small>
                             {q.answer ? (
                                 <div className="qa-a">
-                                    <span className={`qa-tag qa-tag--a${q.answeredBy === 'ai' ? ' qa-tag--ai' : ''}`}>{q.answeredBy === 'ai' ? 'AI 자동 답변' : '참오트케어'}</span>
+                                    <span className="qa-tag qa-tag--a">답변</span>
                                     <div>
+                                        <b className="qa-row__who">
+                                            참오트케어
+                                            {q.answeredBy === 'ai' ? <span className="qa-ai">AI 자동 답변</span> : null}
+                                        </b>
                                         <p>{q.answer}</p>
                                     </div>
                                 </div>
                             ) : (
-                                <p className="qa-wait">담당자가 확인 후 답변드릴게요. 답변이 달리면 이곳에 보여요.</p>
+                                <p className="qa-wait">{q.waiting === 'auto' ? '답변을 준비하고 있어요. 잠시 후 다시 확인해 주세요.' : '담당자가 확인 후 답변드릴게요. 답변이 달리면 이곳에 보여요.'}</p>
                             )}
                         </section>
                     );

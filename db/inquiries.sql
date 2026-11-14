@@ -31,3 +31,7 @@ create table if not exists inquiries (
 create index if not exists inquiries_sku_idx on inquiries(sku, created_at desc);
 create index if not exists inquiries_user_idx on inquiries(user_id, created_at desc);
 create index if not exists inquiries_status_idx on inquiries(status, created_at);
+
+-- Label-based answers (lib/product-facts) are written by code: auto_key identifies them so a re-sync updates them.
+alter table faqs add column if not exists auto_key text;
+create unique index if not exists faqs_auto_key on faqs(auto_key);

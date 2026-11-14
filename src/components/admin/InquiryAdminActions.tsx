@@ -172,8 +172,9 @@ export function FaqRowActions({ faq }: { faq: FaqRow }) {
 }
 
 /** Try a question and see which answer the customer would get (nothing is saved). */
-export function FaqTester() {
+export function FaqTester({ products }: { products: { sku: string; name: string }[] }) {
     const [question, setQuestion] = useState('');
+    const [sku, setSku] = useState(products[0]?.sku ?? '');
     const [busy, setBusy] = useState(false);
     const [result, setResult] = useState<{ answer: string | null; faqQuestion: string | null; note: string; aiReady: boolean } | null>(null);
     const [error, setError] = useState('');
@@ -181,7 +182,7 @@ export function FaqTester() {
     const test = async () => {
         setBusy(true);
         setError('');
-        const r = await post('/api/admin/faqs', 'POST', { action: 'test', question });
+        const r = await post('/api/admin/faqs', 'POST', { action: 'test', question, sku });
         setBusy(false);
         if (r.error) return setError(r.error);
         setResult(r.data as typeof result);
@@ -190,6 +191,13 @@ export function FaqTester() {
     return (
         <div className="adm-qa-box">
             <div className="adm-row">
+                <select value={sku} onChange={(e) => setSku(e.target.value)} aria-label="질문하는 상품 페이지">
+                    {products.map((p) => (
+                        <option key={p.sku} value={p.sku}>
+                            {p.name}
+                        </option>
+                    ))}
+                </select>
                 <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="손님처럼 질문해 보세요 (예: 정수기 물로 타도 돼요?)" onKeyDown={(e) => e.key === 'Enter' && test()} />
                 <button type="button" className="adm-btn adm-btn--primary" onClick={test} disabled={busy}>
                     {busy ? '확인 중...' : '시험하기'}
@@ -236,6 +244,32 @@ export function FaqSeedButton() {
                 기본 FAQ 넣기
             </button>
             {error ? <small className="adm-error">{error}</small> : null}
+        </div>
+    );
+}
+
+/** Rebuild the answers that come from the package label (영양정보·알레르기·보관 …) after the label data changed. */
+export function FaqSyncButton() {
+    const router = useRouter();
+    const [busy, setBusy] = useState(false);
+    const [msg, setMsg] = useState('');
+    return (
+        <div className="adm-row">
+            <button
+                type="button"
+                className="adm-btn"
+                disabled={busy}
+                onClick={async () => {
+                    setBusy(true);
+                    const r = await post('/api/admin/faqs', 'POST', { action: 'sync_facts' });
+                    setBusy(false);
+                    setMsg(r.error ?? `제품 정보 답변 ${(r.data?.count as number) ?? 0}개를 맞췄어요`);
+                    router.refresh();
+                }}
+            >
+                {busy ? '맞추는 중...' : '제품 정보 답변 다시 만들기'}
+            </button>
+            {msg ? <small className="adm-muted">{msg}</small> : null}
         </div>
     );
 }

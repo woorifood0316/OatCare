@@ -37,7 +37,9 @@ function norm(s: string): string {
 }
 
 // Question endings and filler that every question shares; they would make unrelated questions look alike.
-const STOP = new Set(['되나', '나요', '어요', '돼요', '해요', '에요', '예요', '있나', '는데', '어도', '도되', '도돼', '먹어', '먹으', '으면', '하나', '할수', '수있', '있어', '궁금', '금해', '얼마', '마나', '마예', '마에', '어떻', '떻게', '게되', '하고', '싶어', '인가', '가요', '건가', '나여', '니까', '까요', '을까', '를까', '은데', '데요']);
+const STOP = new Set(['되나', '나요', '어요', '돼요', '해요', '에요', '예요', '있나', '는데', '어도', '도되', '도돼', '먹어', '먹으', '으면', '하나', '할수', '수있', '있어', '궁금', '금해', '얼마', '마나', '마예', '마에', '어떻', '떻게', '게되', '하고', '싶어', '인가', '가요', '건가', '나여', '니까', '까요', '을까', '를까', '은데', '데요',
+    // glue around "얼마나 되나요 / 들어 있나요": 은얼, 나되, 들어 …
+    '나되', '은얼', '는얼', '이얼', '가얼', '나들', '들어', '어있', '면되', '이에', '그램', '몇그', '많아', '아요']);
 
 function bigrams(s: string): Set<string> {
     const t = norm(s);
@@ -64,7 +66,8 @@ export function overlap(question: string, faq: FaqLite): number {
 export function rankFaqs(question: string, faqs: FaqLite[], sku: string, limit = 10): { faq: FaqLite; score: number }[] {
     return faqs
         .filter((f) => !f.sku || f.sku === sku)
-        .map((faq) => ({ faq, score: overlap(question, faq) }))
+        // On a product page, that product's own answer wins a tie with the general one.
+        .map((faq) => ({ faq, score: overlap(question, faq) + (faq.sku && faq.sku === sku ? 0.05 : 0) }))
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
 }
@@ -78,7 +81,7 @@ export function clearMatch(ranked: { faq: FaqLite; score: number }[]): FaqLite |
 }
 
 /** The instruction for the AI: choose a number, nothing else. */
-export function buildPrompt(question: string, candidates: FaqLite[]): { system: string; user: string } {
+export function buildPrompt(question: string, candidates: FaqLite[], productName: string | null = null): { system: string; user: string } {
     const system = [
         '당신은 오트밀 쇼핑몰 "참오트케어"의 상품 문의 분류기입니다.',
         '고객 질문과 FAQ 목록을 보고, 고객 질문에 그대로 답이 되는 FAQ 번호 하나만 고르세요.',
@@ -88,7 +91,8 @@ export function buildPrompt(question: string, candidates: FaqLite[]): { system: 
         '출력은 숫자 하나만 쓰세요. 설명하지 마세요.',
     ].join('\n');
     const list = candidates.map((c, i) => `${i + 1}. 질문: ${c.question}\n   답변: ${c.answer}`).join('\n');
-    const user = `FAQ 목록:\n${list}\n\n고객 질문: ${question}\n\n답이 되는 FAQ 번호 (없으면 0):`;
+    const product = productName ? `고객이 보고 있는 상품: ${productName} ("이 상품"은 이 상품을 뜻해요)\n\n` : '';
+    const user = `${product}FAQ 목록:\n${list}\n\n고객 질문: ${question}\n\n답이 되는 FAQ 번호 (없으면 0):`;
     return { system, user };
 }
 

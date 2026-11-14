@@ -1,7 +1,8 @@
 import { getSql } from '../../../lib/db';
 import { jsonError, sameOrigin, sessionUserId } from '../../../lib/api';
 import { getItem } from '../../../lib/catalog';
-import { createInquiry, listProductInquiries } from '../../../lib/inquiries';
+import { answerInquiry, createInquiry, listProductInquiries } from '../../../lib/inquiries';
+import { runInBackground } from '../../../lib/background';
 
 export const runtime = 'edge';
 
@@ -39,5 +40,7 @@ export async function POST(request: Request) {
         secret: body.secret === true,
     });
     if (!result.ok) return jsonError(result.message);
-    return Response.json({ answered: result.answered, inquiries: await listProductInquiries(sku, userId) });
+    // Registered: reply now; the automatic answer is looked for after the response has gone out.
+    if (result.auto) runInBackground(answerInquiry(result.id));
+    return Response.json({ ok: true, inquiries: await listProductInquiries(sku, userId) });
 }

@@ -298,7 +298,7 @@ export const Pillars: React.FC = () => {
             title: '9가지 곡물의 완벽 영양 밸런스',
             desc: '귀리(Oat) 중심의 백태, 서리태, 찰현미 등 9가지 곡물이 빚어낸 균형 잡힌 식이섬유와 가벼운 단백질.',
             icon: ShieldCheck,
-            highlight: '식이섬유 4.2g · 당류 3.5g',
+            highlight: '식이섬유 8g · 당류 7g (그레인 1포)',
         },
         {
             num: '02',

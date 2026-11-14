@@ -2,7 +2,7 @@ import { getSql } from '../../../../lib/db';
 import { isUuid, jsonError, requireAdmin, sameOrigin } from '../../../../lib/api';
 import { getItem } from '../../../../lib/catalog';
 import { FAQ_SEED } from '../../../../lib/faq-seed';
-import { pickAnswer } from '../../../../lib/inquiries';
+import { pickAnswer, syncFactFaqs } from '../../../../lib/inquiries';
 import { workersAiReady } from '../../../../lib/workers-ai';
 
 export const runtime = 'edge';
@@ -56,7 +56,12 @@ export async function POST(request: Request) {
             const n = await sql`select count(*)::int as n from faqs`;
             if ((n[0]?.n as number) > 0) return jsonError('이미 FAQ가 있어요. 기본 FAQ는 비어 있을 때만 넣을 수 있어요.', 409);
             for (const f of FAQ_SEED) await sql`insert into faqs (question, keywords, answer) values (${f.question}, ${f.keywords}, ${f.answer})`;
+            await syncFactFaqs();
             break;
+        }
+        case 'sync_facts': {
+            // Label-based answers (영양정보·알레르기·보관 …): add the missing ones, refresh the rest.
+            return Response.json({ ok: true, count: await syncFactFaqs() });
         }
         case 'test': {
             const question = text(body.question, 500);

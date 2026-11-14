@@ -1,4 +1,5 @@
 import { runBilling, runNotifications, runReminders } from '../../../../lib/cron';
+import { runInquiryAnswers } from '../../../../lib/inquiries';
 
 export const runtime = 'edge';
 
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
         out.reminders = await runReminders();
     }
     if (!job || job === 'notify' || job === 'billing') {
+        out.inquiries = await runInquiryAnswers(); // product Q&A whose background answer didn't run
         out.notifications = await runNotifications();
     }
     return Response.json(out);

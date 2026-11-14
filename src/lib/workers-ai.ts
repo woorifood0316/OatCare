@@ -5,8 +5,11 @@
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
-/** Fast multilingual model recommended by Cloudflare. Override with AI_MODEL. */
-const DEFAULT_MODEL = '@cf/zai-org/glm-4.7-flash';
+/**
+ * A model that answers straight away (no hidden "thinking" step: the first choice, glm-4.7-flash, spent its tokens
+ * thinking and returned nothing). Override with AI_MODEL (any Workers AI text-generation model).
+ */
+const DEFAULT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 type AiBinding = { run: (model: string, input: Record<string, unknown>) => Promise<unknown> };
 
@@ -29,6 +32,7 @@ function textOf(out: unknown): string {
     const o = (out ?? {}) as Record<string, unknown>;
     const r = (o.result ?? o) as Record<string, unknown>;
     if (typeof r.response === 'string') return r.response;
+    if (typeof r.response === 'number') return String(r.response);
     const choices = r.choices as { message?: { content?: unknown }; text?: unknown }[] | undefined;
     const c = choices?.[0];
     if (c) {
@@ -38,7 +42,7 @@ function textOf(out: unknown): string {
     return '';
 }
 
-export async function runChat(system: string, user: string, maxTokens = 400): Promise<string | null> {
+export async function runChat(system: string, user: string, maxTokens = 32): Promise<string | null> {
     const model = process.env.AI_MODEL || DEFAULT_MODEL;
     const input = {
         messages: [
