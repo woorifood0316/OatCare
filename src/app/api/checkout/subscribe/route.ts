@@ -1,6 +1,6 @@
 import { getSql } from '../../../../lib/db';
 import { isUuid, jsonError, sameOrigin, sessionUserId } from '../../../../lib/api';
-import { couponDiscount, firstSubscriptionDiscount, priceCart, sanitizeLines, type CartLine } from '../../../../lib/catalog';
+import { couponDiscount, priceCart, sanitizeLines, type CartLine } from '../../../../lib/catalog';
 import { getAddress } from '../../../../lib/addresses';
 import { removeCartLines } from '../../../../lib/orders';
 import { startSubscription } from '../../../../lib/subscriptions';
@@ -71,11 +71,7 @@ export async function POST(request: Request) {
 
     let discount = 0;
     let couponId: string | null = null;
-    if (giftEligible) {
-        // First subscription: automatic 5,000원 off the first payment. One discount per order, so no coupon here
-        // (the member keeps it for another order).
-        discount = firstSubscriptionDiscount(firstPriced.total);
-    } else if (body.couponId) {
+    if (body.couponId) {
         if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
         const coupon = await getAvailableCoupon(userId, body.couponId);
         if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');

@@ -101,12 +101,6 @@ export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
 export const WELCOME_COUPON_AMOUNT = 3000;
 export const WELCOME_COUPON_DAYS = 30;
 export const WELCOME_COUPON_MIN_ORDER = 20000;
-/**
- * First subscription: this much off its first payment, automatically (no coupon). Same eligibility as the shaker
- * bottle (a member's first subscription; given back if that order is refunded). One discount per order, so a coupon
- * is not used on that payment and stays for a later order.
- */
-export const FIRST_SUBSCRIPTION_DISCOUNT = 5000;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;
 export const GIFT_SHAKER_NAME = '참오트케어 쉐이커 보틀 (정기구독 첫 회 증정)';
@@ -332,9 +326,4 @@ export function couponDiscount(
 /** True when the priced items include a set (bundle). */
 export function hasSetItem(items: { sku: string }[]): boolean {
     return items.some((i) => getItem(i.sku)?.kind === 'bundle');
-}
-
-/** First-subscription discount for a first payment of `total` (never below the minimum Toss accepts). */
-export function firstSubscriptionDiscount(total: number): number {
-    return Math.max(0, Math.min(FIRST_SUBSCRIPTION_DISCOUNT, total - MIN_PAYABLE));
 }

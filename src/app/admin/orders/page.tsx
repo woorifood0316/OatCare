@@ -198,7 +198,7 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                                         )}
                                     </td>
                                     <td className="r">
-                                        {o.discountAmount > 0 ? <span className="ord-disc">{o.couponId ? '쿠폰' : '첫 구독'}</span> : null}
+                                        {o.discountAmount > 0 ? <span className="ord-disc">쿠폰</span> : null}
                                         {won(o.amount)}
                                     </td>
                                 </tr>

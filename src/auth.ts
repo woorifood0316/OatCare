@@ -6,7 +6,6 @@ import Credentials from 'next-auth/providers/credentials';
 import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
-import { verifyTestLogin } from './lib/test-login';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
 
@@ -99,19 +98,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 return { id: userId, name: pending.name, email: pending.email };
             },
         }),
-        // TEMPORARY: test id/password login for the payment-provider review (see lib/test-login.ts).
-        Credentials({
-            id: 'review',
-            name: 'review',
-            credentials: { loginId: {}, password: {} },
-            async authorize(creds) {
-                const userId = await verifyTestLogin(String(creds?.loginId ?? ''), String(creds?.password ?? ''));
-                if (!userId) return null;
-                const sql = getSql();
-                await sql`update users set last_login_at = now() where id = ${userId}`;
-                return { id: userId, name: '테스트 회원' };
-            },
-        }),
     ],
     // Print the real cause of sign-in failures (the browser only shows "Configuration"). No secrets are logged.
     logger: {
@@ -126,7 +112,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async signIn({ user, account }) {
             if (!account) return false;
-            if (account.provider === 'review' || account.provider === 'signup') return true; // done in authorize()
+            if (account.provider === 'signup') return true; // done in authorize()
             const provider = account.provider === 'kakao-app' ? 'kakao' : account.provider;
             const providerAccountId = account.providerAccountId;
             const sql = getSql();
