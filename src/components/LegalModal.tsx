@@ -46,7 +46,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
                             </p>
                             <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--oc-line)', boxShadow: '0 8px 25px rgba(0,0,0,0.12)' }}>
                                 <img
-                                    src="/assets/woori.jpg"
+                                    src="/assets/business-license.jpg"
                                     alt="우리종합식품 사업자등록증"
                                     style={{ width: '100%', height: 'auto', display: 'block' }}
                                 />
