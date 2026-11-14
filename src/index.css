@@ -6018,3 +6018,4 @@ tr.is-muted td { opacity: 0.6; }
   .my-crumbs span[aria-current] { color: var(--oc-brown); font-weight: 700; }
   .my-crumbs .my-crumbs__back { margin-left: auto; display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.35rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; color: var(--oc-brown); font-weight: 700; text-decoration: none; }
 }
+.inv-nudge { margin: 1rem 0; text-align: left; }
