@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useCart } from './CartProvider';
+import { backToPrevious } from '../../lib/prev-page';
 import {
     CYCLE_OPTIONS,
     CartLine,
@@ -257,13 +258,19 @@ function Section({
 
 export function CartView() {
     const { lines, hydrated } = useCart();
+    const router = useRouter();
     const once = lines.filter((l) => l.mode === 'once');
     const subs = lines.filter((l) => l.mode === 'subscribe');
+
+    // Came from a page of this site (e.g. a set page → 정기구독): go back to exactly that page; otherwise home.
+    const continueShopping = (e: React.MouseEvent) => {
+        backToPrevious(e, () => router.back());
+    };
 
     return (
         <main className="cart-page">
             <header className="cart-page__head">
-                <Link href="/" className="cart-back">
+                <Link href="/" className="cart-back" onClick={continueShopping}>
                     <ArrowLeft size={18} />
                     <span>쇼핑 계속하기</span>
                 </Link>

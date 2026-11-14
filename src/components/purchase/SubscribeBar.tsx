@@ -8,7 +8,6 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { CouponHint } from './CouponHint';
 import {
     CYCLE_OPTIONS,
-    FLAVORS,
     MIN_SUBSCRIPTION_CHARGES,
     SUBSCRIPTION_DISCOUNT_RATE,
     getItem,
@@ -20,18 +19,11 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
 type Mode = 'once' | 'subscribe';
 
-/** "골고루" or "그레인 5 · 고구마 10 …" for the flavour mix picked on the page. */
-function mixLabel(mix: Pick<CartLine, 'mix' | 'mixDetail'>, count: number): string {
-    if (mix.mix !== 'custom' || !mix.mixDetail) return `5가지 골고루 (맛별 ${count / FLAVORS.length}개씩)`;
-    return FLAVORS.filter((f) => (mix.mixDetail?.[f] ?? 0) > 0)
-        .map((f) => `${f} ${mix.mixDetail?.[f]}`)
-        .join(' · ');
-}
-
 /**
  * Phone bottom bar for sets that can be subscribed (20·30): [일반 구매] [정기구독 5%↓]. Each opens a sheet:
  * one-time = quantity + 장바구니/바로 구매 (with a nudge to subscribe), subscription = delivery cycle + start.
- * The flavour mix comes from the picker on the page; if it is not valid yet the sheet sends the visitor back to it.
+ * On phones this sheet is the only place to buy: the flavour mix picker lives in it (same state as the page's picker,
+ * which is shown on wide screens only).
  */
 export function SubscribeBar({
     sku,
@@ -39,15 +31,15 @@ export function SubscribeBar({
     setQty,
     mixChoice,
     mixErr,
-    mixAnchorId,
+    mixPicker,
 }: {
     sku: string;
     qty: number;
     setQty: (n: number) => void;
     mixChoice: Pick<CartLine, 'mix' | 'mixDetail'>;
     mixErr: string | null;
-    /** Element id of the flavour picker on the page (to send the visitor back to it). */
-    mixAnchorId: string;
+    /** The flavour mix picker (useMixChoice), rendered inside the sheet. */
+    mixPicker: React.ReactNode;
 }) {
     const router = useRouter();
     const { addLine, buyNow } = useCart();
@@ -64,13 +56,6 @@ export function SubscribeBar({
     const effectiveCycle = cycle ?? item.count;
     const clamp = (n: number) => Math.min(99, Math.max(1, n));
 
-    const fixMix = () => {
-        setOpen(null);
-        setTimeout(() => {
-            const el = document.getElementById(mixAnchorId);
-            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' });
-        }, 50);
-    };
     const addCart = () => {
         if (mixErr) return;
         addLine({ sku, qty, mode: 'once', ...mixChoice });
@@ -120,12 +105,7 @@ export function SubscribeBar({
                             </button>
                         </div>
 
-                        <div className="sbar-sheet__row">
-                            <span>맛 구성</span>
-                            <button type="button" className="sbar-sheet__mix" onClick={fixMix}>
-                                {mixErr ? <em>{mixErr}</em> : mixLabel(mixChoice, item.count)} <u>변경</u>
-                            </button>
-                        </div>
+                        <div className="sbar-sheet__mixbox">{mixPicker}</div>
 
                         {open === 'once' ? (
                             <>

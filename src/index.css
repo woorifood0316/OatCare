@@ -5602,3 +5602,11 @@ body {
 .sbar-sheet .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .sbar-sheet .pd-btn { height: 48px; }
 .sbar-sheet .pc2__min { margin: 0; text-align: center; }
+
+/* Phones: buying happens from the bottom bar, so the in-page buy buttons (and, for subscribable sets, the
+   quantity / flavour / purchase area that the sheet now holds) are hidden to avoid showing them twice. */
+@media (max-width: 800px) {
+  .pd-inline-buy,
+  .pd-inline-actions { display: none !important; }
+}
+.sbar-sheet__mixbox .pd-mix { margin: 0; }

@@ -17,7 +17,7 @@ import {
 } from '../../lib/catalog';
 import { PRODUCT_PAGES, detailUrl, getProductPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
-import { hasReturnPoint } from '../../lib/return-point';
+import { backToPrevious } from '../../lib/prev-page';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 const SLICES = Array.from({ length: 13 }, (_, i) => String(i + 1).padStart(2, '0'));
@@ -99,12 +99,8 @@ export function ProductPage({ slug }: { slug: string }) {
                         href="/#product-lineup"
                         className="pd-top__brand"
                         onClick={(e) => {
-                            // Came here from the landing page: step back so the visitor lands exactly where they left.
-                            if (hasReturnPoint('/') && window.history.length > 1) {
-                                e.preventDefault();
-                                router.back();
-                                return;
-                            }
+                            // Came from another page of this site: step back to exactly where the visitor was.
+                            if (backToPrevious(e, () => router.back())) return;
                             try {
                                 sessionStorage.setItem('oc_return', 'product-lineup');
                             } catch {}
@@ -185,7 +181,8 @@ export function ProductPage({ slug }: { slug: string }) {
                         </div>
 
                         <ShipEta />
-                        {actions}
+                        {/* Phones use the bottom bar's buttons (same actions), so these are for wide screens only. */}
+                        <div className="pd-inline-actions">{actions}</div>
 
                         <div className="pd-sub">
                             <Repeat size={18} />

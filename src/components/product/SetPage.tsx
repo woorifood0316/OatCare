@@ -26,7 +26,7 @@ import {
 } from '../../lib/catalog';
 import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
-import { hasReturnPoint } from '../../lib/return-point';
+import { backToPrevious } from '../../lib/prev-page';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -93,12 +93,8 @@ export function SetPage({ count }: { count: number }) {
         router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
     };
     const goBack = (e?: React.MouseEvent) => {
-        // Came here from the landing page: step back so the visitor lands exactly where they left.
-        if (e && hasReturnPoint('/') && window.history.length > 1) {
-            e.preventDefault();
-            router.back();
-            return;
-        }
+        // Came from another page of this site: step back to exactly where the visitor was.
+        if (e && backToPrevious(e, () => router.back())) return;
         try {
             sessionStorage.setItem('oc_return', 'bundles');
         } catch {}
@@ -180,7 +176,8 @@ export function SetPage({ count }: { count: number }) {
                             </li>
                         </ul>
 
-                        <div className="pd-qty">
+                        {/* Phones buy from the bottom bar's sheet, so the in-page buy area is for wide screens only. */}
+                        <div className={`pd-qty${subscribable ? ' pd-inline-buy' : ''}`}>
                             <span>수량</span>
                             <div className="pd-qty__ctl">
                                 <button type="button" onClick={() => setQty((q) => clamp(q - 1))} aria-label="수량 줄이기">
@@ -202,14 +199,16 @@ export function SetPage({ count }: { count: number }) {
                             <em>{won(total)}</em>
                         </div>
 
-                        <div id="pd-mix-anchor">{picker}</div>
+                        <div className={subscribable ? 'pd-inline-buy' : undefined}>{picker}</div>
 
                         <ShipEta />
                         {subscribable ? (
-                            <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
+                            <div className="pd-inline-buy">
+                                <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
+                            </div>
                         ) : (
                             <>
-                                {actions}
+                                <div className="pd-inline-actions">{actions}</div>
                                 <p className="pd-note">정기구독은 20·30개입 세트에서 가능해요 (최소 {MIN_SUBSCRIPTION_CHARGES}회 이용)</p>
                             </>
                         )}
@@ -238,7 +237,7 @@ export function SetPage({ count }: { count: number }) {
                             <p className="pd-lead">
                                 {count === 10
                                     ? '5가지 맛을 각 2포씩, 총 10포로 구성됩니다.'
-                                    : `5가지 맛 중 원하는 맛을 5개입 묶음으로 골라 총 ${count}포를 채워요. 기본은 5가지 맛 균등 구성이고, 위에서 직접 조합할 수 있어요.`}
+                                    : `5가지 맛 중 원하는 맛을 5개입 묶음으로 골라 총 ${count}포를 채워요. 기본은 5가지 맛 균등 구성이고, 구매할 때 직접 조합할 수 있어요.`}
                             </p>
                             <div className="pd-setflavors">
                                 {PRODUCT_PAGES.map((p) => (
@@ -394,7 +393,7 @@ export function SetPage({ count }: { count: number }) {
                     {actions}
                 </div>
             ) : (
-                <SubscribeBar sku={page.sku} qty={qty} setQty={setQty} mixChoice={mixChoice} mixErr={mixErr} mixAnchorId="pd-mix-anchor" />
+                <SubscribeBar sku={page.sku} qty={qty} setQty={setQty} mixChoice={mixChoice} mixErr={mixErr} mixPicker={picker} />
             )}
         </div>
     );

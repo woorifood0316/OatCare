@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { backToPrevious, previousPage } from '../../lib/prev-page';
 import { ArrowLeft } from 'lucide-react';
 import { AddressForm } from '../address/AddressForm';
 import { getAssetUrl } from '../../utils/assets';
@@ -12,12 +14,19 @@ import type { Address, AddressInput } from '../../lib/validate';
 export const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
 export function CheckoutShell({ title, children }: { title: string; children: React.ReactNode }) {
+    const router = useRouter();
+    // "바로 구매" from a product page skips the cart, so the back button names where it really goes.
+    const [backLabel, setBackLabel] = useState('장바구니로');
+    useEffect(() => {
+        const prev = previousPage();
+        if (prev && prev !== '/cart') setBackLabel('이전 화면으로');
+    }, []);
     return (
         <main className="cart-page co-page">
             <header className="cart-page__head">
-                <Link href="/cart" className="cart-back">
+                <Link href="/cart" className="cart-back" onClick={(e) => backToPrevious(e, () => router.back())}>
                     <ArrowLeft size={18} />
-                    <span>장바구니로</span>
+                    <span>{backLabel}</span>
                 </Link>
                 <h1>{title}</h1>
             </header>
