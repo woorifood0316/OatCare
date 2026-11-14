@@ -102,14 +102,28 @@ export function OrderSummary({
     );
 }
 
-/** Choose one of the customer's usable coupons (or none). */
+/** Best usable coupon for this order (largest discount), or null. Used to pre-select it at checkout. */
+export function bestCouponId(coupons: Coupon[], subtotal: number, total: number, noMinimum: boolean): string | null {
+    let best: { id: string; d: number } | null = null;
+    for (const c of coupons) {
+        if (!c.available) continue;
+        const d = couponDiscount(c, subtotal, total, noMinimum);
+        if (d > 0 && (!best || d > best.d)) best = { id: c.id, d };
+    }
+    return best?.id ?? null;
+}
+
+/**
+ * Coupon section at checkout. A status line always says whether a coupon is applied, and when the member's coupon
+ * does not fit this order it says why and how to use it (add more, or a 20·30 set / subscription).
+ */
 export function CouponPicker({
     coupons,
     selectedId,
     onSelect,
     subtotal,
     total,
-    hasSet = false,
+    noMinimum = false,
     note,
 }: {
     coupons: Coupon[];
@@ -117,8 +131,8 @@ export function CouponPicker({
     onSelect: (id: string | null) => void;
     subtotal: number;
     total: number;
-    /** Order has a set (or is a subscription): the coupon's minimum does not apply. */
-    hasSet?: boolean;
+    /** Order has a 20·30 set (or is a subscription): the coupon's minimum does not apply. */
+    noMinimum?: boolean;
     note?: string;
 }) {
     const usable = coupons.filter((c) => c.available);
@@ -127,9 +141,53 @@ export function CouponPicker({
         const d = new Date(iso);
         return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}까지`;
     };
+    const fits = usable.filter((c) => couponDiscount(c, subtotal, total, noMinimum) > 0);
+    const selected = usable.find((c) => c.id === selectedId) ?? null;
+    const selectedOff = selected ? couponDiscount(selected, subtotal, total, noMinimum) : 0;
+    const biggest = [...usable].sort((a, b) => b.amount - a.amount)[0];
+
+    let status: React.ReactNode;
+    if (selected && selectedOff > 0) {
+        status = (
+            <div className="cph is-ok co-coupon-status" role="status">
+                <p>
+                    🎟️ <b>{selected.name} {won(selectedOff)} 할인</b>이 적용됐어요
+                </p>
+            </div>
+        );
+    } else if (fits.length > 0) {
+        status = (
+            <div className="cph co-coupon-status" role="status">
+                <p>
+                    🎟️ 이 주문에 쓸 수 있는 쿠폰이 있어요 · <b>아래에서 선택</b>하면 {won(couponDiscount(fits[0], subtotal, total, noMinimum))} 할인돼요
+                </p>
+            </div>
+        );
+    } else {
+        status = (
+            <div className="cph co-coupon-status" role="status">
+                <p>
+                    🎟️ <b>{won(biggest.amount)} 쿠폰</b>은 이 주문에 쓸 수 없어요 · 낱개·맛보기 세트는{' '}
+                    <span className="oc-nowrap">상품 금액 {won(biggest.minOrder)} 이상</span>부터 써요 (
+                    <span className="oc-nowrap">
+                        <b>{won(biggest.minOrder - subtotal)}</b> 부족
+                    </span>
+                    )
+                </p>
+                <p className="cph__up">
+                    <span>
+                        <b>20·30개 세트</b>나 <b>정기구독</b>은 금액 상관없이 바로 적용돼요
+                    </span>
+                    <Link href="/cart">장바구니에서 바꾸기 →</Link>
+                </p>
+            </div>
+        );
+    }
+
     return (
         <section className="cart-section">
             <h2 className="co-h2">쿠폰</h2>
+            {status}
             <ul className="co-addr">
                 <li>
                     <label className={`co-addr__item${selectedId === null ? ' is-active' : ''}`}>
@@ -140,7 +198,7 @@ export function CouponPicker({
                     </label>
                 </li>
                 {usable.map((c) => {
-                    const ok = couponDiscount(c, subtotal, total, hasSet) > 0;
+                    const ok = couponDiscount(c, subtotal, total, noMinimum) > 0;
                     return (
                         <li key={c.id}>
                             <label className={`co-addr__item${selectedId === c.id ? ' is-active' : ''}${ok ? '' : ' is-disabled'}`}>
@@ -150,7 +208,7 @@ export function CouponPicker({
                                         {c.name} · {won(c.amount)} 할인
                                     </strong>
                                     <span>
-                                        {exp(c.expiresAt)} · 세트 포함 주문은 금액 상관없이, 낱개만 주문 시 {won(c.minOrder)} 이상
+                                        {exp(c.expiresAt)} · 20·30개 세트·정기구독은 금액 상관없이, 낱개·맛보기 세트는 {won(c.minOrder)} 이상
                                         {ok ? '' : ' (현재 주문은 사용할 수 없어요)'}
                                     </span>
                                 </div>

@@ -305,25 +305,28 @@ export function giftItem(): PricedItem {
     return { sku: 'gift:shaker', name: GIFT_SHAKER_NAME, qty: 1, unitPrice: 0, amount: 0, mode: 'subscribe', count: 1, gift: true };
 }
 
+/** Smallest set that lets a coupon skip its minimum order (the 10-pack taster set does not). */
+export const COUPON_SET_MIN_COUNT = 20;
+
 /**
- * Coupon discount for an order. `subtotal` is checked against the coupon's minimum order,
- * and the customer always pays at least MIN_PAYABLE.
- */
-/**
- * Coupon value for an order. The coupon's minimum order applies only when the order has NO set:
- * any order with a 10·20·30 set (and every subscription) can use it whatever the amount.
+ * Coupon value for an order (the customer always pays at least MIN_PAYABLE).
+ * `noMinimum`: the order has a 20·30 set, or is a subscription → any amount.
+ * Otherwise (single items and/or the 10-pack taster) the goods must reach the coupon's minimum order.
  */
 export function couponDiscount(
     coupon: { amount: number; minOrder: number },
     subtotal: number,
     total: number,
-    hasSet = false,
+    noMinimum = false,
 ): number {
-    if (!hasSet && subtotal < coupon.minOrder) return 0;
+    if (!noMinimum && subtotal < coupon.minOrder) return 0;
     return Math.max(0, Math.min(coupon.amount, total - MIN_PAYABLE));
 }
 
-/** True when the priced items include a set (bundle). */
-export function hasSetItem(items: { sku: string }[]): boolean {
-    return items.some((i) => getItem(i.sku)?.kind === 'bundle');
+/** True when the items include a 20·30 set, so a coupon's minimum order does not apply. */
+export function hasCouponSet(items: { sku: string }[]): boolean {
+    return items.some((i) => {
+        const it = getItem(i.sku);
+        return it?.kind === 'bundle' && it.count >= COUPON_SET_MIN_COUNT;
+    });
 }

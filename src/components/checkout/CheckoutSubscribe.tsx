@@ -3,7 +3,7 @@
 import { ShipEta } from '../ShipEta';
 import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, won } from './Parts';
+import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
 import { cardText } from '../mypage/PaymentMethodManager';
 import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, type PricedCart } from '../../lib/catalog';
@@ -38,7 +38,6 @@ export function CheckoutSubscribe({
     const [methodId, setMethodId] = useState<string | null>(methods.find((m) => m.isDefault)?.id ?? methods[0]?.id ?? null);
     const [agreed, setAgreed] = useState(false);
     const [agreedMin, setAgreedMin] = useState(false);
-    const [couponId, setCouponId] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [partial, setPartial] = useState<string[]>([]);
@@ -55,6 +54,8 @@ export function CheckoutSubscribe({
     // The coupon and the bottle go on the first (shortest-cycle) subscription's first order.
     const firstCycle = cycles[0]?.[0];
     const firstGroup = priced.items.filter((i) => (i.cycleDays ?? 30) === firstCycle).reduce((sum, i) => sum + i.amount, 0);
+    // A fitting coupon is applied from the start (subscriptions have no minimum), so the discount shows right away.
+    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, firstGroup, firstGroup, true));
     const selected = coupons.find((c) => c.id === couponId) ?? null;
     const discount = selected ? couponDiscount(selected, firstGroup, firstGroup, true) : 0;
     const payable = priced.total - discount;
@@ -110,7 +111,7 @@ export function CheckoutSubscribe({
                 onSelect={setCouponId}
                 subtotal={firstGroup}
                 total={firstGroup}
-                hasSet
+                noMinimum
                 note="쿠폰은 첫 회 결제에만 적용돼요."
             />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />

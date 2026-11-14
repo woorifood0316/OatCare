@@ -13,7 +13,10 @@ import {
     FREE_SHIPPING_MIN,
     MIN_SUBSCRIPTION_CHARGES,
     FLAVORS,
+    COUPON_SET_MIN_COUNT,
     MIX_UNIT,
+    WELCOME_COUPON_AMOUNT,
+    WELCOME_COUPON_MIN_ORDER,
     SHIPPING_FEE,
     evenMix,
     getItem,
@@ -166,6 +169,13 @@ export function SetPage({ count }: { count: number }) {
                             ))}
                             <li>
                                 배송비 무료 (세트 상품)
+                            </li>
+                            <li className="pd-facts__coupon">
+                                {item.count >= COUPON_SET_MIN_COUNT ? (
+                                    <>🎟️ 가입 쿠폰 <b>{won(WELCOME_COUPON_AMOUNT)}</b> 금액 상관없이 바로 적용</>
+                                ) : (
+                                    <>🎟️ 가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}은 {won(WELCOME_COUPON_MIN_ORDER)} 이상 주문 시 적용 · <b>20·30개 세트는 금액 상관없이</b></>
+                                )}
                             </li>
                         </ul>
 

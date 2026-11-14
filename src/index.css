@@ -4969,11 +4969,12 @@ body {
 .oc-bundle-detail-btn--full { width: 100%; margin-top: 0.4rem; }
 .oc-bundle-card__subnote { margin: 0.5rem 0 0; color: rgba(59, 42, 32, 0.55); font-size: 0.78rem; text-align: center; }
 .oc-modal-chooser { margin: 0.8rem 0 0.2rem; }
-.cart-upsell { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; padding: 0.6rem 0.75rem; border-radius: 0.7rem; background: #fff6dc; border: 1px solid #f0dca0; }
-.cart-upsell div { display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.78rem; }
+.cart-upsell { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 0.7rem; padding: 0.6rem 0.75rem; border-radius: 0.7rem; background: #fff6dc; border: 1px solid #f0dca0; }
+.cart-upsell div { flex: 1 1 13rem; display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.78rem; }
 .cart-upsell b { font-size: 0.82rem; }
 .cart-upsell span { color: rgba(59, 42, 32, 0.7); }
 .cart-upsell button { flex: none; padding: 0.45rem 0.7rem; border: 0; border-radius: 0.6rem; background: var(--oc-maroon); color: #fff7e8; font-family: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+@media (max-width: 480px) { .cart-upsell button { flex: 1 1 100%; padding: 0.55rem 0.7rem; } }
 
 /* Card actions: row 1 = [cart][buy], row 2 = [detail]; one gap value keeps both rows aligned edge to edge */
 .ca { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-top: auto; padding-top: 0.9rem; }
@@ -5481,3 +5482,15 @@ body {
 .oc-guide__app ol li::before { content: counter(ocstep); flex: none; width: 1.45rem; height: 1.45rem; border-radius: 999px; background: var(--oc-maroon); color: #fff; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; transform: translateY(-0.05rem); }
 .oc-guide__app ol li { display: block; position: relative; padding-left: 2rem; }
 .oc-guide__app ol li::before { position: absolute; left: 0; top: 0.12rem; transform: none; }
+
+/* Coupon hint (cart) and coupon status (checkout) */
+.cph { margin: 0 0 0.55rem; padding: 0.55rem 0.75rem; border-radius: 12px; background: #fbf1f1; border: 1px dashed #d9a8ab; color: var(--oc-brown); font-size: 0.85rem; font-weight: 600; line-height: 1.5; }
+.cph p { margin: 0; }
+.cph b { font-weight: 800; color: var(--oc-maroon); }
+.cph.is-ok { background: rgba(47, 107, 58, 0.07); border: 1px solid rgba(47, 107, 58, 0.22); }
+.cph.is-ok b { color: #2f6b3a; }
+.cph__up { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.25rem 0.6rem; margin-top: 0.35rem !important; padding-top: 0.35rem; border-top: 1px dashed #e6c9cb; font-size: 0.8rem; }
+.cph__up a { flex: none; font-weight: 800; color: var(--oc-maroon); text-decoration: underline; text-underline-offset: 2px; }
+.cart-cph { margin: 0.2rem 0 0.6rem; }
+.co-coupon-status { margin: 0 0 0.7rem; }
+.co-coupon-status .cph__up a { white-space: nowrap; }

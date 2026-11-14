@@ -1,6 +1,7 @@
 'use client';
 
 import { FreeShipHint } from '../purchase/FreeShipHint';
+import { CouponHint } from '../purchase/CouponHint';
 import { ShipEta } from '../ShipEta';
 import React from 'react';
 import Link from 'next/link';
@@ -18,6 +19,7 @@ import {
     evenMix,
     subscriptionUnitPrice,
     getItem,
+    hasCouponSet,
     lineKey,
     maxQty,
     mixError,
@@ -226,6 +228,7 @@ function Section({
                 {mode === 'once' ? (
                     <FreeShipHint subtotal={priced.subtotal} hasBundle={lines.some((l) => getItem(l.sku)?.kind === 'bundle')} className="cart-fsh" />
                 ) : null}
+                <CouponHint mode={mode} subtotal={priced.subtotal} noMinimum={hasCouponSet(lines)} className="cart-cph" />
                 {mode === 'once' && listTotal > priced.subtotal ? (
                     <div className="cart-summary__row cart-summary__row--sub">
                         <span>할인 혜택</span>

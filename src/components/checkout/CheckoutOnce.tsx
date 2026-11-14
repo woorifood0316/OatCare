@@ -2,9 +2,9 @@
 
 import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
-import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, won } from './Parts';
+import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
 import { loadTossSdk as loadSdk } from '../../lib/toss-sdk';
-import { couponDiscount, hasSetItem, type PricedCart } from '../../lib/catalog';
+import { couponDiscount, hasCouponSet, type PricedCart } from '../../lib/catalog';
 import type { Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 
@@ -25,7 +25,9 @@ export function CheckoutOnce({
 }) {
     const [addressId, setAddressId] = useState<string | null>(addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null);
     const [memo, setMemo] = useState('');
-    const [couponId, setCouponId] = useState<string | null>(null);
+    const noMinimum = hasCouponSet(priced.items);
+    // A coupon that fits this order is applied from the start, so the customer sees the discount right away.
+    const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.subtotal, priced.total, noMinimum));
     const [ready, setReady] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -33,7 +35,7 @@ export function CheckoutOnce({
     const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
 
     const selected = coupons.find((c) => c.id === couponId) ?? null;
-    const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total, hasSetItem(priced.items)) : 0;
+    const discount = selected ? couponDiscount(selected, priced.subtotal, priced.total, noMinimum) : 0;
     const payable = priced.total - discount;
     const payableRef = useRef(payable);
     payableRef.current = payable;
@@ -116,7 +118,7 @@ export function CheckoutOnce({
     return (
         <CheckoutShell title="주문·결제">
             <OrderSummary priced={priced} mode="once" discount={discount} />
-            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} hasSet={hasSetItem(priced.items)} />
+            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} subtotal={priced.subtotal} total={priced.total} noMinimum={noMinimum} />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">
