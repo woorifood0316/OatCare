@@ -10,6 +10,9 @@ interface KakaoSdk {
     Auth: {
         authorize(opts: { redirectUri: string; state?: string; scope?: string; throughTalk?: boolean }): void;
     };
+    Share?: {
+        sendDefault(opts: Record<string, unknown>): void;
+    };
 }
 declare global {
     interface Window {
@@ -74,5 +77,21 @@ function runKakaoLogin(Kakao: KakaoSdk, callbackPath: string): void {
         redirectUri: `${window.location.origin}/api/kakao/callback`,
         state,
         scope: 'profile_nickname,account_email',
+    });
+}
+
+/**
+ * KakaoTalk share (a card with image, title and a button that opens the url). Rejects when the SDK or the share
+ * feature isn't available, so the caller can fall back to copying the link.
+ */
+export async function shareToKakao(opts: { title: string; description: string; imageUrl: string; url: string; button?: string }): Promise<void> {
+    const Kakao = await loadSdk();
+    if (!Kakao.isInitialized()) Kakao.init(JS_KEY);
+    if (!Kakao.Share) throw new Error('kakao share unavailable');
+    const link = { mobileWebUrl: opts.url, webUrl: opts.url };
+    Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: { title: opts.title, description: opts.description, imageUrl: opts.imageUrl, link },
+        buttons: [{ title: opts.button ?? '구경하러 가기', link }],
     });
 }

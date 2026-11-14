@@ -123,6 +123,13 @@ export const RETURN_FEE_ROUND_TRIP = SHIPPING_FEE * 2;
 export const RETURN_CHANGE_OF_MIND_DAYS = 7;
 export const RETURN_DEFECT_MONTHS = 3;
 export const RETURN_MAX_PHOTOS = 5;
+
+// Friend invitation (친구 초대): both the member who shared their link and the new friend get a coupon once the
+// friend's first order is confirmed (delivered, then the change-of-mind return period passed with no cancel/return).
+export const REFERRAL_REWARD = 2000;
+export const REFERRAL_COUPON_NAME = '친구 초대 쿠폰';
+/** Days after the parcel was received before the first order counts as confirmed (= the legal return period). */
+export const REFERRAL_CONFIRM_DAYS = RETURN_CHANGE_OF_MIND_DAYS;
 export const WELCOME_COUPON_MIN_COUNT = BOX_SIZE;
 /** Toss rejects payments below this. */
 export const MIN_PAYABLE = 100;

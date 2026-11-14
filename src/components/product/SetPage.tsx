@@ -10,7 +10,8 @@ import { useCart } from '../cart/CartProvider';
 import { PurchaseChooser } from '../purchase/PurchaseChooser';
 import { SubscribeBar } from '../purchase/SubscribeBar';
 import { ReviewList } from '../reviews/ReviewList';
-import { ProductNotice } from './ProductNotice';
+import { ProductLabelInfo, ProductNotice } from './ProductNotice';
+import { ShareButton } from '../share/ShareButton';
 import { InquiryBoard } from '../inquiries/InquiryBoard';
 import { useMixChoice } from '../purchase/MixPicker';
 import {
@@ -30,7 +31,6 @@ import {
 import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
 import { backToPrevious } from '../../lib/prev-page';
-import { ReturnPolicySummary } from '../returns/ReturnPhotoGuide';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -40,9 +40,9 @@ const COMMON_SLICES = ['04.webp', '10.webp', 'review.mp4', 'rating.mp4', '05.web
 
 const TABS = [
     { id: 'pd-detail', label: '상품상세' },
-    { id: 'pd-review', label: '리뷰' },
+    { id: 'pd-review', label: '상품평' },
     { id: 'pd-qna', label: '상품문의' },
-    { id: 'pd-ship', label: '배송·교환·반품' },
+    { id: 'pd-ship', label: '배송/교환/반품 안내' },
 ] as const;
 
 export function SetPage({ count }: { count: number }) {
@@ -155,7 +155,10 @@ export function SetPage({ count }: { count: number }) {
 
                     <div className="pd-buy">
                         <p className="pd-buy__tag">{page.tagline}</p>
-                        <h1 className="pd-buy__name">{item.name}</h1>
+                        <div className="pd-buy__titlerow">
+                            <h1 className="pd-buy__name">{item.name}</h1>
+                            <ShareButton title={`참오트케어 ${item.name}`} description={page.tagline} image={page.img} />
+                        </div>
                         <p className="pd-buy__desc">{page.description}</p>
 
                         <div className="pd-price">
@@ -235,6 +238,7 @@ export function SetPage({ count }: { count: number }) {
                 </div>
 
                 <section id="pd-detail" className="pd-sec pd-sec--detail">
+                    <ProductLabelInfo name={item.name} flavors={[...FLAVORS]} count={page.count} />
                     <div className={`pd-slices pd-slices--set${expanded ? ' is-open' : ''}`}>
                         <div className="pd-setintro">
                             <h2>세트 구성</h2>
@@ -349,25 +353,7 @@ export function SetPage({ count }: { count: number }) {
 
                 <section id="pd-ship" className="pd-sec">
                     <h2>배송·교환·반품</h2>
-                    <dl className="pd-policy">
-                        <dt>배송</dt>
-                        <dd>
-                            평일 오후 1시까지 결제 완료된 주문은 당일 발송되며, 이후 결제·주말·공휴일 주문은 다음 영업일에 발송됩니다. 세트 상품은 배송비가 무료입니다. (낱개 상품만 구매 시 배송비 {won(SHIPPING_FEE)}, {FREE_SHIPPING_MIN_COUNT}개(한 박스) 이상 무료)
-                        </dd>
-                        <dt>정기구독</dt>
-                        <dd>
-                            결제일 기준으로 결제·발송되며, 최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건이 있습니다. 마이페이지에서 주기 변경과
-                            해지 예약이 가능합니다.
-                        </dd>
-                        <dt>교환·반품</dt>
-                        <dd>
-                            <ReturnPolicySummary />
-                        </dd>
-                        <dt>반품처</dt>
-                        <dd>경기도 김포시 양촌읍 황금1로 2-71 (우리종합식품)</dd>
-                    </dl>
-
-                    <ProductNotice name={item.name} flavors={[...FLAVORS]} count={page.count} />
+                    <ProductNotice set />
                 </section>
 
                 <section className="pd-sec pd-rec">

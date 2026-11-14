@@ -1,5 +1,6 @@
 import { runBilling, runNotifications, runReminders } from '../../../../lib/cron';
 import { runInquiryAnswers } from '../../../../lib/inquiries';
+import { runReferralRewards } from '../../../../lib/referrals';
 
 export const runtime = 'edge';
 
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     if (!job || job === 'billing') {
         out.billing = await runBilling();
         out.reminders = await runReminders();
+        out.referrals = await runReferralRewards(); // friend invitations whose first order is now confirmed
     }
     if (!job || job === 'notify' || job === 'billing') {
         out.inquiries = await runInquiryAnswers(); // product Q&A whose background answer didn't run

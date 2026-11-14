@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
+import { currentRefCode } from './share/RefCapture';
 import { getAssetUrl } from '../utils/assets';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
 import { CART_PARAM, encodeCart, inAppKind, isAndroid, isAndroidChrome, isMobile, isStandalone, openInAppHref, rememberedInApp, type InAppKind } from '../lib/app-switch';
@@ -197,6 +198,8 @@ function AuthCardInner({ mode }: { mode: Mode }) {
             const target = provider === 'naver' ? 'naver' : 'chrome';
             const url = new URL(window.location.href);
             url.searchParams.set('oc_start', provider);
+            const ref = currentRefCode();
+            if (ref) url.searchParams.set('ref', ref);
             try {
                 const raw = window.localStorage.getItem('oc_cart_v1');
                 const lines = raw ? (JSON.parse(raw) as unknown[]) : [];

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Repeat, Package, CreditCard, Ticket, Check, Star, User, MessageCircleQuestion } from 'lucide-react';
+import { Repeat, Package, CreditCard, Ticket, Check, Star, User, MessageCircleQuestion, Gift } from 'lucide-react';
 import { MIN_SUBSCRIPTION_CHARGES, SUBSCRIPTION_DISCOUNT_RATE } from '../../lib/catalog';
 import { listCoupons } from '../../lib/coupons';
 import { getCurrentUser } from '../../lib/current-user';
@@ -93,6 +93,11 @@ export default async function MyHomePage() {
                     <MessageCircleQuestion size={22} />
                     <strong>상품 문의</strong>
                     <span>내 문의와 답변 확인</span>
+                </Link>
+                <Link href="/mypage/invite" className="my-card my-tile">
+                    <Gift size={22} />
+                    <strong>친구 초대</strong>
+                    <span>친구도 나도 2,000원 쿠폰</span>
                 </Link>
             </div>
         </>

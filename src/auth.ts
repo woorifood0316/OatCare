@@ -9,6 +9,7 @@ import { issueWelcomeCoupon } from './lib/coupons';
 import { isBannedAccount } from './lib/reviews';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
+import { REF_COOKIE, recordReferral } from './lib/referrals';
 
 /** Kakao app-login failure with the reason in `code` (shown on /login so a failed try tells us why). */
 class KakaoSignin extends CredentialsSignin {
@@ -94,6 +95,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         values (${userId}, ${pending.provider}, ${pending.providerAccountId})
                     `;
                     await issueWelcomeCoupon(userId);
+                    // Came through a member's invitation link: record the invitation (coupons follow the first confirmed order).
+                    await recordReferral(userId, jar.get(REF_COOKIE)?.value);
+                    jar.delete(REF_COOKIE);
                 }
                 jar.delete(PENDING_COOKIE);
                 return { id: userId, name: pending.name, email: pending.email };
