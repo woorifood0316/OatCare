@@ -34,7 +34,7 @@ export default async function ReturnRequestPage({ params }: { params: Promise<{ 
                 <section className="my-card">
                     <p style={{ margin: 0 }}>{blocked}</p>
                     <p className="cart-note">
-                        궁금한 점은 고객센터 031-998-7234 · <Link href={`/mypage/orders/${order.orderNo}`}>주문 상세로</Link>
+                        궁금한 점은 고객센터 031-998-7234
                     </p>
                 </section>
             ) : (

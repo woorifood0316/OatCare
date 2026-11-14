@@ -101,7 +101,7 @@ export default async function OrderDetailPage({
             ) : null}
 
             <p className="cart-note">
-                문의: 고객센터 031-998-7234 · <Link href="/mypage/orders">주문 목록으로</Link>
+                문의: 고객센터 031-998-7234
             </p>
         </>
     );

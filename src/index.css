@@ -5992,3 +5992,29 @@ tr.is-muted td { opacity: 0.6; }
   .inv-band__text strong { font-size: 1.02rem; }
   .inv-band__btn { width: 100%; text-align: center; }
 }
+/* 마이페이지 홈 친구 초대 띠 */
+.my-inv { display: flex; align-items: center; gap: 0.9rem; margin: 0 0 0.9rem; padding: 0.9rem 1.1rem; border-radius: 1.1rem; background: #fff8e6; border: 1.5px solid #e9c46a; }
+.my-inv__icon { flex: none; color: var(--oc-maroon); }
+.my-inv__text { flex: 1; display: grid; gap: 0.15rem; }
+.my-inv__text strong { font-size: 1rem; font-weight: 800; color: var(--oc-brown); }
+.my-inv__text > span { font-size: 0.82rem; color: #6a5848; }
+.my-inv__more { color: var(--oc-maroon); font-weight: 700; }
+.my-inv__btn { flex: none; padding: 0.65rem 1rem; border: 0; border-radius: 999px; background: var(--oc-maroon); color: #fff; font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+@media (max-width: 600px) {
+  .my-inv { flex-wrap: wrap; }
+  .my-inv__icon { display: none; }
+  .my-inv__btn { width: 100%; }
+}
+/* 마이페이지: "← 제목" top bar on phones, breadcrumb on wide screens */
+.my-topbar--sub { justify-content: flex-start; gap: 0.25rem; padding-left: 0.4rem; }
+.my-topbar__back { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; margin: -0.4rem 0; border-radius: 999px; color: var(--oc-brown); }
+.my-topbar__back:active { background: rgba(122, 35, 49, 0.08); }
+.my-topbar__title { margin: 0; font-size: 1.08rem; font-weight: 800; color: var(--oc-brown); }
+.my-crumbs { display: none; }
+@media (min-width: 900px) {
+  .my-crumbs { display: flex; align-items: center; gap: 0.35rem; margin: 0 0 0.9rem; font-size: 0.85rem; color: #8a7a6a; }
+  .my-crumbs a { color: #6a5848; text-decoration: none; }
+  .my-crumbs a:hover { color: var(--oc-maroon); text-decoration: underline; }
+  .my-crumbs span[aria-current] { color: var(--oc-brown); font-weight: 700; }
+  .my-crumbs .my-crumbs__back { margin-left: auto; display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.35rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; color: var(--oc-brown); font-weight: 700; text-decoration: none; }
+}

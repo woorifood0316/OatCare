@@ -2,6 +2,15 @@ import Link from 'next/link';
 import { Repeat, Package, CreditCard, Ticket, Check, Star, User, MessageCircleQuestion, Gift } from 'lucide-react';
 import { MIN_SUBSCRIPTION_CHARGES, SUBSCRIPTION_DISCOUNT_RATE } from '../../lib/catalog';
 import { listCoupons } from '../../lib/coupons';
+import { listSubscriptions } from '../../lib/subscriptions';
+import { listOrders } from '../../lib/orders';
+import { listPaymentMethods } from '../../lib/payment-methods';
+import { listAddresses } from '../../lib/addresses';
+import { listReviewables } from '../../lib/reviews';
+import { listMyInquiries } from '../../lib/inquiries';
+import { myReferrals } from '../../lib/referrals';
+import { REFERRAL_REWARD } from '../../lib/catalog';
+import { MyInviteStrip } from '../../components/share/MyInviteStrip';
 import { getCurrentUser } from '../../lib/current-user';
 import { PageHead } from '../../components/mypage/ComingSoon';
 
@@ -10,6 +19,44 @@ export const runtime = 'edge';
 export default async function MyHomePage() {
     const user = await getCurrentUser();
     const usable = (await listCoupons(user.id)).filter((c) => c.available);
+    const safe = async <T,>(f: () => Promise<T>, fallback: T): Promise<T> => {
+        try {
+            return await f();
+        } catch {
+            return fallback;
+        }
+    };
+    const [subs, orders, cards, addresses, reviewables, inquiries, refs] = await Promise.all([
+        safe(() => listSubscriptions(user.id), []),
+        safe(() => listOrders(user.id), []),
+        safe(() => listPaymentMethods(user.id), []),
+        safe(() => listAddresses(user.id), []),
+        safe(() => listReviewables(user.id), []),
+        safe(() => listMyInquiries(user.id), []),
+        safe(() => myReferrals(user.id), { invited: [], invitedBy: null }),
+    ]);
+    const md = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
+    const liveSubs = subs.filter((x) => x.status !== 'canceled');
+    const nextSub = liveSubs.filter((x) => x.status === 'active').sort((a, b) => a.nextBillingDate.localeCompare(b.nextBillingDate))[0];
+    const subText =
+        liveSubs.length === 0
+            ? '이용 중인 구독이 없어요'
+            : `이용 중인 구독 ${liveSubs.length}개${nextSub ? ` · 다음 결제 ${md(nextSub.nextBillingDate)}` : liveSubs.some((x) => x.status === 'paused') ? ' · 일시정지' : ''}`;
+    const shipping = orders.filter((o) => o.status === 'shipped').length;
+    const preparing = orders.filter((o) => o.status === 'paid' || o.status === 'preparing').length;
+    const orderText =
+        orders.length === 0
+            ? '최근 주문이 없어요'
+            : shipping > 0
+              ? `배송 중 ${shipping}건${preparing > 0 ? ` · 준비 중 ${preparing}건` : ''}`
+              : preparing > 0
+                ? `상품 준비 중 ${preparing}건`
+                : `최근 주문 ${md(orders[0].createdAt.slice(0, 10))}`;
+    const payText = cards.length + addresses.length === 0 ? '등록된 정보가 없어요' : `카드 ${cards.length}장 · 배송지 ${addresses.length}곳`;
+    const reviewText = reviewables.length > 0 ? `리뷰 쓸 수 있는 상품 ${reviewables.length}개` : '리뷰 남기고 쿠폰 받기';
+    const waiting = inquiries.filter((q) => q.status === 'pending').length;
+    const qaText = inquiries.length === 0 ? '내 문의와 답변 확인' : waiting > 0 ? `답변 대기 ${waiting}건` : `문의 ${inquiries.length}건 · 모두 답변 완료`;
+    const rewarded = refs.invited.filter((r) => r.status === 'rewarded').length;
     const subPct = Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100);
     const coupon = [...usable].sort((x, y) => y.amount - x.amount)[0] ?? null;
     const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -58,21 +105,23 @@ export default async function MyHomePage() {
                 </Link>
             </section>
 
+            <MyInviteStrip invited={refs.invited.length} rewarded={rewarded} />
+
             <div className="my-grid">
                 <Link href="/mypage/subscription" className="my-card my-tile">
                     <Repeat size={22} />
                     <strong>정기구독</strong>
-                    <span>이용 중인 구독이 없어요</span>
+                    <span>{subText}</span>
                 </Link>
                 <Link href="/mypage/orders" className="my-card my-tile">
                     <Package size={22} />
                     <strong>주문·배송</strong>
-                    <span>최근 주문이 없어요</span>
+                    <span>{orderText}</span>
                 </Link>
                 <Link href="/mypage/payment" className="my-card my-tile">
                     <CreditCard size={22} />
                     <strong>결제수단·배송지</strong>
-                    <span>등록된 정보가 없어요</span>
+                    <span>{payText}</span>
                 </Link>
                 <Link href="/mypage/profile" className="my-card my-tile">
                     <User size={22} />
@@ -87,17 +136,17 @@ export default async function MyHomePage() {
                 <Link href="/mypage/reviews" className="my-card my-tile">
                     <Star size={22} />
                     <strong>리뷰 쓰기</strong>
-                    <span>리뷰 남기고 쿠폰 받기</span>
+                    <span>{reviewText}</span>
                 </Link>
                 <Link href="/mypage/inquiries" className="my-card my-tile">
                     <MessageCircleQuestion size={22} />
                     <strong>상품 문의</strong>
-                    <span>내 문의와 답변 확인</span>
+                    <span>{qaText}</span>
                 </Link>
                 <Link href="/mypage/invite" className="my-card my-tile">
                     <Gift size={22} />
                     <strong>친구 초대</strong>
-                    <span>친구도 나도 2,000원 쿠폰</span>
+                    <span>{refs.invited.length > 0 ? `초대한 친구 ${refs.invited.length}명` : `친구도 나도 ${REFERRAL_REWARD.toLocaleString('ko-KR')}원 쿠폰`}</span>
                 </Link>
             </div>
         </>
