@@ -7,6 +7,7 @@ import { safeCallbackPath } from '../lib/safe-redirect';
 import { getAssetUrl } from '../utils/assets';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
 import { inAppKind, isMobile, rememberedInApp, type InAppKind } from '../lib/app-switch';
+import { OpenInAppsBox } from './OpenInApps';
 
 
 type Mode = 'login' | 'signup';
@@ -154,6 +155,8 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         </button>
                     ))}
                 </div>
+
+                <OpenInAppsBox compact />
 
                 {env?.mobile && env.inApp === null ? (
                     <button type="button" className="oc-auth__guide-open" onClick={() => setGuideOpen(true)}>

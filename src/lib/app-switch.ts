@@ -51,3 +51,51 @@ export function decodeCart(v: string): unknown[] | null {
         return null;
     }
 }
+
+/** Inverse of decodeCart (URL-safe base64 of the JSON lines). */
+export function encodeCart(lines: unknown[]): string {
+    const bytes = new TextEncoder().encode(JSON.stringify(lines));
+    let bin = '';
+    bytes.forEach((b) => (bin += String.fromCharCode(b)));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+export type OpenTarget = 'kakao' | 'naver' | 'chrome';
+
+export const isAndroid = (ua: string = navigator.userAgent) => /Android/i.test(ua);
+export const isIos = (ua: string = navigator.userAgent) => /iPhone|iPad|iPod/i.test(ua);
+/** Real Chrome on Android (not Samsung Internet / Whale / Edge / Opera / an app WebView). */
+export const isAndroidChrome = (ua: string = navigator.userAgent) =>
+    isAndroid(ua) && /Chrome\/[\d.]+ Mobile/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR|; wv\)|Version\/[\d.]+ Chrome/.test(ua);
+/** Opened from the home-screen icon (installed web app). */
+export const isStandalone = () =>
+    window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+/**
+ * Link that asks the phone to open `url` inside that app.
+ *  - Naver app: its in-app browser ("naversearchapp://inappbrowser"), widely used.
+ *  - KakaoTalk: its in-app browser ("kakaotalk://inappbrowser"); not in Kakao's public docs, so it may not work on every
+ *    version. A Kakao channel link is the official route.
+ *  - Chrome: Android only (Android intent).
+ * On Android the intent carries a fallback back to this page (with oc_noapp=<target>) for when the app isn't installed.
+ */
+export function openInAppHref(target: OpenTarget, url: string, ua: string = navigator.userAgent): string | null {
+    const u = new URL(url);
+    if (target === 'kakao' || target === 'naver') u.searchParams.set(INAPP_PARAM, target);
+    else u.searchParams.set('oc_opened', target); // Chrome: don't offer the chooser again there
+    const dest = u.toString();
+    const back = new URL(url);
+    back.searchParams.set('oc_noapp', target);
+    const fallback = `S.browser_fallback_url=${encodeURIComponent(back.toString())}`;
+    const android = isAndroid(ua);
+    if (target === 'naver') {
+        const q = `inappbrowser?url=${encodeURIComponent(dest)}&target=new&version=6`;
+        return android ? `intent://${q}#Intent;scheme=naversearchapp;package=com.nhn.android.search;${fallback};end` : `naversearchapp://${q}`;
+    }
+    if (target === 'kakao') {
+        const q = `inappbrowser?url=${encodeURIComponent(dest)}`;
+        return android ? `intent://${q}#Intent;scheme=kakaotalk;package=com.kakao.talk;${fallback};end` : `kakaotalk://${q}`;
+    }
+    if (!android) return null;
+    return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=com.android.chrome;${fallback};end`;
+}

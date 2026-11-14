@@ -5853,3 +5853,30 @@ tr.is-muted td { opacity: 0.6; }
 .adm-qa-result { display: grid; gap: 0.3rem; padding: 0.6rem 0.7rem; border-radius: 0.6rem; background: #f6f1e4; font-size: 0.88rem; }
 .adm-qa-result p { margin: 0; line-height: 1.55; }
 .adm-tabs { margin-bottom: 0.6rem; flex-wrap: wrap; }
+
+/* ---- "앱으로 열기" chooser (QR landing sheet + login page box) ---- */
+.oia-btns { display: grid; gap: 0.55rem; }
+.oia-btn { display: grid; gap: 0.1rem; width: 100%; padding: 0.85rem 1rem; border-radius: 14px; border: 0; text-align: center; cursor: pointer; font: inherit; }
+.oia-btn b { font-size: 1.02rem; font-weight: 800; }
+.oia-btn small { font-size: 0.78rem; opacity: 0.8; }
+.oia-btn--kakao { background: #fee500; color: #191600; }
+.oia-btn--naver { background: #03c75a; color: #fff; }
+.oia-btn--chrome { background: #fff; color: #1f1f1f; border: 1.5px solid #dadce0; }
+.oia-note { margin: 0.4rem 0 0; padding: 0.55rem 0.7rem; border-radius: 10px; background: #fff4e5; color: #8a4b00; font-size: 0.84rem; line-height: 1.5; }
+.oia-box { display: grid; gap: 0.45rem; margin: 0 0 1rem; padding: 0.95rem; border-radius: 16px; background: #fbf7ee; border: 1px solid var(--oc-line); text-align: center; }
+.oia-box__title { margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--oc-brown); }
+.oia-box__sub { margin: 0 0 0.2rem; font-size: 0.84rem; line-height: 1.5; color: #6a5848; }
+.oia-sheet { position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-end; justify-content: center; background: rgba(30, 20, 14, 0.55); }
+.oia-sheet__card { width: 100%; max-width: 480px; display: grid; gap: 0.75rem; padding: 1.4rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; background: #fffdf8; text-align: center; animation: oia-up 0.25s ease-out; }
+.oia-sheet__logo { justify-self: center; width: 52px; height: 52px; border-radius: 12px; }
+.oia-sheet__card h2 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--oc-brown); }
+.oia-sheet__card > p { margin: 0; font-size: 0.92rem; line-height: 1.6; color: #5b4a3d; }
+.oia-sheet__skip { margin-top: 0.1rem; padding: 0.5rem; border: 0; background: none; color: #7a6a5a; font: inherit; font-size: 0.88rem; cursor: pointer; }
+@keyframes oia-up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.oia-box--compact { margin: 1rem 0 0; background: transparent; border-style: dashed; }
+.oia-box--compact .oia-btns { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 0.4rem; }
+.oia-box--compact .oia-btn { padding: 0.6rem 0.4rem; background: #fff; color: var(--oc-brown); border: 1.5px solid var(--oc-line); }
+.oia-box--compact .oia-btn b { font-size: 0.82rem; }
+.oia-box--compact .oia-btn small { display: none; }
+.oia-box--compact .oia-btn--kakao { border-color: #e6cf00; }
+.oia-box--compact .oia-btn--naver { border-color: #03c75a; color: #02873d; }
