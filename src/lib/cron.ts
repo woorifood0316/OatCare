@@ -3,7 +3,8 @@ import { addDays, todayKst } from './dates';
 import { dueSubscriptionIds, mapSubscription, processDueSubscription } from './subscriptions';
 import { priceCart } from './catalog';
 import { enqueue, type NotifyEvent } from './notify';
-import { adminMessage, customerMessage } from './notify-messages';
+import { adminMessage } from './notify-messages';
+import { buildCustomerEmail } from './email-template';
 
 /** Charge every subscription whose billing day has come (bounded per run to fit edge time limits). */
 export async function runBilling(limit = 20) {
@@ -78,7 +79,7 @@ export function parseSender(from: string): { name?: string; email: string } | nu
  * Customer email through Brevo's transactional API (https://www.brevo.com, free plan: 300 emails a day).
  * Needs BREVO_API_KEY and EMAIL_FROM (a sender verified in Brevo). Skipped until configured.
  */
-async function sendEmail(to: string, subject: string, text: string): Promise<'sent' | 'skipped' | string> {
+export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<'sent' | 'skipped' | string> {
     const key = process.env.BREVO_API_KEY;
     const sender = parseSender(process.env.EMAIL_FROM ?? '');
     if (!key || !sender) return 'skipped';
@@ -86,7 +87,7 @@ async function sendEmail(to: string, subject: string, text: string): Promise<'se
         const res = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: { 'api-key': key, accept: 'application/json', 'content-type': 'application/json' },
-            body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text }),
+            body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, ...(html ? { htmlContent: html } : {}) }),
         });
         if (res.ok) return 'sent';
         const body = await res.text().catch(() => '');
@@ -114,9 +115,9 @@ export async function runNotifications(limit = 50) {
         if (r.channel === 'admin') {
             outcome = await sendAdmin(adminMessage(event, payload));
         } else {
-            const msg = customerMessage(event, payload);
             const to = r.email as string | null;
-            outcome = !msg || !to || to.endsWith('.invalid') ? 'skipped' : await sendEmail(to, msg.subject, msg.text);
+            const msg = to && !to.endsWith('.invalid') ? await buildCustomerEmail(event, payload) : null;
+            outcome = !msg || !to ? 'skipped' : await sendEmail(to, msg.subject, msg.text, msg.html);
         }
 
         if (outcome === 'sent') {

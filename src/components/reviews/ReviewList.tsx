@@ -103,7 +103,7 @@ export function ReviewList({ sku, externalNote }: { sku: string; externalNote?: 
                                 </div>
                                 {r.eventJoined ? (
                                     <p className="rv-disclose">
-                                        리뷰 이벤트 참여 · 작성자에게 {r.rewardAmount > 0 ? `${won(r.rewardAmount)} ` : ''}할인 쿠폰이 지급됐어요
+                                        리뷰 이벤트 참여
                                     </p>
                                 ) : null}
                                 <p className="rv-item__body">{r.body}</p>

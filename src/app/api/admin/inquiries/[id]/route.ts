@@ -1,6 +1,6 @@
 import { getSql } from '../../../../../lib/db';
 import { isUuid, jsonError, requireAdmin, sameOrigin } from '../../../../../lib/api';
-import { enqueue } from '../../../../../lib/notify';
+
 
 export const runtime = 'edge';
 
@@ -33,9 +33,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
                 const question = typeof body.faqQuestion === 'string' && body.faqQuestion.trim() ? body.faqQuestion.trim() : (q.body as string);
                 await sql`insert into faqs (question, keywords, answer) values (${question.slice(0, 200)}, ${String(body.faqKeywords ?? '').slice(0, 200)}, ${answer})`;
             }
-            if (q.user_id) {
-                await enqueue('inquiry_answered', { question: String(q.body).slice(0, 200), answer }, { userId: q.user_id as string, admin: false });
-            }
+            // No email for Q&A answers: the customer sees them on the product page and in 마이페이지 > 상품 문의.
             break;
         }
         case 'hide': {

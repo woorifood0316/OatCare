@@ -194,7 +194,15 @@ export function AdminCronButtons() {
         <section className="adm-card">
             {dialog}
             <h2>수동 실행</h2>
-            <p className="adm-muted">스케줄러가 매일 자동으로 하는 일을 지금 바로 실행해요.</p>
+            <p className="adm-muted">스케줄러가 자동으로 하는 일을 지금 바로 실행해요. 평소에는 누를 필요가 없어요.</p>
+            <ul className="adm-muted adm-cron-help">
+                <li>
+                    <b>오늘 결제 실행</b>: 결제일이 된 정기구독을 <b>지금 실제로 결제</b>하고, 2일 뒤 결제될 고객에게 결제 예정 안내를 보내요. (자동: 매일 오전 9시)
+                </li>
+                <li>
+                    <b>알림 발송</b>: 쌓여 있는 알림(고객 이메일·운영자 알림)을 지금 보내고, 자동 답변을 기다리는 상품 문의를 다시 처리해요. (자동: 10분마다) 결과의 picked는 보낼 알림 수예요.
+                </li>
+            </ul>
             <div className="adm-row">
                 <button
                     type="button"

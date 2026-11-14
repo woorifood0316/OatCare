@@ -214,7 +214,7 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
                     </span>
                 </label>
                 <p>
-                    참여한 리뷰에는 <b>&lsquo;리뷰 이벤트 참여 · 작성자에게 할인 쿠폰 지급&rsquo;</b> 표시가 함께 보여요. 쿠폰은 별점·내용과 관계없이 지급되며,
+                    참여한 리뷰에는 <b>&lsquo;리뷰 이벤트 참여&rsquo;</b> 표시가 함께 보여요. 쿠폰은 별점·내용과 관계없이 지급되며,
                     {COUPON_VALID_DAYS}일 동안 20·30개 세트·정기구독 또는 {WELCOME_COUPON_MIN_COUNT}개(한 박스) 이상 주문에 쓸 수 있어요.
                 </p>
             </div>

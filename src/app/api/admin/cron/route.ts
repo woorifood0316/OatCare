@@ -1,5 +1,6 @@
 import { jsonError, requireAdmin, sameOrigin } from '../../../../lib/api';
 import { runBilling, runNotifications, runReminders } from '../../../../lib/cron';
+import { runInquiryAnswers } from '../../../../lib/inquiries';
 
 export const runtime = 'edge';
 
@@ -15,6 +16,10 @@ export async function POST(request: Request) {
         return jsonError('잘못된 요청이에요');
     }
     if (body.job === 'billing') return Response.json({ billing: await runBilling(), reminders: await runReminders() });
-    if (body.job === 'notify') return Response.json({ notifications: await runNotifications() });
+    if (body.job === 'notify') {
+        // Same as the scheduler's notify run: product Q&A still waiting for the automatic answer get another try first.
+        const inquiries = await runInquiryAnswers();
+        return Response.json({ inquiries, notifications: await runNotifications() });
+    }
     return jsonError('알 수 없는 작업이에요');
 }
