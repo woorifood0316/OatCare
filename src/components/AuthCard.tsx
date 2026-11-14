@@ -163,6 +163,15 @@ function AuthCardInner({ mode }: { mode: Mode }) {
         message = { tone: 'error', text: reason ? `${base} (오류 코드: ${reason})` : base };
     }
 
+    // Titles say where the visitor will end up (the phone may ask which app to open: they pick that one).
+    const toNaverApp = Boolean(env?.mobile && !env.standalone && env.inApp === null);
+    const toChrome = Boolean(env?.mobile && !env.standalone && env.inApp === null && env.android && !env.chrome);
+    const buttonTitle = (p: Provider): string => {
+        if (p === 'kakao') return '카카오로 3초 만에 시작하기';
+        if (p === 'naver') return toNaverApp ? '네이버 앱으로 시작하기' : '네이버로 시작하기';
+        return toChrome ? '구글 크롬브라우저로 시작하기' : '구글로 시작하기';
+    };
+
     const handleClick = (provider: Provider) => {
         if (pending) return;
         setPending(provider);
@@ -239,12 +248,6 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     </p>
                 )}
 
-                {leaving ? (
-                    <p className="oc-auth__msg oc-auth__msg--info" role="status">
-                        {leaving === 'naver' ? '네이버 앱' : '크롬'}으로 이동해요. 휴대폰이 물어보면 <b>[열기]</b>를 눌러 주세요.
-                    </p>
-                ) : null}
-
                 {cameBack && !leaving ? (
                     <div className="oc-auth__back" role="status">
                         <b>{cameBack === 'naver' ? '네이버' : '구글'} 아이디·비밀번호를 물어봤나요?</b>
@@ -275,7 +278,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         >
                             <span className="oc-auth__btn-icon">{ICONS[p]}</span>
                             <span>
-                                {pending === p ? '이동 중...' : p === 'kakao' ? '카카오로 3초 만에 시작하기' : `${PROVIDER_LABEL[p]}로 시작하기`}
+                                {pending === p ? '이동 중...' : buttonTitle(p)}
                             </span>
                         </button>
                     ))}
