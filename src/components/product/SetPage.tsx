@@ -336,7 +336,7 @@ export function SetPage({ count }: { count: number }) {
 
                 <section id="pd-review" className="pd-sec">
                     <h2>리뷰</h2>
-                    <ReviewList sku={page.sku} externalNote="상품 상세 이미지 속 후기는 외부 판매처(쿠팡)에서 작성된 후기입니다." />
+                    <ReviewList sku={page.sku} />
                 </section>
 
                 <section id="pd-qna" className="pd-sec">
