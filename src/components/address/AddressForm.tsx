@@ -4,6 +4,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { AddressInput } from '../../lib/validate';
 
+/**
+ * Adds the hyphens while the number is typed: 010-1234-5678, 010-123-4567, 02-123-4567, 02-1234-5678, 031-123-4567.
+ * Digits only (max 11); anything else typed or pasted is dropped.
+ */
+function formatPhoneInput(value: string): string {
+    let d = value.replace(/\D/g, '');
+    if (value.trim().startsWith('+82') && d.startsWith('82')) d = `0${d.slice(2)}`; // pasted "+82 10-…"
+    d = d.slice(0, 11);
+    if (d.startsWith('02')) {
+        if (d.length <= 2) return d;
+        if (d.length <= 5) return `${d.slice(0, 2)}-${d.slice(2)}`;
+        if (d.length <= 9) return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`;
+        return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6, 10)}`;
+    }
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    if (d.length <= 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+}
+
 declare global {
     interface Window {
         daum?: {
@@ -62,7 +82,7 @@ export function AddressForm({
     const [form, setForm] = useState({
         label: initial?.label ?? '',
         recipient: initial?.recipient ?? '',
-        phone: initial?.phone ?? '',
+        phone: formatPhoneInput(initial?.phone ?? ''),
         zipcode: initial?.zipcode ?? '',
         address1: initial?.address1 ?? '',
         address2: initial?.address2 ?? '',
@@ -149,8 +169,8 @@ export function AddressForm({
                 <span>연락처</span>
                 <input
                     value={form.phone}
-                    onChange={(e) => set({ phone: e.target.value })}
-                    inputMode="tel"
+                    onChange={(e) => set({ phone: formatPhoneInput(e.target.value) })}
+                    inputMode="numeric"
                     autoComplete="tel"
                     placeholder="010-0000-0000"
                     maxLength={13}
