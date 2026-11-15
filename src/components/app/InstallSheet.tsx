@@ -40,18 +40,24 @@ function Steps({ items }: { items: React.ReactNode[] }) {
  */
 export function InstallSheet({ onClose, joined = false }: { onClose: () => void; joined?: boolean }) {
     const ins = useAppInstall();
-    const [state, setState] = useState<'idle' | 'busy' | 'installed' | 'copied'>('idle');
+    const [state, setState] = useState<'idle' | 'busy' | 'opening' | 'installed' | 'copied'>('idle');
     const [error, setError] = useState('');
     useBodyScrollLock(true);
 
     const env = ins.env;
     const offer = offerText(ins.info);
 
+    // The phone takes a few seconds to show its own install window: say so at once, so it never feels stuck.
     const install = async () => {
+        if (state === 'opening') return;
         setError('');
+        setState('opening');
         const r = await promptInstall();
         if (r === 'accepted') setState('installed');
-        else if (r === 'unavailable') setError('이 브라우저에서는 메뉴에서 직접 추가해 주세요.');
+        else {
+            setState('idle');
+            if (r === 'unavailable') setError('이 브라우저에서는 메뉴에서 직접 추가해 주세요.');
+        }
     };
 
     const moveTo = async (where: 'chrome' | 'safari') => {
@@ -82,19 +88,35 @@ export function InstallSheet({ onClose, joined = false }: { onClose: () => void;
     if (state === 'installed') {
         how = (
             <div className="app-sheet__done">
-                <strong>🎉 설치됐어요!</strong>
+                <strong>🎉 설치를 시작했어요!</strong>
                 <span>
-                    홈 화면의 <b>참오트케어</b> 아이콘으로 들어오면 혜택이 바로 적용돼요.
+                    몇 초 뒤 홈 화면에 <b>참오트케어</b> 아이콘이 생겨요.{' '}
+                    {offer.perk ? `아이콘으로 들어와 ${ins.member ? '' : '가입·'}로그인하면 혜택이 바로 적용돼요.` : '아이콘을 눌러 바로 들어오세요.'}
                 </span>
             </div>
         );
     } else if (!env || env.kind === 'standalone') {
         how = <p className="app-sheet__note">이미 앱으로 쓰고 계세요.</p>;
     } else if (env.kind === 'android' || env.kind === 'desktop') {
-        how = ins.canPrompt ? (
-            <button type="button" className="app-sheet__main" onClick={install}>
-                {env.kind === 'desktop' ? '이 PC에 설치하기' : '홈 화면에 추가하기'}
-            </button>
+        how = ins.canPrompt || state === 'opening' ? (
+            <>
+                <button type="button" className="app-sheet__main" onClick={install} disabled={state === 'opening'} aria-busy={state === 'opening'}>
+                    {state === 'opening' ? (
+                        <>
+                            <span className="app-spin" aria-hidden="true" /> 설치 창을 여는 중이에요...
+                        </>
+                    ) : env.kind === 'desktop' ? (
+                        '이 PC에 설치하기'
+                    ) : (
+                        '홈 화면에 추가하기'
+                    )}
+                </button>
+                <p className="app-sheet__fine app-sheet__wait">
+                    {state === 'opening'
+                        ? '휴대폰이 설치 창을 준비하고 있어요. 몇 초만 기다려 주세요. 창이 뜨면 [설치]를 눌러 주세요.'
+                        : '누르면 휴대폰의 설치 창이 떠요. 뜨기까지 몇 초 걸릴 수 있어요.'}
+                </p>
+            </>
         ) : env.kind === 'android' ? (
             <Steps
                 items={[
@@ -189,9 +211,11 @@ export function InstallSheet({ onClose, joined = false }: { onClose: () => void;
                     </div>
                 </div>
                 <ul className="app-sheet__perks">
-                    <li>
-                        🎟️ <b>{offer.headline}</b>
-                    </li>
+                    {offer.perk ? (
+                        <li>
+                            🎟️ <b>{offer.headline}</b>
+                        </li>
+                    ) : null}
                     <li>📲 아이콘 한 번으로 바로 들어와요</li>
                     <li>🔐 로그인이 계속 유지돼요</li>
                     <li>📦 쿠폰·주문·배송 조회를 바로 확인해요</li>
@@ -199,7 +223,10 @@ export function InstallSheet({ onClose, joined = false }: { onClose: () => void;
                 {how}
                 {error ? <p className="app-sheet__error">{error}</p> : null}
                 <p className="app-sheet__fine">
-                    설치한 뒤 홈 화면의 아이콘으로 들어와 {ins.member ? '' : '가입·'}로그인하면 쿠폰 혜택이 바로 적용돼요 (회원당 한 번). 앱 스토어 설치는 필요 없어요.
+                    {offer.perk
+                        ? `설치한 뒤 홈 화면의 아이콘으로 들어와 ${ins.member ? '' : '가입·'}로그인하면 쿠폰 혜택이 바로 적용돼요 (회원당 한 번). `
+                        : '앱 설치 쿠폰은 이미 받으셨어요. 다시 설치해도 로그인만 하면 그대로 이어서 쓸 수 있어요. '}
+                    앱 스토어 설치는 필요 없어요.
                 </p>
                 <button type="button" className="app-sheet__later" onClick={onClose}>
                     나중에 할게요

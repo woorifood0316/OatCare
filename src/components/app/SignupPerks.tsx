@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Check, Ticket, X } from 'lucide-react';
-import { openInstallSheet } from '../../lib/app-install';
+import { openInstallSheet, wasMember } from '../../lib/app-install';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import {
     CONSENT_COUPON_AMOUNT,
@@ -14,6 +14,7 @@ import {
     WELCOME_COUPON_BONUS,
 } from '../../lib/catalog';
 import { useAppInstall } from './useAppInstall';
+import { consentGiftText, type ConsentResult } from '../mypage/consentResult';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -41,6 +42,34 @@ export function SignupPerks() {
     const raise = ins.info?.offer !== 'bonus';
     let head: React.ReactNode;
     let sub: React.ReactNode;
+    const inApp = ins.env?.kind === 'standalone';
+    // In the app but not logged in: the app step is done; what is missing is the login (or the sign-up).
+    if (inApp && !st.member) {
+        const back = wasMember();
+        return (
+            <section id="signup-perks" className="perk-band" aria-label="가입 혜택">
+                <div className="perk-band__inner">
+                    <Ticket size={30} className="perk-band__icon" aria-hidden="true" />
+                    <div className="perk-band__text">
+                        <strong>{back ? <>로그인하면 앱 설치 혜택이 바로 적용돼요</> : <>지금 가입하면 쿠폰 {won(WELCOME_COUPON_AMOUNT)}부터</>}</strong>
+                        <p>
+                            {back ? (
+                                <>앱에서는 처음 한 번만 로그인하면 계속 유지돼요.</>
+                            ) : (
+                                <>
+                                    <span className="oc-chunk">앱으로 들어와서 가입하면</span>{' '}
+                                    <span className="oc-chunk">가입 쿠폰이 바로 {won(WELCOME_COUPON_AMOUNT)}이에요.</span>
+                                </>
+                            )}
+                        </p>
+                    </div>
+                    <Link href="/login?callbackUrl=%2F" className="perk-band__btn">
+                        {back ? '로그인하기 →' : '3초 가입하기 →'}
+                    </Link>
+                </div>
+            </section>
+        );
+    }
     if (!st.member) {
         head = <>가입하면 쿠폰 최대 {won(SIGNUP_COUPON_MAX)}</>;
         sub = (
@@ -82,6 +111,7 @@ function PerksSheet({ ins, onClose }: { ins: Ins; onClose: () => void }) {
     const raise = ins.info?.offer !== 'bonus';
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [gift, setGift] = useState('');
 
     const turnOn = async () => {
         if (busy) return;
@@ -94,6 +124,8 @@ function PerksSheet({ ins, onClose }: { ins: Ins; onClose: () => void }) {
                 body: JSON.stringify({ agreed: true }),
             });
             if (!res.ok) throw new Error();
+            const data = (await res.json().catch(() => ({}))) as ConsentResult;
+            setGift(consentGiftText(data) || `알림 받기 쿠폰 ${won(CONSENT_COUPON_AMOUNT)}`);
             ins.refresh();
         } catch {
             setError('켜지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -193,6 +225,14 @@ function PerksSheet({ ins, onClose }: { ins: Ins; onClose: () => void }) {
                         ) : null}
                     </li>
                 </ol>
+                {gift ? (
+                    <div className="app-sheet__done" role="status">
+                        <strong>🎉 {gift}이 발급됐어요</strong>
+                        <span>
+                            이벤트·혜택 알림을 켰어요. <Link href="/mypage/coupons">쿠폰함에서 확인하기 →</Link>
+                        </span>
+                    </div>
+                ) : null}
                 {error ? <p className="app-sheet__error">{error}</p> : null}
 
                 <p className="app-sheet__fine">

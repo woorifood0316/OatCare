@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { consentGiftText, type ConsentResult } from './consentResult';
 
 /**
  * "알림 켜고 쿠폰 받기": turns the event/benefit notifications on, which issues the waiting coupons (and raises the
@@ -10,7 +11,7 @@ import { useRouter } from 'next/navigation';
 export function ConsentUnlock({ heading, gainText }: { heading: string; gainText: string }) {
     const router = useRouter();
     const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
+    const [done, setDone] = useState<string | null>(null);
     const [error, setError] = useState('');
 
     const turnOn = async () => {
@@ -24,7 +25,8 @@ export function ConsentUnlock({ heading, gainText }: { heading: string; gainText
                 body: JSON.stringify({ agreed: true }),
             });
             if (!res.ok) throw new Error();
-            setDone(true);
+            const data = (await res.json().catch(() => ({}))) as ConsentResult;
+            setDone(consentGiftText(data) || gainText);
             router.refresh();
         } catch {
             setError('켜지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -37,7 +39,7 @@ export function ConsentUnlock({ heading, gainText }: { heading: string; gainText
         return (
             <div className="co-consent is-on">
                 <div className="co-consent__text">
-                    <strong>🎉 쿠폰을 받았어요</strong>
+                    <strong>🎉 {done}을 받았어요</strong>
                     <span>이벤트·혜택 알림을 켰어요. 쿠폰함에서 바로 쓸 수 있어요.</span>
                 </div>
             </div>

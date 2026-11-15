@@ -16,6 +16,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const INSTALLED_KEY = 'oc_app_installed';
+const APP_LAUNCH_KEY = 'oc_app_launch';
+const WAS_MEMBER_KEY = 'oc_was_member';
 const DISMISS_KEY = 'oc_install_dismissed';
 /** "닫기" on the strip hides it this long. */
 export const INSTALL_DISMISS_DAYS = 14;
@@ -36,6 +38,12 @@ export function startInstallCapture() {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferred = e as BeforeInstallPromptEvent;
+        // The browser offers to install only when the app is NOT on the phone: it was removed (or never added).
+        try {
+            localStorage.removeItem(INSTALLED_KEY);
+        } catch {
+            /* storage blocked */
+        }
         emit();
     });
     window.addEventListener('appinstalled', () => {
@@ -43,7 +51,39 @@ export function startInstallCapture() {
         deferred = null;
         emit();
     });
-    if (isStandalone()) markInstalled();
+    // The home-screen icon opens manifest start_url (?utm_source=app): remember for this tab that we run as the app.
+    try {
+        if (new URLSearchParams(window.location.search).get('utm_source') === 'app') sessionStorage.setItem(APP_LAUNCH_KEY, '1');
+    } catch {
+        /* storage blocked */
+    }
+    if (runningAsApp()) markInstalled();
+}
+
+/** Opened from the home-screen icon (display-mode standalone, or launched through the manifest start_url). */
+export function runningAsApp(): boolean {
+    if (isStandalone()) return true;
+    try {
+        return sessionStorage.getItem(APP_LAUNCH_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+/** This browser has been logged in as a member before (to say "다시 로그인" rather than "가입"). */
+export function rememberMember() {
+    try {
+        localStorage.setItem(WAS_MEMBER_KEY, '1');
+    } catch {
+        /* storage blocked */
+    }
+}
+export function wasMember(): boolean {
+    try {
+        return localStorage.getItem(WAS_MEMBER_KEY) === '1';
+    } catch {
+        return false;
+    }
 }
 
 export function subscribeInstall(fn: () => void): () => void {
@@ -121,7 +161,7 @@ export type InstallEnv =
     | { kind: 'desktop' };
 
 export function installEnv(ua: string = navigator.userAgent): InstallEnv {
-    if (isStandalone()) return { kind: 'standalone' };
+    if (runningAsApp()) return { kind: 'standalone' };
     const app = inAppKind(ua);
     if (app) return { kind: 'inapp', app, android: isAndroid(ua) };
     if (isAndroid(ua)) return { kind: 'android' };

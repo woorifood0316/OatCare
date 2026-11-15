@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { consentGiftText, type ConsentResult } from './consentResult';
 
 function formatDate(iso: string | null) {
     if (!iso) return null;
@@ -12,12 +14,14 @@ export function MarketingToggle({ initial, updatedAt }: { initial: boolean; upda
     const [changedAt, setChangedAt] = useState<string | null>(updatedAt);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [notice, setNotice] = useState<{ text: string; gift: boolean } | null>(null);
 
     const toggle = async () => {
         if (busy) return;
         const next = !on;
         setBusy(true);
         setError('');
+        setNotice(null);
         try {
             const res = await fetch('/api/account/marketing', {
                 method: 'POST',
@@ -25,8 +29,17 @@ export function MarketingToggle({ initial, updatedAt }: { initial: boolean; upda
                 body: JSON.stringify({ agreed: next }),
             });
             if (!res.ok) throw new Error();
+            const data = (await res.json().catch(() => ({}))) as ConsentResult;
             setOn(next);
             setChangedAt(new Date().toISOString());
+            const gift = next ? consentGiftText(data) : '';
+            setNotice(
+                gift
+                    ? { text: `🎉 ${gift}을 받았어요. 쿠폰함에서 바로 쓸 수 있어요.`, gift: true }
+                    : next
+                      ? { text: '알림 받기를 켰어요.', gift: false }
+                      : { text: '알림 받기를 껐어요. 이미 받은 쿠폰은 그대로 쓸 수 있어요.', gift: false },
+            );
         } catch {
             setError('변경하지 못했어요. 잠시 후 다시 시도해 주세요.');
         } finally {
@@ -43,6 +56,17 @@ export function MarketingToggle({ initial, updatedAt }: { initial: boolean; upda
                     {changedAt ? ` · ${formatDate(changedAt)} 변경` : ''}
                 </span>
                 {error ? <span className="my-error">{error}</span> : null}
+                {notice ? (
+                    <span className={`my-consent-notice${notice.gift ? ' is-gift' : ''}`} role="status">
+                        {notice.text}
+                        {notice.gift ? (
+                            <>
+                                {' '}
+                                <Link href="/mypage/coupons">쿠폰함 보기 →</Link>
+                            </>
+                        ) : null}
+                    </span>
+                ) : null}
             </div>
             <button
                 type="button"

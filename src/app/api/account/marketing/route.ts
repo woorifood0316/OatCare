@@ -25,6 +25,7 @@ export async function POST(request: Request) {
         return new Response('Bad Request', { status: 400 });
     }
 
-    await setMarketingConsent(session.user.id, agreed, 'mypage');
-    return Response.json({ agreed });
+    const r = await setMarketingConsent(session.user.id, agreed, 'mypage');
+    // What turning it on gave, so the screen can say so (the 3,000원 coupon, waiting coupons now issued).
+    return Response.json({ agreed, consentCoupon: Boolean(r.consentCouponId), activated: r.activated });
 }

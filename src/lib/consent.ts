@@ -9,7 +9,7 @@ import { grantConsentRewards } from './coupons';
  * - Either way the member is told the result (정보통신망법: 수신동의·철회 처리 결과 통지).
  * Returns the id of the notification coupon when it was created now.
  */
-export async function setMarketingConsent(userId: string, agreed: boolean, via: string): Promise<{ changed: boolean; consentCouponId: string | null }> {
+export async function setMarketingConsent(userId: string, agreed: boolean, via: string): Promise<{ changed: boolean; consentCouponId: string | null; activated: number }> {
     const sql = getSql();
     const rows = await sql`
         update users set marketing_agreed = ${agreed}, marketing_updated_at = now()
@@ -18,10 +18,11 @@ export async function setMarketingConsent(userId: string, agreed: boolean, via: 
     `;
     const changed = rows.length > 0;
     let consentCouponId: string | null = null;
-    if (agreed) consentCouponId = (await grantConsentRewards(userId)).consentCouponId;
+    let activated = 0;
+    if (agreed) ({ consentCouponId, activated } = await grantConsentRewards(userId));
     if (changed) {
         const date = new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric' });
         await enqueue('marketing_consent', { agreed, date, via }, { userId, admin: false });
     }
-    return { changed, consentCouponId };
+    return { changed, consentCouponId, activated };
 }

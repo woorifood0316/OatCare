@@ -25,7 +25,7 @@ export function InstallStrip() {
         <div className="app-strip" role="region" aria-label="앱 설치 안내">
             <img src="/icon-192.png" alt="" className="app-strip__icon" />
             <button type="button" className="app-strip__text" onClick={openInstallSheet}>
-                <strong>앱 설치하면 {offer.short}</strong>
+                <strong>{offer.perk ? `앱 설치하면 ${offer.short}` : '앱으로 설치하면 더 편해요'}</strong>
                 <span>아이콘 한 번으로 바로 들어와요</span>
             </button>
             <button type="button" className="app-strip__btn" onClick={openInstallSheet}>

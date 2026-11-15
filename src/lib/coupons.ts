@@ -130,11 +130,12 @@ export async function consentGain(userId: string): Promise<ConsentGain> {
  * The member turned the notifications on: issue the waiting coupons and the 3,000원 notification coupon (once per
  * member, ever - a unique index backs this up). Returns the id of the notification coupon when it was created now.
  */
-export async function grantConsentRewards(userId: string): Promise<{ consentCouponId: string | null }> {
+export async function grantConsentRewards(userId: string): Promise<{ consentCouponId: string | null; activated: number }> {
     const sql = getSql();
-    await sql`
+    const act = await sql`
         update coupons set pending = false, pending_until = null, expires_at = now() + (${COUPON_VALID_DAYS} || ' days')::interval
         where user_id = ${userId} and pending and expires_at > now()
+        returning id
     `;
     const rows = await sql`
         insert into coupons (user_id, source, name, amount, min_order, expires_at)
@@ -142,7 +143,7 @@ export async function grantConsentRewards(userId: string): Promise<{ consentCoup
                 now() + (${COUPON_VALID_DAYS} || ' days')::interval)
         on conflict do nothing returning id
     `;
-    return { consentCouponId: (rows[0]?.id as string) ?? null };
+    return { consentCouponId: (rows[0]?.id as string) ?? null, activated: act.length };
 }
 
 /** What opening the home-screen app gives: the sign-up coupon raised to 3,000원, or a separate 2,000원 coupon. */

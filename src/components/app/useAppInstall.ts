@@ -37,11 +37,14 @@ function loadInfo(who: string): Promise<InstallInfo | null> {
 }
 
 /** The benefit line for the install cards ("가입 쿠폰 1,000원 → 3,000원" or "2,000원 쿠폰 1장 더"). */
-export function offerText(info: InstallInfo | null): { headline: string; short: string } {
-    if (info?.offer === 'bonus') return { headline: `앱 설치하면 ${won(WELCOME_COUPON_BONUS)} 쿠폰을 1장 더 드려요`, short: `${won(WELCOME_COUPON_BONUS)} 쿠폰` };
+export function offerText(info: InstallInfo | null): { headline: string; short: string; perk: boolean } {
+    // The app benefit was given already (once per member): offer the app for its convenience only.
+    if (info?.installed) return { headline: '앱으로 설치하면 아이콘 한 번으로 바로 들어와요', short: '아이콘 한 번으로 바로', perk: false };
+    if (info?.offer === 'bonus') return { headline: `앱 설치하면 ${won(WELCOME_COUPON_BONUS)} 쿠폰을 1장 더 드려요`, short: `${won(WELCOME_COUPON_BONUS)} 쿠폰`, perk: true };
     return {
         headline: `앱 설치하면 가입 쿠폰이 ${won(WELCOME_COUPON_BASE)} → ${won(WELCOME_COUPON_AMOUNT)}`,
         short: `쿠폰 ${won(WELCOME_COUPON_AMOUNT)}`,
+        perk: true,
     };
 }
 
@@ -85,7 +88,9 @@ export function useAppInstall() {
     }, [status, who, tick]);
 
     const ready = env !== null && infoReady;
-    const hidden = !ready || env.kind === 'standalone' || marked || Boolean(info?.installed);
+    // Hidden in the app itself, and where this browser saw the app installed - unless the browser now offers to
+    // install it again (then it was removed). Having opened the app once (info.installed) only changes the wording.
+    const hidden = !ready || env.kind === 'standalone' || (marked && !canPrompt);
     /** Load the steps again (after the member turned the notifications on). */
     const refresh = () => {
         resetInstallInfo();
