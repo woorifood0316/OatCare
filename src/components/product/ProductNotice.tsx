@@ -80,7 +80,7 @@ export function ProductLabelInfo({ name, flavors, count }: { name: string; flavo
         <div className="pn pn--label">
             <h3 className="pn-title">필수 표기 정보</h3>
             <Table4
-                visible={open ? undefined : 3}
+                visible={open ? undefined : 2}
                 rows={[
                     ['제품명', name],
                     ['식품의 유형', LABEL_COMMON.foodType],

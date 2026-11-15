@@ -20,8 +20,9 @@ import {
     getItem,
     type CartLine,
 } from '../../lib/catalog';
-import { PRODUCT_PAGES, detailUrl, getProductPage } from '../../lib/products';
+import { detailUrl, getProductPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
+import { MoreProducts } from './MoreProducts';
 import { backToPrevious } from '../../lib/prev-page';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -231,19 +232,7 @@ export function ProductPage({ slug }: { slug: string }) {
                     <ProductNotice />
                 </section>
 
-                <section className="pd-sec pd-rec">
-                    <h2>다른 맛도 둘러보세요</h2>
-                    <div className="pd-rec__grid">
-                        {PRODUCT_PAGES.filter((p) => p.slug !== slug).map((p) => (
-                            <Link key={p.slug} href={`/products/${p.slug}`} className="pd-rec__card">
-                                <img src={getAssetUrl(p.img)} alt={`참오트케어 ${p.flavor}`} loading="lazy" />
-                                <b>{p.flavor}</b>
-                                <span className="oc-balance">{p.tagline}</span>
-                                <em>{won(getItem(p.sku)!.price)}</em>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
+                <MoreProducts current={page.sku} />
             </main>
 
             <SinglesBar flavor={page.flavor} />

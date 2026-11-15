@@ -59,8 +59,20 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                 </h1>
                 <p className="oc-auth__sub">{provider} 계정으로 처음 오셨어요. 아래에 동의하시면 가입이 끝나요.</p>
                 <p className="oc-auth__perk">
-                    🎟️ 가입하면 <b>{won(WELCOME_COUPON_BASE)} 쿠폰</b> → 앱 설치하면 <b>{won(WELCOME_COUPON_AMOUNT)}</b>으로 → 알림까지 받으면 <b>{won(CONSENT_COUPON_AMOUNT)} 쿠폰 1장 더</b>
-                    <small className="oc-welcome__fine">최대 {won(SIGNUP_COUPON_MAX)} · 쿠폰은 한 번 주문에 1장씩, 받은 날부터 90일 안에 써요</small>
+                    {/* one step per line, so nothing wraps in the middle of a step */}
+                    <span className="oc-welcome__step">
+                        🎟️ 가입하면 <b>{won(WELCOME_COUPON_BASE)} 쿠폰</b>
+                    </span>
+                    <span className="oc-welcome__step">
+                        📲 앱 설치하면 <b>{won(WELCOME_COUPON_AMOUNT)}</b>으로 업그레이드
+                    </span>
+                    <span className="oc-welcome__step">
+                        🔔 알림까지 받으면 <b>{won(CONSENT_COUPON_AMOUNT)} 쿠폰 1장 더</b>
+                    </span>
+                    <small className="oc-welcome__fine">
+                        <span className="oc-nowrap">최대 {won(SIGNUP_COUPON_MAX)}</span> · <span className="oc-nowrap">쿠폰은 한 번 주문에 1장씩,</span>{' '}
+                        <span className="oc-nowrap">받은 날부터 90일 안에 써요</span>
+                    </small>
                 </p>
 
                 <label className={`oc-welcome__check oc-welcome__check--req${agreed ? ' is-on' : ''}`}>
@@ -68,13 +80,14 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                     <span>
                         <b>(필수)</b> 만 14세 이상이며,{' '}
                         <a href="/terms" target="_blank" rel="noopener noreferrer">이용약관</a>과{' '}
-                        <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 수집·이용</a>에 동의합니다.
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="oc-nowrap">개인정보 수집·이용</a>에 동의합니다.
                     </span>
                 </label>
                 <label className={`oc-welcome__check${marketing ? ' is-on' : ''}`}>
                     <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
                     <span>
-                        (선택) 쿠폰 만료·새 맛·회원 전용 할인 소식을 받을게요 → <b>알림 받기 쿠폰 {won(CONSENT_COUPON_AMOUNT)}</b>
+                        (선택) 쿠폰 만료·새 맛·회원 전용 할인 소식을 받을게요
+                        <b className="oc-welcome__gift">🎁 알림 받기 쿠폰 {won(CONSENT_COUPON_AMOUNT)}</b>
                         <small className="oc-welcome__fine">이메일·카카오톡·문자로 보내요. 주문·배송 안내는 동의와 상관없이 보내 드려요. 언제든 끌 수 있어요.</small>
                     </span>
                 </label>

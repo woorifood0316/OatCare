@@ -7,6 +7,7 @@ import { CartFab } from './cart/CartFab';
 import { PageTracker } from './PageTracker';
 import { RefCapture } from './share/RefCapture';
 import { AppInstallHost } from './app/AppInstallHost';
+import { LineBreakGuard } from './LineBreakGuard';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <PageTracker />
                 <RefCapture />
                 <AppInstallHost />
+                <LineBreakGuard />
             </CartProvider>
         </SessionProvider>
     );

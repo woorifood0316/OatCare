@@ -28,8 +28,9 @@ import {
     mixError,
     type CartLine,
 } from '../../lib/catalog';
-import { PRODUCT_PAGES, SET_PAGES, detailUrl, getSetPage } from '../../lib/products';
+import { PRODUCT_PAGES, detailUrl, getSetPage } from '../../lib/products';
 import { getAssetUrl } from '../../utils/assets';
+import { MoreProducts } from './MoreProducts';
 import { backToPrevious } from '../../lib/prev-page';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -172,7 +173,7 @@ export function SetPage({ count }: { count: number }) {
                                 <li key={p}>{p}</li>
                             ))}
                             <li>
-                                배송비 무료 (세트 상품)
+                                배송비 무료 <span className="oc-nowrap">(세트 상품)</span>
                             </li>
                             <li className="pd-facts__coupon">
                                 {item.count >= COUPON_SET_MIN_COUNT ? (
@@ -356,22 +357,7 @@ export function SetPage({ count }: { count: number }) {
                     <ProductNotice set />
                 </section>
 
-                <section className="pd-sec pd-rec">
-                    <h2>다른 세트도 둘러보세요</h2>
-                    <div className="pd-rec__grid pd-rec__grid--3">
-                        {SET_PAGES.filter((s) => s.count !== count).map((s) => {
-                            const it = getItem(s.sku)!;
-                            return (
-                                <Link key={s.count} href={`/sets/${s.count}`} className="pd-rec__card">
-                                    <img src={getAssetUrl(s.img)} alt={it.name} loading="lazy" />
-                                    <b>{it.name}</b>
-                                    <span className="oc-balance">{s.tagline}</span>
-                                    <em>{won(it.price)}</em>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </section>
+                <MoreProducts current={page.sku} />
             </main>
 
             {!subscribable ? (

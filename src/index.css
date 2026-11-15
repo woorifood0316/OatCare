@@ -36,6 +36,8 @@ html {
      mid-word wraps like "마세/요." or "재구매/하는". */
   word-break: keep-all;
   overflow-wrap: break-word;
+  /* every block (div, span text too, not only p/li): never leave one short word alone on the last line */
+  text-wrap: pretty;
 }
 
 /* Site-wide line breaks on narrow (mobile) screens: headings and short labels split into even lines, and body text
@@ -6148,3 +6150,13 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 @keyframes app-spin { to { transform: rotate(360deg); } }
 .app-sheet__main[aria-busy="true"] { opacity: 0.85; }
 .app-sheet__wait { margin-top: 0.45rem; text-align: center; }
+.oc-footer__escrow-title { display: block; margin-bottom: 0.2rem; font-size: 0.82rem; }
+.oc-footer__cs-hours .oc-nowrap { font: inherit; letter-spacing: normal; text-transform: none; opacity: 1; }
+.oc-welcome__step { display: block; }
+.oc-welcome__gift { display: block; margin-top: 0.15rem; }
+.pd-rec__kind { align-self: flex-start; margin-top: 0.2rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: #efe4cd; color: #6a5848; font-size: 0.72rem !important; font-weight: 800; }
+.pd-rec__kind.is-set { background: var(--oc-maroon); color: #fff !important; }
+.pd-rec__card em small { font-size: 0.75rem; font-weight: 600; color: #8a7a6a; }
+/* label | value: a wrapped value stays in its column instead of running under the label */
+.pd-facts li { display: grid; grid-template-columns: 3.6rem 1fr; column-gap: 0.4rem; }
+.pd-facts li > b { min-width: 0; }

@@ -76,7 +76,11 @@ export function SignupPerks() {
             <>
                 <span className="oc-chunk">앱까지 설치하면</span>{' '}
                 <span className="oc-chunk">
-                    가입 쿠폰이 {won(WELCOME_COUPON_BASE)} → {won(WELCOME_COUPON_AMOUNT)}으로 올라가요.
+                    가입 쿠폰이{' '}
+                    <span className="oc-nowrap">
+                        {won(WELCOME_COUPON_BASE)} → {won(WELCOME_COUPON_AMOUNT)}으로
+                    </span>{' '}
+                    올라가요.
                 </span>
             </>
         );
@@ -175,7 +179,11 @@ function PerksSheet({ ins, onClose }: { ins: Ins; onClose: () => void }) {
                             <span>
                                 {raise ? (
                                     <>
-                                        가입 쿠폰 {won(WELCOME_COUPON_BASE)} → <b>{won(WELCOME_COUPON_AMOUNT)}</b>으로 업그레이드
+                                        가입 쿠폰{' '}
+                                        <span className="oc-nowrap">
+                                            {won(WELCOME_COUPON_BASE)} → <b>{won(WELCOME_COUPON_AMOUNT)}</b>으로
+                                        </span>{' '}
+                                        업그레이드
                                     </>
                                 ) : (
                                     <>

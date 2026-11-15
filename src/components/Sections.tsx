@@ -1367,9 +1367,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
                 </div>
 
                 <div className="oc-footer__info">
-                    <span>상호: 우리종합식품 | 대표자: 윤영필 | <span className="oc-nowrap">개인정보보호책임자: 윤영필</span></span>
-                    <span>사업자등록번호: 850-27-00983 | 통신판매업신고: 2021-경기김포-3077</span>
-                    <span>주소 (반품처): 경기도 김포시 양촌읍 황금1로 2-71</span>
+                    {/* Each "항목: 값" stays on one line: numbers with hyphens must never break (2021-/경기김포-3077). */}
+                    <span>
+                        <span className="oc-nowrap">상호: 우리종합식품</span> | <span className="oc-nowrap">대표자: 윤영필</span> |{' '}
+                        <span className="oc-nowrap">개인정보보호책임자: 윤영필</span>
+                    </span>
+                    <span>
+                        <span className="oc-nowrap">사업자등록번호: 850-27-00983</span> | <span className="oc-nowrap">통신판매업신고: 2021-경기김포-3077</span>
+                    </span>
+                    <span>
+                        <span className="oc-nowrap">주소 (반품처):</span> <span className="oc-nowrap">경기도 김포시 양촌읍</span> <span className="oc-nowrap">황금1로 2-71</span>
+                    </span>
                 </div>
 
                 <p className="oc-footer__copyright">© 2026 우리종합식품. All rights reserved.</p>
@@ -1379,11 +1387,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
                 <span className="oc-footer__cs-tag">고객센터 / CS Center</span>
                 <strong className="oc-footer__phone">031-998-7234</strong>
                 <p className="oc-footer__cs-hours">
-                    운영시간: 평일 09:00 ~ 18:00 (점심 12:00 ~ 13:00)<br />
-                    주말 및 공휴일 휴무 | 이메일문의: yyp0606@naver.com
+                    <span className="oc-nowrap">운영시간: 평일 09:00 ~ 18:00</span> <span className="oc-nowrap">(점심 12:00 ~ 13:00)</span>
+                    <br />
+                    <span className="oc-nowrap">주말 및 공휴일 휴무</span> | <span className="oc-nowrap">이메일문의: yyp0606@naver.com</span>
                 </p>
                 <div className="oc-footer__escrow-box">
-                    <span>🛡️ <strong>구매안전서비스 (에스크로)</strong></span>
+                    <strong className="oc-footer__escrow-title">🛡️ 구매안전서비스 (에스크로)</strong>
                     <p>고객님의 안전거래를 위해 현금 결제 시 구매안전서비스를 이용하실 수 있습니다.</p>
                 </div>
             </div>
