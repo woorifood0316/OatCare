@@ -35,7 +35,8 @@ export function InviteLine({ text }: { text?: string } = {}) {
         <div className="inv-line">
             <Gift size={15} aria-hidden="true" />
             <span>
-                {text ? <>{text} · </> : <>친구 초대하고 쿠폰 받기 · </>}친구 첫 구매가 확정되면 둘 다 {won(REFERRAL_REWARD)} (1회)
+                {text ?? '친구 초대하고 쿠폰 받기'}
+                <small className="inv-line__sub">친구 첫 구매 확정 시 둘 다 {won(REFERRAL_REWARD)}</small>
             </span>
             <ShareButton {...SHARE} label="초대하기 →" className="inv-line__btn" />
         </div>

@@ -46,7 +46,8 @@ export default async function CouponsPage() {
                                 <b>{c.name}</b>
                                 <strong>{won(c.amount)}</strong>
                             </div>
-                            <p className="cpn__meta">20·30개 세트·정기구독은 바로 · 낱개·맛보기 세트는 <span className="oc-nowrap">{c.minCount}개(한 박스) 이상</span> · <span className="oc-nowrap">{day(c.expiresAt)}까지</span></p>
+                            <p className="cpn__meta">20·30개 세트·정기구독은 바로 · 낱개·맛보기 세트는 <span className="oc-nowrap">{c.minCount}개(한 박스) 이상</span></p>
+                            <p className="cpn__date">사용 기한 <b>{day(c.expiresAt)}</b></p>
                             <Link href="/?buy=1" className="cpn__cta">
                                 쓰러 가기
                             </Link>
@@ -67,7 +68,8 @@ export default async function CouponsPage() {
                                 <b>{c.name}</b>
                                 <strong>{won(c.amount)} <small>🔒 대기</small></strong>
                             </div>
-                            <p className="cpn__meta">이벤트·혜택 알림을 켜면 바로 받아요 · {day(c.expiresAt)}까지 보관</p>
+                            <p className="cpn__meta">이벤트·혜택 알림을 켜면 바로 받아요</p>
+                            <p className="cpn__date">보관 기한 <b>{day(c.expiresAt)}</b></p>
                             </li>
                         ))}
                     </ul>
@@ -89,7 +91,7 @@ export default async function CouponsPage() {
                                 <b>{c.name}</b>
                                 <strong>{won(c.amount)} <small>{c.usedAt ? '사용 완료' : '기간 만료'}</small></strong>
                             </div>
-                            <p className="cpn__meta">{c.usedAt ? `${day(c.usedAt)} 사용` : `${day(c.expiresAt)} 만료`}</p>
+                            <p className="cpn__date">{c.usedAt ? '사용일' : '만료일'} <b>{day(c.usedAt ?? c.expiresAt)}</b></p>
                             </li>
                         ))}
                     </ul>

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { LegalModal, type LegalModalType } from './LegalModal';
 import { getAssetUrl } from '../utils/assets';
 import { CONSENT_COUPON_AMOUNT, SIGNUP_COUPON_MAX, WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BASE } from '../lib/catalog';
 import { JOINED_KEY } from '../lib/app-install';
@@ -11,6 +12,8 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 /** First visit with a social account: one required consent (+ optional marketing), then the member is created. */
 export function WelcomeConsent({ name, provider, next }: { name: string | null; provider: string; next: string }) {
     const [agreed, setAgreed] = useState(false);
+    // the documents open over the form, so closing them keeps what was checked
+    const [legal, setLegal] = useState<LegalModalType>(null);
     const [marketing, setMarketing] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -79,8 +82,8 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                     <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); setError(''); }} />
                     <span>
                         <b>(필수)</b> 만 14세 이상이며,{' '}
-                        <a href="/terms" target="_blank" rel="noopener noreferrer">이용약관</a>과{' '}
-                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="oc-nowrap">개인정보 수집·이용</a>에 동의합니다.
+                        <a href="/terms" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegal('terms'); }}>이용약관</a>과{' '}
+                        <a href="/privacy" className="oc-nowrap" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegal('privacy'); }}>개인정보 수집·이용</a>에 동의합니다.
                     </span>
                 </label>
                 <label className={`oc-welcome__check${marketing ? ' is-on' : ''}`}>
@@ -111,6 +114,7 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                     <a href="/">가입하지 않고 둘러보기</a>
                 </p>
             </div>
+            <LegalModal type={legal} onClose={() => setLegal(null)} />
         </main>
     );
 }

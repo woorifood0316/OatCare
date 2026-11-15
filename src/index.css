@@ -6337,3 +6337,7 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .ord-card__go--pill { padding: 0.4rem 0.85rem; border-radius: 999px; background: var(--oc-maroon); color: #fff7e8; }
 .my-subpromo { margin-top: 0.9rem; }
 .cart-note + .app-card { margin-top: 1rem; }
+.cpn__date { margin: 0; font-size: 0.8rem; color: rgba(59, 42, 32, 0.62); }
+.cpn__date b { margin-left: 0.2rem; color: var(--oc-brown); font-weight: 800; }
+.inv-line > span { line-height: 1.4; }
+.inv-line__sub { display: block; margin-top: 0.1rem; font-size: 0.76rem; color: rgba(106, 88, 72, 0.8); white-space: nowrap; }

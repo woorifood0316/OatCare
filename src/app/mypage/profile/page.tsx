@@ -73,12 +73,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 <h2 className="my-card__title">이용 안내</h2>
                 <ul className="my-list">
                     <li className="my-row">
-                        <Link href="/terms" target="_blank">
+                        <Link href="/terms">
                             이용약관
                         </Link>
                     </li>
                     <li className="my-row">
-                        <Link href="/privacy" target="_blank">
+                        <Link href="/privacy">
                             개인정보처리방침
                         </Link>
                     </li>

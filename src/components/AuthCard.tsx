@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { LegalModal, type LegalModalType } from './LegalModal';
 import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { currentRefCode } from './share/RefCapture';
@@ -77,6 +78,8 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const params = useSearchParams();
     const callbackUrl = safeCallbackPath(params.get('callbackUrl'));
     const [pending, setPending] = useState<Provider | null>(null);
+    // 이용약관 / 개인정보처리방침 open over the page, so closing them leaves the visitor right here
+    const [legal, setLegal] = useState<LegalModalType>(null);
     // Where the page runs decides how each button signs in without an id/password:
     //  - 카카오: KakaoTalk "간편로그인" (the app opens for consent only), from any browser.
     //  - 네이버: in a normal phone browser, hand this page over to the Naver app (logged in there), then start Naver login.
@@ -304,11 +307,11 @@ function AuthCardInner({ mode }: { mode: Mode }) {
 
                 <p className="oc-auth__legal">
                     처음 오신 분은 다음 화면에서{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer">
+                    <a href="/terms" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegal('terms'); }}>
                         이용약관
                     </a>
                     과{' '}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                    <a href="/privacy" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegal('privacy'); }}>
                         개인정보처리방침
                     </a>
                     에 동의하면 가입돼요. 만 14세 미만은 가입할 수 없어요.
@@ -317,6 +320,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     <p className="oc-auth__inapp">구글 계정은 크롬·사파리 같은 일반 브라우저에서 이용할 수 있어요.</p>
                 ) : null}
             </div>
+            <LegalModal type={legal} onClose={() => setLegal(null)} />
         </main>
     );
 }
