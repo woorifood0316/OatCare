@@ -1,6 +1,7 @@
 import React from 'react';
 import { FLAVORS } from '../../lib/catalog';
 import type { Order } from '../../lib/orders';
+import { ProductThumb } from '../product/ProductThumbs';
 import { ORDER_STATUS_LABEL } from '../../lib/order-status';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -53,6 +54,7 @@ export function OrderBrief({ order }: { order: Order }) {
             <ul className="co-brief__items">
                 {order.items.map((it, i) => (
                     <li key={i}>
+                        <ProductThumb line={it} size="sm" />
                         <span>
                             {it.name} × {it.qty}
                             {it.mixBreakdown

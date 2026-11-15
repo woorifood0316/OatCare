@@ -16,6 +16,7 @@ import {
 } from '../../lib/catalog';
 import type { Reviewable } from '../../lib/reviews';
 import { ConsentUnlock } from '../mypage/ConsentUnlock';
+import { ProductThumb } from '../product/ProductThumbs';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -140,6 +141,12 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
         <section className="my-card rv-form">
             <label className="rv-field">
                 <span>리뷰할 상품</span>
+                {items.find((i) => i.key === key) ? (
+                    <span className="rv-picked">
+                        <ProductThumb line={items.find((i) => i.key === key)!} />
+                        <b>{items.find((i) => i.key === key)!.name}</b>
+                    </span>
+                ) : null}
                 <select value={key} onChange={(e) => setKey(e.target.value)}>
                     {items.map((i) => (
                         <option key={i.key} value={i.key}>

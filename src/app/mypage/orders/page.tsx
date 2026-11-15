@@ -4,6 +4,7 @@ import { getCurrentUser } from '../../../lib/current-user';
 import { listOrders } from '../../../lib/orders';
 import { ORDER_STATUS_LABEL } from '../../../lib/order-status';
 import { PageHead } from '../../../components/mypage/ComingSoon';
+import { StackedThumbs, orderTitle } from '../../../components/product/ProductThumbs';
 import { listReviewables } from '../../../lib/reviews';
 import { listMyReturns, RETURN_BADGE, type ReturnRequest } from '../../../lib/returns';
 import { REVIEW_REWARD_PHOTO, REVIEW_REWARD_TEXT } from '../../../lib/catalog';
@@ -57,10 +58,10 @@ export default async function OrdersPage() {
                                         {o.kind === 'subscription' ? ' · 정기구독' : ''}
                                     </span>
                                 </div>
-                                <strong>
-                                    {o.items[0]?.name ?? '주문'}
-                                    {o.items.length > 1 ? ` 외 ${o.items.length - 1}건` : ''}
-                                </strong>
+                                <div className="ord-card__item">
+                                    <StackedThumbs lines={o.items} />
+                                    <strong>{orderTitle(o.items)}</strong>
+                                </div>
                                 <div className="ord-card__bottom">
                                     <span>{o.orderNo}</span>
                                     <b>{won(o.amount)}</b>

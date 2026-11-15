@@ -9,6 +9,7 @@ import { ORDER_STATUS_LABEL, type OrderStatus } from '../../lib/order-status';
 import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
 import { cardText } from './PaymentMethodManager';
+import { ProductThumb } from '../product/ProductThumbs';
 import { InviteLine, InviteNudge } from '../share/InviteNudge';
 
 export interface HistoryItem {
@@ -108,6 +109,7 @@ function Card({
                         : null;
                     return (
                         <li key={i}>
+                            <ProductThumb line={it} />
                             <div>
                                 <strong>{it.name}</strong>
                                 {mix ? <span>{mix}</span> : null}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { RotateCcw } from 'lucide-react';
 import { getCurrentUser } from '../../../lib/current-user';
 import { listMyReturns, RETURN_REASON_LABEL, RETURN_STATUS_LABEL, type ReturnRequest } from '../../../lib/returns';
+import { StackedThumbs } from '../../../components/product/ProductThumbs';
 import { PageHead } from '../../../components/mypage/ComingSoon';
 
 export const runtime = 'edge';
@@ -46,7 +47,10 @@ export default async function MyReturnsPage() {
                                 <p>
                                     {day(r.createdAt)} 신청 · 주문번호 {r.orderNo}
                                 </p>
-                                <p>{r.items.map((i) => `${i.name} ${i.qty}개`).join(', ')}</p>
+                                <p className="rt-items">
+                                    <StackedThumbs lines={r.items} />
+                                    <span>{r.items.map((i) => `${i.name} ${i.qty}개`).join(', ')}</span>
+                                </p>
                                 {r.type === 'refund' && r.status !== 'withdrawn' && r.status !== 'rejected' ? (
                                     <p>
                                         {r.status === 'completed' && r.refundAmount !== null
