@@ -67,7 +67,7 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
         <div className="sgl">
             <div className="sgl__box" aria-label={`한 박스 ${BOX_SIZE}개 중 ${inBox}개`}>
                 <p className="sgl__head">
-                    📦 한 박스 <b>{BOX_SIZE}개</b> 채우기
+                    📦 <b>{BOX_SIZE}개(한 박스)</b>부터 무료배송
                     {boxes > 1 ? <span> ({boxes}박스째)</span> : null}
                 </p>
                 {/* Spell out where the count comes from: the visitor picked 1 here but the box may already hold cart items. */}
@@ -104,18 +104,18 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
                 </div>
                 {cartHasCouponSet && inBox < BOX_SIZE ? (
                     <small className="sgl__left">
-                        장바구니에 20·30개 세트가 있어 <b>무료배송 + 쿠폰 사용</b> 가능 · <b>{BOX_SIZE - inBox}개</b> 더 담으면 한 박스 완성
+                        장바구니에 세트가 있어 <b>무료배송</b> · <b>{BOX_SIZE - inBox}개</b> 더 담으면 한 박스 완성
                     </small>
                 ) : cartHasSet && inBox < BOX_SIZE ? (
                     <small className="sgl__left">
-                        세트가 있어 <b>무료배송</b> · <b>{BOX_SIZE - inBox}개</b> 더 담으면 <b>쿠폰 사용</b>
+                        장바구니에 세트가 있어 <b>무료배송</b> · <b>{BOX_SIZE - inBox}개</b> 더 담으면 한 박스 완성
                     </small>
                 ) : inBox < BOX_SIZE ? (
                     <small className="sgl__left">
-                        <b>{BOX_SIZE - inBox}개</b> 더 담으면 <b>무료배송 + 쿠폰 사용</b>
+                        <b>{BOX_SIZE - inBox}개</b> 더 담으면 <b>무료배송</b>
                     </small>
                 ) : (
-                    <small className="sgl__left is-full">한 박스 완성! 무료배송 + 쿠폰 사용 가능 ✓</small>
+                    <small className="sgl__left is-full">한 박스 완성! 무료배송 ✓</small>
                 )}
             </div>
 
@@ -155,9 +155,9 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
                 </span>
                 <b>{won(amount)}</b>
             </div>
-            <CouponHint mode="once" count={boxCount} noMinimum={cartHasCouponSet} className="sgl__hint" />
+            <CouponHint mode="once" count={boxCount} noMinimum={cartHasCouponSet} compact />
             {picked >= 15 ? (
-                <Link href="/sets/20" className="sbar-sheet__nudge" onClick={onDone}>
+                <Link href="/sets/20" className="bs-setlink" onClick={onDone}>
                     💡 맛을 <b>5개 단위</b>로 골라도 괜찮다면 <b className="oc-nowrap">20개 세트가 개당 {won(set20Unit)}</b> →
                 </Link>
             ) : null}

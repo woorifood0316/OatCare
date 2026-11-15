@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { SIGNUP_COUPON_MAX, couponDiscount } from '../../lib/catalog';
+import { SIGNUP_COUPON_MAX, WELCOME_COUPON_MIN_COUNT, couponDiscount } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -28,6 +28,7 @@ export function CouponHint({
     noMinimum,
     total,
     oneCycle = true,
+    compact = false,
     className = '',
 }: {
     mode: 'once' | 'subscribe';
@@ -39,6 +40,8 @@ export function CouponHint({
     total?: number;
     /** All subscriptions on the same cycle (otherwise the coupon only goes on the first one). */
     oneCycle?: boolean;
+    /** Purchase sheet: one line under the total, saying only what really applies to this order (or what is missing). */
+    compact?: boolean;
     className?: string;
 }) {
     const [state, setState] = useState<CouponState | null>(null);
@@ -50,6 +53,7 @@ export function CouponHint({
         };
     }, []);
     if (!state) return null;
+    if (compact) return <CompactLine state={state} mode={mode} count={count} noMinimum={noMinimum} total={total} oneCycle={oneCycle} className={className} />;
 
     if (!state.loggedIn) {
         return (
@@ -108,5 +112,64 @@ export function CouponHint({
                 <Link href="/sets/20">세트 보기 →</Link>
             </p>
         </div>
+    );
+}
+
+/** The purchase sheet's coupon line: applied for sure, or the condition still missing - never a promise that does not hold. */
+function CompactLine({
+    state,
+    mode,
+    count,
+    noMinimum,
+    total,
+    oneCycle,
+    className,
+}: {
+    state: CouponState;
+    mode: 'once' | 'subscribe';
+    count: number;
+    noMinimum: boolean;
+    total?: number;
+    oneCycle: boolean;
+    className: string;
+}) {
+    const free = mode === 'subscribe' || noMinimum;
+    if (!state.loggedIn) {
+        return (
+            <p className={`cph-line ${className}`}>
+                🎟️ 가입하면 <b>쿠폰 최대 {won(SIGNUP_COUPON_MAX)}</b> (한 번 주문에 1장씩)
+                {!free && count < WELCOME_COUPON_MIN_COUNT ? <> · 낱개는 <span className="oc-nowrap">{WELCOME_COUPON_MIN_COUNT}개부터 사용</span></> : null}
+            </p>
+        );
+    }
+    if (state.coupons.length === 0) return null;
+    const usable = state.coupons.filter((c) => couponDiscount(c, count, Number.MAX_SAFE_INTEGER, free) > 0);
+    if (usable.length > 0) {
+        const top = [...usable].sort((a, b) => b.amount - a.amount)[0];
+        return (
+            <p className={`cph-line is-ok ${className}`}>
+                🎟️ <b>{won(top.amount)} 쿠폰</b> 결제 때 자동 적용{mode === 'subscribe' ? ' (첫 결제)' : ''}
+                {mode === 'subscribe' && total && oneCycle && total > top.amount ? (
+                    <>
+                        {' · '}
+                        <span className="oc-nowrap">
+                            첫 결제 <b>{won(total - top.amount)}</b>
+                        </span>{' · '}
+                        <span className="oc-nowrap">
+                            이후 매회 <b>{won(total)}</b>
+                        </span>
+                    </>
+                ) : null}
+            </p>
+        );
+    }
+    const best = [...state.coupons].sort((a, b) => b.amount - a.amount)[0];
+    return (
+        <p className={`cph-line ${className}`}>
+            🎟️ {won(best.amount)} 쿠폰은 <span className="oc-nowrap">{best.minCount}개부터 사용 가능</span> ·{' '}
+            <span className="oc-nowrap">
+                <b>{best.minCount - count}개</b> 더 담으면 적용
+            </span>
+        </p>
     );
 }

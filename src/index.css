@@ -6248,3 +6248,12 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .co-brief__items li > span { flex: 1; min-width: 0; }
 .rt-items { display: flex; align-items: center; gap: 0.6rem; }
 .rv-picked { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; }
+
+/* purchase sheet: benefits sit on the choice they belong to; the coupon is one line under the total */
+.sbar-sheet__modes button { position: relative; }
+.bs-tab-badge { position: absolute; top: -0.55rem; right: 0.4rem; padding: 0.05rem 0.4rem; border-radius: 999px; background: var(--oc-gold); color: #fff; font-size: 0.62rem; font-weight: 900; white-space: nowrap; }
+.cph-line { margin: 0; font-size: 0.84rem; line-height: 1.5; color: #5a4838; }
+.cph-line.is-ok { color: #1f5130; }
+.cph-line b { color: var(--oc-maroon); }
+.cph-line.is-ok b { color: #1f5130; }
+.bs-setlink { justify-self: start; font-size: 0.8rem; color: #6a5848; text-decoration: underline; text-underline-offset: 2px; }

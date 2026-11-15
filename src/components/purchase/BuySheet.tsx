@@ -174,6 +174,7 @@ export function SetBuyBody({
                     </button>
                     <button type="button" role="tab" aria-selected={mode === 'subscribe'} className={mode === 'subscribe' ? 'is-active' : ''} onClick={() => setMode('subscribe')}>
                         정기구독 {pct}%↓
+                        <span className="bs-tab-badge">첫 회 보틀 증정</span>
                     </button>
                 </div>
             ) : null}
@@ -198,12 +199,7 @@ export function SetBuyBody({
                         <span>합계 (무료배송)</span>
                         <b>{won(item.price * qty)}</b>
                     </div>
-                    {subscribable ? (
-                        <button type="button" className="sbar-sheet__nudge" onClick={() => setMode('subscribe')}>
-                            💡 정기구독하면 <b className="oc-nowrap">매회 {won(saving)} 절약</b> <span className="oc-nowrap">+ 첫 회 쉐이커 보틀 →</span>
-                        </button>
-                    ) : null}
-                    <CouponHint mode="once" count={item.count * qty} noMinimum={subscribable} className="sbar-sheet__coupon" />
+                    <CouponHint mode="once" count={item.count * qty} noMinimum={subscribable} compact />
                     <div className="pd-actions">
                         <button type="button" className="pd-btn pd-btn--cart" onClick={addCart} disabled={!!mixErr}>
                             <ShoppingBag size={17} />
@@ -244,7 +240,7 @@ export function SetBuyBody({
                             <Check size={14} aria-hidden="true" /> 마이페이지에서 <b>주기 변경·건너뛰기</b>
                         </li>
                     </ul>
-                    <CouponHint mode="subscribe" count={item.count} noMinimum total={subPrice} className="sbar-sheet__coupon" />
+                    <CouponHint mode="subscribe" count={item.count} noMinimum total={subPrice} compact />
                     <button type="button" className="pc2__start" onClick={subscribe} disabled={!!mixErr}>
                         <Repeat size={16} />
                         <span>정기구독 시작하기</span>
