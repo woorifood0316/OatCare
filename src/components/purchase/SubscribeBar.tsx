@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { preloadCoupons } from './CouponHint';
 import { Repeat, ShoppingBag } from 'lucide-react';
 import { SUBSCRIPTION_DISCOUNT_RATE, getItem, type CartLine } from '../../lib/catalog';
 import { SetBuyBody, SheetFrame, type BuyMode } from './BuySheet';
@@ -30,6 +31,7 @@ export function SubscribeBar({
 }) {
     const item = getItem(sku);
     const [open, setOpen] = useState<BuyMode | null>(null);
+    useEffect(() => preloadCoupons(), []);
     if (!item) return null;
     const pct = Math.round(SUBSCRIPTION_DISCOUNT_RATE * 100);
 

@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { SheetFrame, SinglesBody } from './BuySheet';
-import { CouponHint } from './CouponHint';
+import { CouponHint, preloadCoupons } from './CouponHint';
 import { BOX_SIZE, COUPON_SET_MIN_COUNT, FLAVORS, MAX_QTY_ONCE, getItem, hasCouponSet, type CartLine } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -179,6 +179,7 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
 /** Phone bottom bar on single-item pages: either button opens the shared purchase sheet at this flavour. */
 export function SinglesBar({ flavor }: { flavor: string }) {
     const [open, setOpen] = useState(false);
+    useEffect(() => preloadCoupons(), []);
     const price = getItem(skuOf(flavor))?.price ?? 0;
 
     return (

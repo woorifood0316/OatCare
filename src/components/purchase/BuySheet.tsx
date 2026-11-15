@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ChevronLeft, Minus, Plus, Repeat, ShoppingBag, X, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
-import { CouponHint } from './CouponHint';
+import { CouponHint, preloadCoupons } from './CouponHint';
 import { useMixChoice } from './MixPicker';
 import { SinglesPicker } from './SinglesBar';
 import { getAssetUrl } from '../../utils/assets';
@@ -343,6 +343,7 @@ export function BuySheetHost() {
     const [fromList, setFromList] = useState(false);
     const [tab, setTab] = useState<'set' | 'single'>('set');
 
+    useEffect(() => preloadCoupons(), []);
     useEffect(() => {
         const onOpen = (e: Event) => {
             const t = (e as CustomEvent<BuyTarget>).detail;

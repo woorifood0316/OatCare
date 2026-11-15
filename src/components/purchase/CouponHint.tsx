@@ -11,6 +11,10 @@ type CouponState = { loggedIn: boolean; coupons: CouponLite[] };
 
 // Fetched once per page load and shared by every hint on the page.
 let couponsPromise: Promise<CouponState> | null = null;
+/** Start loading as soon as a page with a purchase sheet opens, so the coupon line is there when the sheet is. */
+export function preloadCoupons() {
+    void loadCoupons();
+}
 function loadCoupons(): Promise<CouponState> {
     couponsPromise ??= fetch('/api/coupons')
         .then((r) => (r.ok ? r.json() : { loggedIn: false, coupons: [] }))
