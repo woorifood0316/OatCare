@@ -107,7 +107,7 @@ export function ShareButton({
                                 <Gift size={30} className="shr__gift" />
                                 <h2>회원으로 공유하면 쿠폰을 드려요</h2>
                                 <p>
-                                    회원가입 후 공유하면 <b>나만의 초대 링크</b>가 만들어져요. 친구가 그 링크로 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 {won(REFERRAL_REWARD)} 쿠폰</b>을 받아요.
+                                    회원가입 후 공유하면 <b>나만의 초대 링크</b>가 만들어져요. 친구가 그 링크로 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 {won(REFERRAL_REWARD)} 쿠폰</b>을 1장씩 받아요.
                                 </p>
                                 <p className="shr__warn">회원가입 없이 공유하면 초대 혜택이 없어요.</p>
                                 <Link href={`/login?callbackUrl=${encodeURIComponent(here)}`} className="shr__primary" onClick={() => setStep('closed')}>
@@ -126,7 +126,7 @@ export function ShareButton({
                                 <h2>친구에게 공유하기</h2>
                                 {status === 'authenticated' ? (
                                     <p className="shr__perk">
-                                        <Gift size={15} /> 내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 {won(REFERRAL_REWARD)} 쿠폰</b>
+                                        <Gift size={15} /> 내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 {won(REFERRAL_REWARD)} 쿠폰 1장씩</b>
                                     </p>
                                 ) : (
                                     <p className="shr__warn">초대 혜택 없이 공유돼요.</p>

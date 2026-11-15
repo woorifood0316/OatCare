@@ -9,7 +9,7 @@ import { ORDER_STATUS_LABEL, type OrderStatus } from '../../lib/order-status';
 import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
 import { cardText } from './PaymentMethodManager';
-import { InviteNudge } from '../share/InviteNudge';
+import { InviteLine, InviteNudge } from '../share/InviteNudge';
 
 export interface HistoryItem {
     orderNo: string;
@@ -351,6 +351,7 @@ export function SubscriptionManager({
                 <Link href="/#bundles" className="my-btn my-btn--primary">
                     정기구독 알아보기
                 </Link>
+                <InviteLine />
             </section>
         );
     }
@@ -358,10 +359,14 @@ export function SubscriptionManager({
     return (
         <>
             {justStarted ? <p className="sub-banner">정기구독이 시작됐어요. 첫 회차 결제가 완료됐어요.</p> : null}
-            {justStarted ? <InviteNudge heading="정기구독 시작을 축하해요! 친구에게도 알려 주세요" /> : null}
             {subs.map((s) => (
                 <Card key={s.id} sub={s} addresses={addresses} methods={methods} history={history[s.id] ?? []} onUpdate={setSubs} />
             ))}
+            {subs.some((s) => s.status !== 'canceled') ? (
+                <InviteNudge heading={justStarted ? '정기구독 시작을 축하해요! 친구에게도 알려 주세요' : '구독 중인 이 맛, 친구에게도 알려 주세요'} />
+            ) : (
+                <InviteLine />
+            )}
         </>
     );
 }

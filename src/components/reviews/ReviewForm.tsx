@@ -15,7 +15,6 @@ import {
     WELCOME_COUPON_MIN_COUNT,
 } from '../../lib/catalog';
 import type { Reviewable } from '../../lib/reviews';
-import { InviteNudge } from '../share/InviteNudge';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -116,7 +115,6 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
                         🎟️ 리뷰 이벤트 쿠폰 <b>{won(done.reward)}</b>을 드렸어요. 마이페이지 쿠폰에서 확인할 수 있어요.
                     </p>
                 ) : null}
-                <InviteNudge heading="리뷰 고마워요! 친구에게도 추천해 보세요" />
                 <button
                     type="button"
                     className="my-btn"

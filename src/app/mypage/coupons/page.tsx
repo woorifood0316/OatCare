@@ -3,6 +3,7 @@ import { Ticket } from 'lucide-react';
 import { getCurrentUser } from '../../../lib/current-user';
 import { listCoupons } from '../../../lib/coupons';
 import { PageHead } from '../../../components/mypage/ComingSoon';
+import { InviteNudge } from '../../../components/share/InviteNudge';
 
 export const runtime = 'edge';
 
@@ -21,6 +22,7 @@ export default async function CouponsPage() {
     return (
         <>
             <PageHead title="쿠폰" desc="결제할 때 쿠폰을 골라 쓸 수 있어요." />
+            <InviteNudge heading="쿠폰 더 받는 법: 친구 초대" />
 
             {coupons.length === 0 ? (
                 <section className="my-card my-placeholder">

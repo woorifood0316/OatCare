@@ -6019,3 +6019,10 @@ tr.is-muted td { opacity: 0.6; }
   .my-crumbs .my-crumbs__back { margin-left: auto; display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.35rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; color: var(--oc-brown); font-weight: 700; text-decoration: none; }
 }
 .inv-nudge { margin: 1rem 0; text-align: left; }
+
+/* one-line friend invitation on task screens */
+.inv-line { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin: 1rem 0 0; padding: 0.6rem 0.9rem; border-radius: 0.8rem; background: #fff8e6; color: #6a5848; font-size: 0.85rem; text-align: left; }
+.inv-line > svg { flex: none; color: var(--oc-maroon); }
+.inv-line > span { flex: 1; min-width: 12rem; }
+.inv-line__btn { flex: none; padding: 0; border: 0; background: none; color: var(--oc-maroon); font: inherit; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.inv-line__btn:hover { text-decoration: underline; }

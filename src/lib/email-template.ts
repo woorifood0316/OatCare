@@ -125,7 +125,7 @@ export function layout(opts: {
         ? `<tr><td style="padding:22px 28px 0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff8e6;border:1.5px solid #e9c46a;border-radius:14px;"><tr><td style="padding:16px 18px;">
     <div style="font-size:15px;font-weight:800;color:${C.brown};">🎁 친구에게도 알려 주세요</div>
-    <div style="margin-top:4px;font-size:13px;line-height:1.6;color:#6a5848;">내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰</b>을 드려요.</div>
+    <div style="margin-top:4px;font-size:13px;line-height:1.6;color:#6a5848;">내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 <b>나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰</b>을 1장씩 드려요.</div>
     <div style="margin-top:12px;"><a href="${esc(opts.invite)}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:${C.maroon};color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">친구 초대하기 →</a></div>
   </td></tr></table>
 </td></tr>`
@@ -273,7 +273,7 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
         ...(event === 'inquiry_answered' ? ['', `문의: ${p.question}`, `답변: ${p.answer}`] : []),
         ...(button ? ['', `${button.label}: ${button.url}`] : []),
         ...(note ? ['', note] : []),
-        ...(inviteUrl ? ['', `친구에게도 알려 주세요: 내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰을 드려요.`, `친구 초대하기: ${inviteUrl}`] : []),
+        ...(inviteUrl ? ['', `친구에게도 알려 주세요: 내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰을 1장씩 드려요.`, `친구 초대하기: ${inviteUrl}`] : []),
     ].join('\n');
     return { subject: base.subject, html, text: text + textFooter() };
 }

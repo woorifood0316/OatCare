@@ -28,7 +28,7 @@ export default async function InvitePage() {
 
     return (
         <>
-            <PageHead title="친구 초대" desc={`내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰을 받아요.`} />
+            <PageHead title="친구 초대" desc={`내 초대 링크로 친구가 가입하고 첫 구매가 확정되면 나와 친구 모두 ${won(REFERRAL_REWARD)} 쿠폰을 1장씩 받아요.`} />
             {!ready ? (
                 <section className="my-card my-placeholder">
                     <Gift size={24} />

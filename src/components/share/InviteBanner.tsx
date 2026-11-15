@@ -21,7 +21,7 @@ export function InviteBanner() {
                         <span className="oc-chunk">친구 초대하면</span> <span className="oc-chunk">친구도 나도 {won(REFERRAL_REWARD)} 쿠폰</span>
                     </strong>
                     <p>
-                        <span className="oc-chunk">내 초대 링크로 친구가 가입하고</span> <span className="oc-chunk">첫 구매가 확정되면 두 사람 모두 쿠폰을 드려요.</span>
+                        <span className="oc-chunk">내 초대 링크로 친구가 가입하고</span> <span className="oc-chunk">첫 구매가 확정되면 두 사람 모두 쿠폰을 1장씩 드려요.</span>
                     </p>
                 </div>
                 {status === 'authenticated' ? (
