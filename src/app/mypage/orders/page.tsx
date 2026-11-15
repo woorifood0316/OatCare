@@ -5,6 +5,7 @@ import { listOrders } from '../../../lib/orders';
 import { ORDER_STATUS_LABEL } from '../../../lib/order-status';
 import { PageHead } from '../../../components/mypage/ComingSoon';
 import { listReviewables } from '../../../lib/reviews';
+import { listMyReturns, RETURN_BADGE, type ReturnRequest } from '../../../lib/returns';
 import { REVIEW_REWARD_PHOTO, REVIEW_REWARD_TEXT } from '../../../lib/catalog';
 
 export const runtime = 'edge';
@@ -15,6 +16,8 @@ export default async function OrdersPage() {
     const user = await getCurrentUser();
     const orders = await listOrders(user.id);
     const reviewable = await listReviewables(user.id).then((r) => r.length).catch(() => 0);
+    const latest = new Map<string, ReturnRequest>(); // newest first, so the first one per order wins
+    for (const r of await listMyReturns(user.id).catch(() => [])) if (r.status !== 'withdrawn' && !latest.has(r.orderId)) latest.set(r.orderId, r);
 
     return (
         <>
@@ -41,7 +44,14 @@ export default async function OrdersPage() {
                         <li key={o.id}>
                             <Link href={`/mypage/orders/${o.orderNo}`} className="my-card ord-card">
                                 <div className="ord-card__top">
-                                    <span className={`ord-status ord-status--${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
+                                    <span className="ord-card__badges">
+                                        <span className={`ord-status ord-status--${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
+                                        {latest.get(o.id) ? (
+                                            <span className={`rt-badge rt-badge--${latest.get(o.id)!.status}`}>
+                                                {latest.get(o.id)!.type === 'refund' ? '반품' : '교환'} {RETURN_BADGE[latest.get(o.id)!.status]}
+                                            </span>
+                                        ) : null}
+                                    </span>
                                     <span className="ord-card__date">
                                         {new Date(o.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                                         {o.kind === 'subscription' ? ' · 정기구독' : ''}

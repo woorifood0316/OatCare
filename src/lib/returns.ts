@@ -36,6 +36,15 @@ export async function listReturnsForOrder(orderId: string): Promise<ReturnReques
     return rows.map(mapReturn);
 }
 
+/** All of a member's requests (마이페이지 교환·반품 내역 and the badges on the order list), newest first. */
+export async function listMyReturns(userId: string): Promise<ReturnRequest[]> {
+    const rows = await getSql()`
+        select r.*, o.order_no from return_requests r join orders o on o.id = r.order_id
+        where o.user_id = ${userId} order by r.created_at desc limit 200
+    `;
+    return rows.map(mapReturn);
+}
+
 export async function refundedSoFar(orderId: string): Promise<number> {
     const rows = await getSql()`select coalesce(sum(refund_amount), 0)::int as s from return_requests where order_id = ${orderId} and status = 'completed'`;
     return (rows[0]?.s as number) ?? 0;

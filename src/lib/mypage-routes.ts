@@ -14,6 +14,7 @@ const HOME = { label: '마이페이지', href: '/mypage' };
 const SECTIONS: Record<string, { title: string; tab: string }> = {
     subscription: { title: '정기구독', tab: '/mypage/subscription' },
     orders: { title: '주문·배송', tab: '/mypage/orders' },
+    returns: { title: '교환·반품 내역', tab: '/mypage/orders' },
     payment: { title: '결제수단·배송지', tab: '/mypage/payment' },
     profile: { title: '내 정보', tab: '/mypage/profile' },
     coupons: { title: '쿠폰', tab: '/mypage' },

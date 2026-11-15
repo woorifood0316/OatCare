@@ -21,6 +21,9 @@ export const RETURN_STATUS_LABEL: Record<ReturnStatus, string> = {
     withdrawn: '신청 취소',
 };
 
+/** Short badge for the order list, e.g. "반품 회수 중". */
+export const RETURN_BADGE: Record<ReturnStatus, string> = { requested: '접수', approved: '회수 중', completed: '완료', rejected: '반려', withdrawn: '취소' };
+
 export interface ReturnLine {
     index: number;
     name: string;

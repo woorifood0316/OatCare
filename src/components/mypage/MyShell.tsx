@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { myRoute } from '../../lib/mypage-routes';
 import { backToPrevious } from '../../lib/prev-page';
-import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck, Ticket, Star, MessageCircleQuestion, Gift } from 'lucide-react';
+import { Home, Repeat, Package, CreditCard, User, LifeBuoy, ShieldCheck, Ticket, Star, MessageCircleQuestion, Gift, RotateCcw } from 'lucide-react';
 import { LogoutButton } from '../LogoutButton';
 
 const NAV = [
@@ -50,15 +50,26 @@ export function MyShell({
 
                 <nav className="my-side__nav" aria-label="마이페이지 메뉴">
                     {NAV.map(({ href, label, icon: Icon, ...rest }) => (
-                        <Link
-                            key={href}
-                            href={href}
-                            className={`my-side__link${isActive(href, 'exact' in rest ? rest.exact : false) ? ' is-active' : ''}`}
-                            aria-current={isActive(href, 'exact' in rest ? rest.exact : false) ? 'page' : undefined}
-                        >
-                            <Icon size={18} />
-                            <span>{label}</span>
-                        </Link>
+                        <React.Fragment key={href}>
+                            <Link
+                                href={href}
+                                className={`my-side__link${isActive(href, 'exact' in rest ? rest.exact : false) ? ' is-active' : ''}`}
+                                aria-current={isActive(href, 'exact' in rest ? rest.exact : false) ? 'page' : undefined}
+                            >
+                                <Icon size={18} />
+                                <span>{label}</span>
+                            </Link>
+                            {href === '/mypage/orders' ? (
+                                <Link
+                                    href="/mypage/returns"
+                                    className={`my-side__link${isActive('/mypage/returns') ? ' is-active' : ''}`}
+                                    aria-current={isActive('/mypage/returns') ? 'page' : undefined}
+                                >
+                                    <RotateCcw size={18} />
+                                    <span>교환·반품 내역</span>
+                                </Link>
+                            ) : null}
+                        </React.Fragment>
                     ))}
                     <Link href="/mypage/coupons" className={`my-side__link${pathname.startsWith('/mypage/coupons') ? ' is-active' : ''}`}>
                         <Ticket size={18} />

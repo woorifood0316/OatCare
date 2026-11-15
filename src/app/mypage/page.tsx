@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Repeat, Package, CreditCard, Ticket, Check, Star, User, MessageCircleQuestion, Gift } from 'lucide-react';
+import { Repeat, Package, CreditCard, Ticket, Check, Star, User, MessageCircleQuestion, Gift, RotateCcw } from 'lucide-react';
 import { MIN_SUBSCRIPTION_CHARGES, SUBSCRIPTION_DISCOUNT_RATE } from '../../lib/catalog';
 import { listCoupons } from '../../lib/coupons';
 import { listSubscriptions } from '../../lib/subscriptions';
@@ -9,6 +9,7 @@ import { listAddresses } from '../../lib/addresses';
 import { listReviewables } from '../../lib/reviews';
 import { listMyInquiries } from '../../lib/inquiries';
 import { myReferrals } from '../../lib/referrals';
+import { listMyReturns } from '../../lib/returns';
 import { REFERRAL_REWARD } from '../../lib/catalog';
 import { MyInviteStrip } from '../../components/share/MyInviteStrip';
 import { getCurrentUser } from '../../lib/current-user';
@@ -26,7 +27,7 @@ export default async function MyHomePage() {
             return fallback;
         }
     };
-    const [subs, orders, cards, addresses, reviewables, inquiries, refs] = await Promise.all([
+    const [subs, orders, cards, addresses, reviewables, inquiries, refs, returns] = await Promise.all([
         safe(() => listSubscriptions(user.id), []),
         safe(() => listOrders(user.id), []),
         safe(() => listPaymentMethods(user.id), []),
@@ -34,6 +35,7 @@ export default async function MyHomePage() {
         safe(() => listReviewables(user.id), []),
         safe(() => listMyInquiries(user.id), []),
         safe(() => myReferrals(user.id), { invited: [], invitedBy: null }),
+        safe(() => listMyReturns(user.id), []),
     ]);
     const md = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
     const liveSubs = subs.filter((x) => x.status !== 'canceled');
@@ -52,6 +54,8 @@ export default async function MyHomePage() {
               : preparing > 0
                 ? `상품 준비 중 ${preparing}건`
                 : `최근 주문 ${md(orders[0].createdAt.slice(0, 10))}`;
+    const openReturns = returns.filter((r) => r.status === 'requested' || r.status === 'approved').length;
+    const returnText = openReturns > 0 ? `진행 중 ${openReturns}건` : returns.some((r) => r.status !== 'withdrawn') ? '진행 중인 신청 없음' : '신청 내역 없음';
     const payText = cards.length + addresses.length === 0 ? '등록된 정보가 없어요' : `카드 ${cards.length}장 · 배송지 ${addresses.length}곳`;
     const reviewText = reviewables.length > 0 ? `리뷰 쓸 수 있는 상품 ${reviewables.length}개` : '리뷰 남기고 쿠폰 받기';
     const waiting = inquiries.filter((q) => q.status === 'pending').length;
@@ -117,6 +121,11 @@ export default async function MyHomePage() {
                     <Package size={22} />
                     <strong>주문·배송</strong>
                     <span>{orderText}</span>
+                </Link>
+                <Link href="/mypage/returns" className="my-card my-tile">
+                    <RotateCcw size={22} />
+                    <strong>교환·반품 내역</strong>
+                    <span>{returnText}</span>
                 </Link>
                 <Link href="/mypage/payment" className="my-card my-tile">
                     <CreditCard size={22} />

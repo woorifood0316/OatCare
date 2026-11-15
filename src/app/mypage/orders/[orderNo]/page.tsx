@@ -7,6 +7,7 @@ import { OrderBrief } from '../../../../components/checkout/OrderBrief';
 import { OrderCancelButton } from '../../../../components/mypage/OrderCancelButton';
 import { PageHead } from '../../../../components/mypage/ComingSoon';
 import { ReturnStatus } from '../../../../components/returns/ReturnStatus';
+import { InviteLine } from '../../../../components/share/InviteNudge';
 import { listReturnsForOrder, returnWindow, returnableLines, type ReturnRequest } from '../../../../lib/returns';
 
 const md = (d: Date | null) => (d ? d.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric' }) : '');
@@ -99,6 +100,8 @@ export default async function OrderDetailPage({
                     </p>
                 </section>
             ) : null}
+
+            {order.status === 'delivered' && !returns.some((r) => r.status !== 'withdrawn' && r.status !== 'rejected') ? <InviteLine /> : null}
 
             <p className="cart-note">
                 문의: 고객센터 031-998-7234
