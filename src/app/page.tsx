@@ -11,6 +11,7 @@ import { LegalPage } from '../components/LegalPage';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { InviteBanner } from '../components/share/InviteBanner';
 import { InstallStrip } from '../components/app/InstallStrip';
+import { SignupPerks } from '../components/app/SignupPerks';
 import {
     BoldStatement,
     Bundles,
@@ -140,6 +141,8 @@ export default function Home() {
             <ScrollReveal className="oc-band oc-band--tan">
                 <QuickReviews />
             </ScrollReveal>
+
+            <SignupPerks />
 
             <ScrollReveal className="oc-band oc-band--cream">
                 <Bundles onSelectProduct={setSelectedProduct} />

@@ -11,6 +11,9 @@ export interface InstallInfo {
     installed: boolean;
     /** What opening the app gives: raise the sign-up coupon, or a separate 2,000원 coupon. */
     offer: 'raise' | 'bonus' | null;
+    /** The 3,000원 notification coupon was received. */
+    consentCoupon?: boolean;
+    marketingAgreed?: boolean;
 }
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -54,6 +57,7 @@ export function useAppInstall() {
     const [marked, setMarked] = useState(false);
     const [info, setInfo] = useState<InstallInfo | null>(null);
     const [infoReady, setInfoReady] = useState(false);
+    const [tick, setTick] = useState(0);
 
     useEffect(() => {
         startInstallCapture();
@@ -78,9 +82,14 @@ export function useAppInstall() {
         return () => {
             alive = false;
         };
-    }, [status, who]);
+    }, [status, who, tick]);
 
     const ready = env !== null && infoReady;
     const hidden = !ready || env.kind === 'standalone' || marked || Boolean(info?.installed);
-    return { ready, hidden, env, canPrompt, info, member: status === 'authenticated' };
+    /** Load the steps again (after the member turned the notifications on). */
+    const refresh = () => {
+        resetInstallInfo();
+        setTick((t) => t + 1);
+    };
+    return { ready, hidden, env, canPrompt, info, member: status === 'authenticated', refresh };
 }

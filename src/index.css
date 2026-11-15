@@ -6110,3 +6110,32 @@ tr.is-muted td { opacity: 0.6; }
 .my-profile-logoutall .addr-btn { width: 100%; }
 .my-profile-logoutall__note { margin: 0.4rem 0 0.8rem; font-size: 0.8rem; color: #8a7a6a; }
 .co-coupon-one { margin-top: 0.6rem; }
+
+/* Home: sign-up benefit band above the sets (same shape as the friend-invitation band, dark brown) + its popup */
+.perk-band { padding: 1.3rem 1rem; background: #3b2a20; }
+.perk-band__inner { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 1rem; color: #fff7e8; }
+.perk-band__icon { flex: none; color: #f2c14e; }
+.perk-band__text { flex: 1; display: grid; gap: 0.25rem; }
+.perk-band__text strong { font-size: 1.15rem; font-weight: 800; }
+.perk-band__text p { margin: 0; font-size: 0.9rem; opacity: 0.88; line-height: 1.5; }
+.perk-band__btn { flex: none; padding: 0.75rem 1.2rem; border: 0; border-radius: 999px; background: #f2c14e; color: #3b2a20; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+@media (max-width: 700px) {
+  .perk-band__inner { flex-wrap: wrap; gap: 0.6rem; }
+  .perk-band__icon { display: none; }
+  .perk-band__text strong { font-size: 1.02rem; }
+  .perk-band__btn { width: 100%; }
+}
+.perk-steps { list-style: none; display: grid; gap: 0.6rem; margin: 1rem 0 0; padding: 0; }
+.perk-steps li { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 0.9rem; border-radius: 0.9rem; background: #fff; border: 1px solid var(--oc-line); }
+.perk-steps li.is-done { background: #f3efe6; }
+.perk-step__no { flex: none; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 999px; background: var(--oc-maroon); color: #fff; font-size: 0.88rem; }
+.perk-steps li.is-done .perk-step__no { background: #b9a993; }
+.perk-step__body { flex: 1; min-width: 0; display: grid; gap: 0.15rem; }
+.perk-step__body strong { font-size: 0.95rem; font-weight: 800; }
+.perk-step__body span { font-size: 0.88rem; color: #5a4838; }
+.perk-step__body span b { color: var(--oc-maroon); }
+.perk-step__body small { font-size: 0.74rem; line-height: 1.5; color: #8a7a6a; }
+.perk-step__btn { flex: none; padding: 0.55rem 0.9rem; border: 0; border-radius: 999px; background: var(--oc-maroon); color: #fff; font: inherit; font-size: 0.85rem; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.perk-step__btn:disabled { opacity: 0.6; }
+.perk-step__done { flex: none; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.82rem; font-weight: 800; color: #2f7a46; }
+a.app-sheet__later { text-align: center; text-decoration: none; }
