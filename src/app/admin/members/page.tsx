@@ -1,5 +1,6 @@
 import { searchMembers } from '../../../lib/admin-data';
 import { day, PROVIDER_KO } from '../../../components/admin/format';
+import { LogoutAllButton } from '../../../components/LogoutAllButton';
 
 export const runtime = 'edge';
 
@@ -16,7 +17,7 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                     검색
                 </button>
             </form>
-            <p className="adm-muted">최근 가입순 {members.length}명 · 개인정보 보호를 위해 최소한의 항목만 표시해요</p>
+            <p className="adm-muted">최근 가입순 {members.length}명 · 개인정보 보호를 위해 최소한의 항목만 표시해요 · 휴대폰을 잃어버린 회원이 연락하면 [모든 기기 로그아웃]으로 로그인을 끊어 주세요</p>
             <div className="adm-table-wrap">
                 <table className="adm-table">
                     <thead>
@@ -28,6 +29,8 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                             <th className="r">주문</th>
                             <th className="r">구독</th>
                             <th>마케팅</th>
+                            <th>앱</th>
+                            <th>로그인</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,6 +45,10 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                                 <td className="r">{m.orderCount}</td>
                                 <td className="r">{m.activeSubs}</td>
                                 <td>{m.marketingAgreed ? '동의' : '-'}</td>
+                                <td>{m.appInstalled ? '설치' : '-'}</td>
+                                <td>
+                                    <LogoutAllButton memberId={m.id} label="모든 기기 로그아웃" />
+                                </td>
                             </tr>
                         ))}
                     </tbody>

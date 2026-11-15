@@ -6,6 +6,7 @@ import { CartProvider } from './cart/CartProvider';
 import { CartFab } from './cart/CartFab';
 import { PageTracker } from './PageTracker';
 import { RefCapture } from './share/RefCapture';
+import { AppInstallHost } from './app/AppInstallHost';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -15,6 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <CartFab />
                 <PageTracker />
                 <RefCapture />
+                <AppInstallHost />
             </CartProvider>
         </SessionProvider>
     );

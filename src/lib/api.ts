@@ -1,4 +1,6 @@
+import { cookies } from 'next/headers';
 import { auth } from '../auth';
+import { ADMIN_SEEN_COOKIE, adminActive } from './admin-idle';
 import { getSql } from './db';
 
 /** CSRF guard for cookie-authenticated mutations: only same-origin requests. */
@@ -24,10 +26,14 @@ export async function sessionUserId(): Promise<string | null> {
 
 /** Admin check is done against the DB on every request (never trust the JWT for roles). */
 export async function requireAdmin(): Promise<{ id: string } | null> {
-    const id = await sessionUserId();
+    const session = await auth();
+    const id = session?.user?.id;
     if (!id) return null;
     const rows = await getSql()`select role from users where id = ${id}`;
-    return rows[0]?.role === 'admin' ? { id } : null;
+    if (rows[0]?.role !== 'admin') return null;
+    // Unused for 12 hours: no customer data until the admin logs in again (lib/admin-idle.ts).
+    const jar = await cookies();
+    return (await adminActive(id, session.authAt, jar.get(ADMIN_SEEN_COOKIE)?.value)) ? { id } : null;
 }
 
 export function isUuid(value: unknown): value is string {

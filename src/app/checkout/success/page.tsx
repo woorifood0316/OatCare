@@ -4,6 +4,7 @@ import { getCurrentUser } from '../../../lib/current-user';
 import { finalizeWidgetPayment } from '../../../lib/payments';
 import { OrderBrief } from '../../../components/checkout/OrderBrief';
 import { InviteNudge } from '../../../components/share/InviteNudge';
+import { InstallCard } from '../../../components/app/InstallCard';
 
 export const runtime = 'edge';
 
@@ -30,6 +31,7 @@ export default async function CheckoutSuccessPage({
     return (
         <Result ok message="결제가 완료됐어요">
             <OrderBrief order={result.order} />
+            <InstallCard />
             <InviteNudge heading="맛있게 드시고, 친구에게도 알려 주세요" />
         </Result>
     );

@@ -10,6 +10,7 @@ import { LegalModal, LegalModalType } from '../components/LegalModal';
 import { LegalPage } from '../components/LegalPage';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { InviteBanner } from '../components/share/InviteBanner';
+import { InstallStrip } from '../components/app/InstallStrip';
 import {
     BoldStatement,
     Bundles,
@@ -173,6 +174,7 @@ export default function Home() {
             </ScrollReveal>
 
             <Footer onOpenLegal={handleOpenLegal} />
+            {isDrawerOpen ? null : <InstallStrip />}
         </div>
     );
 }

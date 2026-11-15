@@ -12,6 +12,7 @@ import { myReferrals } from '../../lib/referrals';
 import { listMyReturns } from '../../lib/returns';
 import { REFERRAL_REWARD } from '../../lib/catalog';
 import { MyInviteStrip } from '../../components/share/MyInviteStrip';
+import { InstallCard } from '../../components/app/InstallCard';
 import { getCurrentUser } from '../../lib/current-user';
 import { PageHead } from '../../components/mypage/ComingSoon';
 
@@ -111,6 +112,7 @@ export default async function MyHomePage() {
                 </Link>
             </section>
 
+            <InstallCard />
             <MyInviteStrip invited={refs.invited.length} rewarded={rewarded} />
 
             <div className="my-grid">

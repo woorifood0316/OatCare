@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { WELCOME_COUPON_AMOUNT } from '../../lib/catalog';
+import { SIGNUP_COUPON_MAX } from '../../lib/catalog';
 
 /** 'here' = the page the visitor is on when they press a button (some buttons move on to /cart right after adding). */
 const resolve = (back: string) => (back === 'here' ? window.location.pathname + window.location.search : back);
@@ -32,7 +32,7 @@ export function SignupPrompt({ back, onClose }: { back: string; onClose: () => v
                 <p>
                     장바구니와 주문은 회원만 이용할 수 있어요.
                     <br />
-                    고른 상품은 그대로 기억해 둘게요. 가입하면 <b>최대 {WELCOME_COUPON_AMOUNT.toLocaleString('ko-KR')}원 쿠폰</b>도 드려요.
+                    고른 상품은 그대로 기억해 둘게요. 가입하면 <b>최대 {SIGNUP_COUPON_MAX.toLocaleString('ko-KR')}원 쿠폰</b>도 드려요.
                 </p>
                 <p className="sup__member">카카오·네이버·구글 계정으로 3초면 가입돼요. 이미 회원이면 로그인돼요.</p>
                 <button type="button" className="sup__go" onClick={go}>

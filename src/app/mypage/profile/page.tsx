@@ -4,6 +4,7 @@ import { PageHead } from '../../../components/mypage/ComingSoon';
 import { MarketingToggle } from '../../../components/mypage/MarketingToggle';
 import { WithdrawButton } from '../../../components/WithdrawButton';
 import { LogoutButton } from '../../../components/LogoutButton';
+import { LogoutAllButton } from '../../../components/LogoutAllButton';
 
 export const runtime = 'edge';
 
@@ -97,6 +98,10 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 <div className="my-profile-logout">
                     <LogoutButton className="my-btn addr-btn addr-btn--ghost" />
                 </div>
+                <div className="my-profile-logoutall">
+                    <LogoutAllButton className="my-btn addr-btn addr-btn--ghost" />
+                </div>
+                <p className="my-profile-logoutall__note">휴대폰을 잃어버렸거나 다른 사람 기기에서 로그인했다면 [모든 기기에서 로그아웃]으로 모든 로그인을 끊을 수 있어요.</p>
                 <WithdrawButton />
             </section>
         </>

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Lock, MessageCircleQuestion } from 'lucide-react';
 import type { PublicInquiry } from '../../lib/inquiries';
-import { WELCOME_COUPON_AMOUNT } from '../../lib/catalog';
+import { SIGNUP_COUPON_MAX } from '../../lib/catalog';
 
 const day = (iso: string) => {
     const d = new Date(iso);
@@ -124,7 +124,7 @@ export function InquiryBoard({ sku }: { sku: string }) {
                         <Lock size={16} /> 상품 문의는 회원만 작성할 수 있어요
                     </p>
                     <p>
-                        회원가입 후 궁금한 점을 남겨 주시면 <b>AI가 빠르게 답변</b>해 드려요. 지금 가입하면 <b>최대 {WELCOME_COUPON_AMOUNT.toLocaleString('ko-KR')}원 웰컴 쿠폰</b>도 드려요.
+                        회원가입 후 궁금한 점을 남겨 주시면 <b>AI가 빠르게 답변</b>해 드려요. 지금 가입하면 <b>최대 {SIGNUP_COUPON_MAX.toLocaleString('ko-KR')}원 가입 쿠폰 혜택</b>도 드려요.
                     </p>
                     <div className="qa-join__btns">
                         <Link href={`/login?callbackUrl=${encodeURIComponent(here)}`} className="my-btn my-btn--primary">

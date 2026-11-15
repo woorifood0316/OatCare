@@ -9,6 +9,8 @@ import { PurchaseChooser } from './purchase/PurchaseChooser';
 import { CardActions } from './purchase/CardActions';
 import { FlavorCoverflow } from './purchase/FlavorCoverflow';
 import { ShipEta } from './ShipEta';
+import { useAppInstall, offerText } from './app/useAppInstall';
+import { openInstallSheet } from '../lib/app-install';
 import { BookOpen, Leaf, Moon, ShoppingBag, Star, Zap, ShieldCheck, Flame, Scale, Clock, HeartPulse, CheckCircle2, X, User, ExternalLink, ArrowRight, Menu } from 'lucide-react';
 import { BundleItem, ProductItem } from '../types';
 
@@ -43,6 +45,7 @@ export interface NavProps {
 
 export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const app = useAppInstall();
     const { status } = useSession();
     const isLoggedIn = status === 'authenticated';
     const { count: cartCount, hydrated: cartReady } = useCart();
@@ -139,6 +142,21 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                             </button>
                         </div>
                         <nav className="oc-mobile-menu-nav">
+                            {app.hidden ? null : (
+                                <button
+                                    type="button"
+                                    className="oc-mobile-menu-link oc-mobile-menu-link--app"
+                                    onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        openInstallSheet();
+                                    }}
+                                >
+                                    <span>
+                                        📲 앱 설치 <small>{offerText(app.info).short}</small>
+                                    </span>
+                                    <ArrowRight size={18} />
+                                </button>
+                            )}
                             <a className="oc-mobile-menu-link" href="#why-oatcare" onClick={(e) => handleNavClick(e, 'why-oatcare')}>
                                 <span>참오트케어 소개</span>
                                 <ArrowRight size={18} />

@@ -21,6 +21,10 @@ const NAV = [
 export function AdminShell({ name, children }: { name: string | null; children: React.ReactNode }) {
     const pathname = usePathname() ?? '';
     const active = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
+    // Every admin page view renews the 12-hour activity mark (lib/admin-idle.ts).
+    React.useEffect(() => {
+        fetch('/api/admin/seen', { method: 'POST' }).catch(() => undefined);
+    }, [pathname]);
 
     return (
         <div className="adm-shell">

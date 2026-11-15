@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { safeCallbackPath } from '../lib/safe-redirect';
 import { currentRefCode } from './share/RefCapture';
 import { getAssetUrl } from '../utils/assets';
+import { SIGNUP_COUPON_MAX } from '../lib/catalog';
 import { preloadKakaoSdk, startKakaoLogin } from '../lib/kakao-sdk';
 import { CART_PARAM, encodeCart, inAppKind, isAndroid, isAndroidChrome, isMobile, isStandalone, openInAppHref, rememberedInApp, type InAppKind } from '../lib/app-switch';
 
@@ -243,7 +244,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     처음이시면 동의 한 번으로 가입까지 끝나요.
                 </p>
 
-                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (90일 이내 사용)</p>
+                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>쿠폰 혜택 최대 {SIGNUP_COUPON_MAX.toLocaleString('ko-KR')}원</b> (가입 · 앱 설치 · 알림 받기)</p>
 
                 {message && (
                     <p className={`oc-auth__msg oc-auth__msg--${message.tone}`} role="alert">

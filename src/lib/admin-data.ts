@@ -186,13 +186,14 @@ export interface MemberRow {
     marketingAgreed: boolean;
     orderCount: number;
     activeSubs: number;
+    appInstalled: boolean;
 }
 
 export async function searchMembers(q?: string): Promise<MemberRow[]> {
     const sql = getSql();
     const like = q ? `%${q.trim()}%` : null;
     const rows = await sql`
-        select u.id, u.name, u.email, u.role, u.created_at, u.marketing_agreed,
+        select u.id, u.name, u.email, u.role, u.created_at, u.marketing_agreed, u.app_installed_at,
             (select array_agg(a.provider) from accounts a where a.user_id = u.id) as providers,
             (select count(*)::int from orders o where o.user_id = u.id and o.status <> 'pending') as order_count,
             (select count(*)::int from subscriptions s where s.user_id = u.id and s.status = 'active') as active_subs
@@ -208,6 +209,7 @@ export async function searchMembers(q?: string): Promise<MemberRow[]> {
         providers: ((r.providers as string[] | null) ?? []).filter(Boolean),
         createdAt: new Date(r.created_at as string).toISOString(),
         marketingAgreed: Boolean(r.marketing_agreed),
+        appInstalled: Boolean(r.app_installed_at),
         orderCount: r.order_count as number,
         activeSubs: r.active_subs as number,
     }));

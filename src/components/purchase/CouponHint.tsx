@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { WELCOME_COUPON_AMOUNT, couponDiscount } from '../../lib/catalog';
+import { SIGNUP_COUPON_MAX, couponDiscount } from '../../lib/catalog';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -49,7 +49,7 @@ export function CouponHint({
         return (
             <div className={`cph ${className}`}>
                 <p>
-                    🎟️ 회원가입하면 <b>최대 {won(WELCOME_COUPON_AMOUNT)} 쿠폰</b>을 드려요 · <span className="oc-nowrap">20·30개 세트·정기구독은</span> 금액 상관없이 바로 적용
+                    🎟️ 회원가입하면 <b>쿠폰 최대 {won(SIGNUP_COUPON_MAX)}</b> (한 번 주문에 1장씩) · <span className="oc-nowrap">20·30개 세트·정기구독은</span> 금액 상관없이 바로 적용
                 </p>
             </div>
         );

@@ -12,9 +12,8 @@ import {
     FLAVORS,
     GIFT_SHAKER_NAME,
     COUPON_VALID_DAYS,
-    WELCOME_BONUS_COUPON_NAME,
-    WELCOME_COUPON_AMOUNT,
-    WELCOME_COUPON_BONUS,
+    CONSENT_COUPON_AMOUNT,
+    CONSENT_COUPON_NAME,
     WELCOME_COUPON_MIN_COUNT,
     couponDiscount,
     type PricedCart,
@@ -122,47 +121,41 @@ export function OrderSummary({
     );
 }
 
-/** Best usable coupon for this order (largest discount), or null. Used to pre-select it at checkout. */
-/** A coupon as shown at checkout: `raised` / `unlocked` mark what the notification toggle changed. */
-export type ShownCoupon = Coupon & { raised?: boolean; unlocked?: boolean };
+/** A coupon as shown at checkout: `unlocked` / `fresh` mark what the notification toggle changed. */
+export type ShownCoupon = Coupon & { unlocked?: boolean; fresh?: boolean };
 
-/** Same id the server maps to the 2,000원 sign-up bonus coupon (lib/checkout-coupon). */
-const BONUS_PREVIEW_ID = 'welcome-bonus';
+/** Same id the server maps to the 3,000원 notification coupon (lib/checkout-coupon). */
+const CONSENT_PREVIEW_ID = 'consent-coupon';
 
 /**
- * The notification toggle at checkout. Off: waiting coupons stay locked. On: they become selectable, the sign-up coupon
- * shows 3,000원 (or a 2,000원 bonus appears when it was used). Nothing is final until the order is placed: the server
- * records the consent and issues the coupons when the pay button is pressed.
+ * The notification toggle at checkout. Off: waiting coupons stay locked. On: they become selectable and the 3,000원
+ * notification coupon appears. Nothing is final until the order is placed: the server records the consent and issues
+ * the coupons when the pay button is pressed.
  */
 export function useConsentCoupons(coupons: Coupon[], gain: ConsentGain | null) {
     const [optIn, setOptIn] = useState(false);
-    const offer = Boolean(gain && (gain.pendingIds.length > 0 || gain.welcomeUpgradeId || gain.welcomeBonusNew));
+    const offer = Boolean(gain && (gain.pendingIds.length > 0 || gain.consentCoupon));
     const shown: ShownCoupon[] = React.useMemo(() => {
         if (!optIn || !gain) return coupons;
-        const list: ShownCoupon[] = coupons.map((c) => {
-            if (gain.pendingIds.includes(c.id)) return { ...c, pending: false, available: true, unlocked: true };
-            if (c.id === gain.welcomeUpgradeId) return { ...c, amount: WELCOME_COUPON_AMOUNT, raised: true };
-            return c;
-        });
-        if (gain.welcomeBonusNew) {
+        const list: ShownCoupon[] = coupons.map((c) => (gain.pendingIds.includes(c.id) ? { ...c, pending: false, available: true, unlocked: true } : c));
+        if (gain.consentCoupon) {
             list.unshift({
-                id: BONUS_PREVIEW_ID,
-                name: WELCOME_BONUS_COUPON_NAME,
-                amount: WELCOME_COUPON_BONUS,
+                id: CONSENT_PREVIEW_ID,
+                name: CONSENT_COUPON_NAME,
+                amount: CONSENT_COUPON_AMOUNT,
                 minCount: WELCOME_COUPON_MIN_COUNT,
                 expiresAt: new Date(Date.now() + COUPON_VALID_DAYS * 86400000).toISOString(),
                 usedAt: null,
-                source: 'welcome_bonus',
+                source: 'consent',
                 pending: false,
                 available: true,
-                unlocked: true,
+                fresh: true,
             });
         }
         return list;
     }, [coupons, gain, optIn]);
     const parts: string[] = [];
-    if (gain?.welcomeUpgradeId) parts.push(`신규 가입 쿠폰 ${won(WELCOME_COUPON_AMOUNT)}`);
-    if (gain?.welcomeBonusNew) parts.push(`가입 추가 쿠폰 ${won(WELCOME_COUPON_BONUS)}`);
+    if (gain?.consentCoupon) parts.push(`${CONSENT_COUPON_NAME} ${won(CONSENT_COUPON_AMOUNT)}`);
     if (gain && gain.pendingIds.length > 0) parts.push(`받을 준비 중인 쿠폰 ${gain.pendingIds.length}장`);
     return { optIn, setOptIn, shown, offer, gainText: parts.join(' · ') };
 }
@@ -195,12 +188,13 @@ export function ConsentSwitch({ on, onChange, gainText }: { on: boolean; onChang
     );
 }
 
+/** Best usable coupon for this order (largest discount; on a tie the one that runs out first), or null. */
 export function bestCouponId(coupons: Coupon[], sachets: number, total: number, noMinimum: boolean): string | null {
-    let best: { id: string; d: number } | null = null;
+    let best: { id: string; d: number; exp: string } | null = null;
     for (const c of coupons) {
         if (!c.available) continue;
         const d = couponDiscount(c, sachets, total, noMinimum);
-        if (d > 0 && (!best || d > best.d)) best = { id: c.id, d };
+        if (d > 0 && (!best || d > best.d || (d === best.d && c.expiresAt < best.exp))) best = { id: c.id, d, exp: c.expiresAt };
     }
     return best?.id ?? null;
 }
@@ -313,7 +307,7 @@ export function CouponPicker({
                                 <div>
                                     <strong>
                                         {c.name} · {won(c.amount)} 할인
-                                        {c.raised ? <em className="co-coupon__tag">✨ {won(WELCOME_COUPON_BONUS)} 올랐어요</em> : null}
+                                        {c.fresh ? <em className="co-coupon__tag">🎁 새로 받았어요</em> : null}
                                         {c.unlocked ? <em className="co-coupon__tag">🔓 이제 쓸 수 있어요</em> : null}
                                     </strong>
                                     <span>
@@ -327,6 +321,11 @@ export function CouponPicker({
                 })}
             </ul>
             <LockedCoupons list={locked} />
+            {usable.length + locked.length > 1 ? (
+                <p className="cart-note co-coupon-one" style={{ textAlign: 'left' }}>
+                    쿠폰은 한 번 주문에 1장만 쓸 수 있어요. 남은 쿠폰은 받은 날부터 {COUPON_VALID_DAYS}일 안에 다음 주문에 쓰면 돼요.
+                </p>
+            ) : null}
             {note ? (
                 <p className="cart-note" style={{ textAlign: 'left' }}>
                     {note}

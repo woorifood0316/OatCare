@@ -11,6 +11,10 @@ import { isBannedAccount } from './lib/reviews';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
 import { REF_COOKIE, recordReferral } from './lib/referrals';
+import { consumeHandoff } from './lib/handoff';
+
+/** Logins last this long and are renewed whenever the member comes back ("모든 기기에서 로그아웃" ends them early). */
+const SESSION_DAYS = 180;
 
 /** Kakao app-login failure with the reason in `code` (shown on /login so a failed try tells us why). */
 class KakaoSignin extends CredentialsSignin {
@@ -111,6 +115,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 return { id: userId, name: pending.name, email: pending.email };
             },
         }),
+        // Moving from an app's built-in browser to Chrome / Safari (to add the site to the home screen): a one-time
+        // token from /api/account/handoff logs the same member in there (lib/handoff.ts).
+        Credentials({
+            id: 'handoff',
+            name: 'handoff',
+            credentials: { token: {} },
+            async authorize(creds) {
+                return consumeHandoff(String(creds?.token ?? ''));
+            },
+        }),
     ],
     // Print the real cause of sign-in failures (the browser only shows "Configuration"). No secrets are logged.
     logger: {
@@ -119,13 +133,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             console.error('[auth]', error.name, error.message, cause instanceof Error ? `${cause.name}: ${cause.message}` : (cause ?? ''));
         },
     },
-    session: { strategy: 'jwt' },
+    session: { strategy: 'jwt', maxAge: SESSION_DAYS * 24 * 60 * 60 },
     trustHost: true,
     pages: { signIn: '/login', error: '/login' },
     callbacks: {
         async signIn({ user, account }) {
             if (!account) return false;
-            if (account.provider === 'signup') return true; // done in authorize()
+            if (account.provider === 'signup' || account.provider === 'handoff') return true; // done in authorize()
             const provider = account.provider === 'kakao-app' ? 'kakao' : account.provider;
             const providerAccountId = account.providerAccountId;
             const sql = getSql();
@@ -161,13 +175,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return '/welcome';
         },
         async jwt({ token, user }) {
-            if (user?.id) token.uid = user.id;
+            const sql = getSql();
+            if (user?.id) {
+                token.uid = user.id;
+                token.authAt = Date.now();
+                const r = await sql`select session_version from users where id = ${user.id}`;
+                token.sv = (r[0]?.session_version as number | undefined) ?? 0;
+                return token;
+            }
+            if (token.uid) {
+                // "모든 기기에서 로그아웃" or a withdrawn account: this login is over (a DB hiccup keeps it).
+                try {
+                    const r = await sql`select session_version from users where id = ${token.uid}`;
+                    if (!r[0] || ((r[0].session_version as number) ?? 0) !== (token.sv ?? 0)) return null;
+                } catch (e) {
+                    console.error('[auth] session check failed', e);
+                }
+            }
             return token;
         },
         async session({ session, token }) {
             if (token.uid && session.user) {
                 session.user.id = token.uid as string;
             }
+            session.authAt = token.authAt;
             return session;
         },
     },

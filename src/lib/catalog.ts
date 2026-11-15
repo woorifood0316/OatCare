@@ -100,12 +100,23 @@ export const FREE_SHIPPING_MIN_COUNT = BOX_SIZE;
 export const MIN_SUBSCRIPTION_CHARGES = 2;
 /** Welcome coupon issued at sign-up. Its minimum (in sachets) applies only to singles / the taster set (20·30 sets and subscriptions: none). */
 export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
-/** Sign-up coupon: 1,000원 at sign-up; turning the event/benefit notifications on raises it to 3,000원 (once per member). */
+/**
+ * Sign-up coupon steps, each once per member:
+ *  1. sign up: 1,000원
+ *  2. open the site from the home-screen app: raised to 3,000원 (when it cannot be raised - used, or already 3,000원 -
+ *     a separate 2,000원 'welcome_bonus' coupon)
+ *  3. turn the event/benefit notifications on: a separate 3,000원 'consent' coupon
+ * One coupon per order, so they spread over the next orders (each valid COUPON_VALID_DAYS from issue).
+ */
 export const WELCOME_COUPON_BASE = 1000;
 export const WELCOME_COUPON_BONUS = 2000;
-/** The most the sign-up coupon is worth (with the notification consent). */
+/** The sign-up coupon after the app step. */
 export const WELCOME_COUPON_AMOUNT = WELCOME_COUPON_BASE + WELCOME_COUPON_BONUS;
-export const WELCOME_BONUS_COUPON_NAME = '신규 가입 추가 쿠폰';
+export const WELCOME_BONUS_COUPON_NAME = '앱 설치 쿠폰';
+export const CONSENT_COUPON_AMOUNT = 3000;
+export const CONSENT_COUPON_NAME = '알림 받기 쿠폰';
+/** Everything a new member can get from the three steps (shown as "최대 …"). */
+export const SIGNUP_COUPON_MAX = WELCOME_COUPON_AMOUNT + CONSENT_COUPON_AMOUNT;
 /** Review-event / friend-invitation coupons of members without the notification consent wait this many days. */
 export const COUPON_PENDING_DAYS = 30;
 /** Every coupon (sign-up, review event) is valid for this many days from issue. */

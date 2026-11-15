@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { getAssetUrl } from '../utils/assets';
-import { WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BASE } from '../lib/catalog';
+import { CONSENT_COUPON_AMOUNT, SIGNUP_COUPON_MAX, WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BASE } from '../lib/catalog';
+import { JOINED_KEY } from '../lib/app-install';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -29,6 +30,11 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
             return;
         }
         document.cookie = 'oc_after=; path=/; max-age=0';
+        try {
+            sessionStorage.setItem(JOINED_KEY, '1'); // the next page offers the home-screen app once
+        } catch {
+            /* storage blocked */
+        }
         window.location.href = next;
     };
 
@@ -53,7 +59,8 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                 </h1>
                 <p className="oc-auth__sub">{provider} 계정으로 처음 오셨어요. 아래에 동의하시면 가입이 끝나요.</p>
                 <p className="oc-auth__perk">
-                    🎟️ 가입하면 <b>{won(WELCOME_COUPON_BASE)} 쿠폰</b> · 혜택 알림까지 받으면 <b>{won(WELCOME_COUPON_AMOUNT)} 쿠폰</b>으로 드려요 (90일 이내 사용)
+                    🎟️ 가입하면 <b>{won(WELCOME_COUPON_BASE)} 쿠폰</b> → 앱 설치하면 <b>{won(WELCOME_COUPON_AMOUNT)}</b>으로 → 알림까지 받으면 <b>{won(CONSENT_COUPON_AMOUNT)} 쿠폰 1장 더</b>
+                    <small className="oc-welcome__fine">최대 {won(SIGNUP_COUPON_MAX)} · 쿠폰은 한 번 주문에 1장씩, 받은 날부터 90일 안에 써요</small>
                 </p>
 
                 <label className={`oc-welcome__check oc-welcome__check--req${agreed ? ' is-on' : ''}`}>
@@ -67,7 +74,7 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                 <label className={`oc-welcome__check${marketing ? ' is-on' : ''}`}>
                     <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
                     <span>
-                        (선택) 쿠폰 만료·새 맛·회원 전용 할인 소식을 받을게요 → <b>가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}</b>
+                        (선택) 쿠폰 만료·새 맛·회원 전용 할인 소식을 받을게요 → <b>알림 받기 쿠폰 {won(CONSENT_COUPON_AMOUNT)}</b>
                         <small className="oc-welcome__fine">이메일·카카오톡·문자로 보내요. 주문·배송 안내는 동의와 상관없이 보내 드려요. 언제든 끌 수 있어요.</small>
                     </span>
                 </label>
