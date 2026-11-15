@@ -5,8 +5,7 @@ import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useCart } from './cart/CartProvider';
 import { findSkuByName, getItem } from '../lib/catalog';
-import { PurchaseChooser } from './purchase/PurchaseChooser';
-import { CardActions } from './purchase/CardActions';
+import { openBuy } from './purchase/BuySheet';
 import { FlavorCoverflow } from './purchase/FlavorCoverflow';
 import { ShipEta } from './ShipEta';
 import { useAppInstall, offerText } from './app/useAppInstall';
@@ -340,7 +339,6 @@ export const Pillars: React.FC = () => {
         <div className="oc-band oc-band--tan">
             <section className="oc-section" id="pillars">
                 <div className="oc-section-header">
-                    <span className="oc-eyebrow">3 Core Pillars</span>
                     <h2>건강식 · 간편식 · 다이어트식<br /><span className="oc-highlight-maroon">참오트케어</span>로 한 번에 해결하세요</h2>
                 </div>
 
@@ -421,7 +419,6 @@ export const QuickReviews: React.FC = () => {
         <section className="oc-section oc-reviews-marquee-section" id="reviews">
             <div className="oc-section-header">
                 <ScrollReveal>
-                    <span className="oc-eyebrow">Real Reviews</span>
                     <h2 className="oc-h2-keep">5,400명+이 입을 모아<br /><span className="oc-highlight-maroon">재구매하는 이유</span></h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
@@ -596,7 +593,6 @@ export const ProductGrid: React.FC<ProductOptionProps> = ({ onSelectProduct }) =
         <section className="oc-section" id="product-lineup">
             <div className="oc-section-header">
                 <ScrollReveal>
-                    <span className="oc-eyebrow">5 FLAVORS COLLECTION</span>
                     <h2><span className="oc-chunk">다섯 가지 맛,</span> <span className="oc-chunk"><span className="oc-highlight-maroon">질리지 않는 아침</span></span></h2>
                 </ScrollReveal>
                 <ScrollReveal delay={0.15}>
@@ -626,7 +622,6 @@ export const Nutrition: React.FC = () => {
     return (
         <section className="oc-section" id="nutrition">
             <div className="oc-section-header">
-                <span className="oc-eyebrow">SATISFACTION & NUTRITION</span>
                 <h2><span className="oc-chunk">약 195 kcal로 채우는</span> <span className="oc-chunk"><span className="oc-highlight-maroon">4시간의 속 편한 포만감</span></span></h2>
                 <p className="oc-section-subhead">
                     <span className="oc-chunk">귀리(Oat) 속 핵심 수용성 식이섬유 <span className="oc-highlight-gold">'베타글루칸'</span>과</span> <span className="oc-chunk">9가지 곡물 레시피로</span> <span className="oc-chunk">장시간 공복감을 싹 없애줍니다.</span>
@@ -760,7 +755,6 @@ export const FamilyStory: React.FC = () => {
         <section className="oc-section" id="family-story">
             <div className="oc-section-header">
                 <ScrollReveal>
-                    <span className="oc-eyebrow">OUR BRAND STORY</span>
                     <h2>
                         <span className="oc-chunk">나와 내가 사랑하는</span> <span className="oc-chunk">사람들이 매일 아침</span> <span className="oc-chunk"><span className="oc-highlight-maroon">안심하고 먹는 정직함</span></span>
                     </h2>
@@ -862,7 +856,6 @@ export const BUNDLES: (ProductDetailItem & {
     ];
 
 export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
-    const { addLine } = useCart();
     const sectionRef = React.useRef<HTMLElement>(null);
     const [isVisible, setIsVisible] = React.useState(false);
     const bundleRef = React.useRef<HTMLDivElement>(null);
@@ -899,7 +892,6 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
         >
             <div className="oc-section-header">
                 <ScrollReveal>
-                    <span className="oc-eyebrow">Starter Bundles</span>
                     <h2>
                         <span className="oc-chunk">세트로 더 알차게</span> <span className="oc-chunk"><span className="oc-highlight-maroon">챙기는 아침</span></span>
                     </h2>
@@ -966,26 +958,23 @@ export const Bundles: React.FC<BundlesProps> = ({ onSelectProduct }) => {
                                 </span>
                             </div>
 
-                            {(() => {
-                                const sku = findSkuByName(b.flavor);
-                                const subscribable = Boolean(sku && getItem(sku)?.subscribable);
-                                return subscribable && sku ? (
-                                    <>
-                                        <PurchaseChooser sku={sku} />
-                                        <button
-                                            className="oc-cta-outline oc-bundle-detail-btn oc-bundle-detail-btn--full"
-                                            onClick={() => onSelectProduct?.(b)}
-                                        >
-                                            <span>상세보기</span>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="oc-bundle-plain">
-                                        {sku ? <CardActions sku={sku} onDetail={() => onSelectProduct?.(b)} /> : null}
-                                        <p className="oc-bundle-card__subnote">정기구독은 20·30개입 세트에서 가능해요</p>
-                                    </div>
-                                );
-                            })()}
+                            {/* Same two buttons on every set: 상세보기 = the set page, 바로구매 = the shared purchase sheet at this set. */}
+                            <div className="ca ca--two">
+                                <button type="button" className="ca__btn ca__btn--detail" onClick={() => onSelectProduct?.(b)}>
+                                    <span>상세보기</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="ca__btn ca__btn--buy"
+                                    onClick={() => {
+                                        const sku = findSkuByName(b.flavor);
+                                        if (sku) openBuy({ kind: 'set', sku });
+                                    }}
+                                >
+                                    <Zap size={15} />
+                                    <span>바로구매</span>
+                                </button>
+                            </div>
                         </div>
                     </ScrollReveal>
                 ))}

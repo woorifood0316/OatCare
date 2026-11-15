@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { slugForFlavor, slugForSetName } from '../lib/products';
 import { rememberReturnPoint, restoreScroll, takeReturnPoint } from '../lib/return-point';
 import { ScrollScrubHero } from '../components/ScrollScrubHero';
-import { QuickPurchaseDrawer } from '../components/QuickPurchaseDrawer';
+import { BuySheetHost, openBuy } from '../components/purchase/BuySheet';
 import { LegalModal, LegalModalType } from '../components/LegalModal';
 import { LegalPage } from '../components/LegalPage';
 import { ScrollReveal } from '../components/ScrollReveal';
@@ -41,8 +41,6 @@ export default function Home() {
         }
     };
     const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [drawerTab, setDrawerTab] = useState<'single' | 'bundle'>('bundle');
     const [legalModalType, setLegalModalType] = useState<LegalModalType>(null);
     const [standaloneLegalRoute, setStandaloneLegalRoute] = useState<'privacy' | 'terms' | null>(null);
     const [savedScrollPos, setSavedScrollPos] = useState<number>(0);
@@ -52,10 +50,7 @@ export default function Home() {
         const point = takeReturnPoint('/');
         if (!point) return;
         restoreScroll(point.y, () => {
-            if (point.drawer) {
-                setDrawerTab(point.drawer.tab);
-                setIsDrawerOpen(true);
-            }
+            if (point.drawer) openBuy({ kind: 'list', tab: point.drawer.tab === 'single' ? 'single' : 'set' });
         });
     }, []);
 
@@ -102,8 +97,8 @@ export default function Home() {
     }, []);
 
     const handleOpenDrawer = (tab: 'single' | 'bundle' = 'bundle') => {
-        setDrawerTab(tab);
-        setIsDrawerOpen(true);
+        // the shared purchase sheet, starting at the product list
+        openBuy({ kind: 'list', tab: tab === 'single' ? 'single' : 'set' });
     };
 
     const handleOpenLegal = (type: 'privacy' | 'terms' | 'license') => {
@@ -144,21 +139,18 @@ export default function Home() {
 
             <SignupPerks />
 
-            <ScrollReveal className="oc-band oc-band--cream">
+            {/* products show at once (no reveal animation): people who jump here from the menu see them immediately */}
+            <div className="oc-band oc-band--cream">
                 <Bundles onSelectProduct={setSelectedProduct} />
-            </ScrollReveal>
+            </div>
 
-            <ScrollReveal className="oc-band oc-band--tan">
+            <div className="oc-band oc-band--tan">
                 <ProductGrid onSelectProduct={setSelectedProduct} />
-            </ScrollReveal>
+            </div>
 
             <InviteBanner />
 
-            <QuickPurchaseDrawer
-                isOpen={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
-                initialTab={drawerTab}
-            />
+            <BuySheetHost />
 
             <LegalModal type={legalModalType} onClose={() => setLegalModalType(null)} />
 
@@ -177,7 +169,7 @@ export default function Home() {
             </ScrollReveal>
 
             <Footer onOpenLegal={handleOpenLegal} />
-            {isDrawerOpen ? null : <InstallStrip />}
+            <InstallStrip />
         </div>
     );
 }

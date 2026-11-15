@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Minus, Plus, ShoppingBag, X, Zap } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { SheetFrame, SinglesBody } from './BuySheet';
 import { CouponHint } from './CouponHint';
 import { BOX_SIZE, COUPON_SET_MIN_COUNT, FLAVORS, MAX_QTY_ONCE, getItem, hasCouponSet, type CartLine } from '../../lib/catalog';
 
@@ -176,10 +176,9 @@ export function SinglesPicker({ flavor, onDone }: { flavor: string; onDone?: () 
     );
 }
 
-/** Phone bottom bar on single-item pages: either button opens the SinglesPicker in a sheet. */
+/** Phone bottom bar on single-item pages: either button opens the shared purchase sheet at this flavour. */
 export function SinglesBar({ flavor }: { flavor: string }) {
     const [open, setOpen] = useState(false);
-    useBodyScrollLock(open);
     const price = getItem(skuOf(flavor))?.price ?? 0;
 
     return (
@@ -202,19 +201,9 @@ export function SinglesBar({ flavor }: { flavor: string }) {
             </div>
 
             {open ? (
-                <div className="sbar-sheet" role="dialog" aria-modal="true" aria-label="낱개 담기" onClick={() => setOpen(false)}>
-                    <div className="sbar-sheet__card" onClick={(e) => e.stopPropagation()}>
-                        <div className="sbar-sheet__head">
-                            <strong className="sgl__title">
-                                낱개 골라 담기 <small>1개 단위 · 여러 맛 섞기 가능</small>
-                            </strong>
-                            <button type="button" className="sbar-sheet__close" onClick={() => setOpen(false)} aria-label="닫기">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <SinglesPicker flavor={flavor} onDone={() => setOpen(false)} />
-                    </div>
-                </div>
+                <SheetFrame label="낱개 담기" onClose={() => setOpen(false)}>
+                    {(close) => <SinglesBody flavor={flavor} onClose={close} />}
+                </SheetFrame>
             ) : null}
         </>
     );

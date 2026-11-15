@@ -185,7 +185,7 @@ export function SetPage({ count }: { count: number }) {
                         </ul>
 
                         {/* Phones buy from the bottom bar's sheet, so the in-page buy area is for wide screens only. */}
-                        <div className={`pd-qty${subscribable ? ' pd-inline-buy' : ''}`}>
+                        <div className="pd-qty pd-inline-buy">
                             <span>수량</span>
                             <div className="pd-qty__ctl">
                                 <button type="button" onClick={() => setQty((q) => clamp(q - 1))} aria-label="수량 줄이기">
@@ -207,7 +207,7 @@ export function SetPage({ count }: { count: number }) {
                             <em>{won(total)}</em>
                         </div>
 
-                        <div className={subscribable ? 'pd-inline-buy' : undefined}>{picker}</div>
+                        <div className="pd-inline-buy">{picker}</div>
 
                         <ShipEta />
                         {subscribable ? (
@@ -215,10 +215,10 @@ export function SetPage({ count }: { count: number }) {
                                 <PurchaseChooser sku={page.sku} qty={qty} mixChoice={mixChoice} blockedReason={mixErr} />
                             </div>
                         ) : (
-                            <>
+                            <div className="pd-inline-buy">
                                 <div className="pd-inline-actions">{actions}</div>
                                 <p className="pd-note">정기구독은 20·30개입 세트에서 가능해요 (최소 {MIN_SUBSCRIPTION_CHARGES}회 이용)</p>
-                            </>
+                            </div>
                         )}
                     </div>
                 </section>
@@ -360,17 +360,8 @@ export function SetPage({ count }: { count: number }) {
                 <MoreProducts current={page.sku} />
             </main>
 
-            {!subscribable ? (
-                <div className="pd-sticky">
-                    <div className="pd-sticky__sum">
-                        <span>{qty}세트</span>
-                        <b>{won(total)}</b>
-                    </div>
-                    {actions}
-                </div>
-            ) : (
-                <SubscribeBar sku={page.sku} qty={qty} setQty={setQty} mixChoice={mixChoice} mixErr={mixErr} mixPicker={picker} />
-            )}
+            {/* phones: every set buys through the shared purchase sheet (wide screens use the inline area above) */}
+            <SubscribeBar sku={page.sku} qty={qty} setQty={setQty} mixChoice={mixChoice} mixErr={mixErr} mixPicker={picker} />
         </div>
     );
 }

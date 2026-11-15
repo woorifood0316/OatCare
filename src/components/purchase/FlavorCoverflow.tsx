@@ -1,13 +1,9 @@
 'use client';
 
-import { FreeShipHint } from './FreeShipHint';
-import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
-import { useCart } from '../cart/CartProvider';
-import { findSkuByName, getItem, type CartLine } from '../../lib/catalog';
+import { ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { findSkuByName, getItem } from '../../lib/catalog';
+import { openBuy } from './BuySheet';
 import type { ProductItemDetailed } from '../Sections';
 // (type-only import: no runtime cycle with Sections.tsx)
 
@@ -17,8 +13,7 @@ const STATE_KEY = 'oc-coverflow-state';
 /**
  * Landing 5-flavour coverflow: every card is visible, the centred one is the "current" flavour,
  * the others sit tilted and faded on both sides and the ring loops endlessly (circular look).
- * Quantities are kept per flavour (all start at 0) and one action bar buys everything picked,
- * the same way the quick-purchase drawer does.
+ * The centred card has [상세보기] (the flavour page) and [바로구매] (the shared purchase sheet at this flavour).
  */
 export function FlavorCoverflow({
     products,
@@ -28,12 +23,7 @@ export function FlavorCoverflow({
     onDetail?: (p: ProductItemDetailed) => void;
 }) {
     const n = products.length;
-    const router = useRouter();
-    const { addLine, buyNow } = useCart();
     const [active, setActive] = useState(0);
-    const [qty, setQty] = useState<Record<string, number>>({});
-    const [hint, setHint] = useState('');
-    const [notice, setNotice] = useState(false);
     // The card that wraps from one end to the other must jump, not fly across the centre.
     const prevActive = useRef(active);
     useEffect(() => {
@@ -47,12 +37,11 @@ export function FlavorCoverflow({
             const raw = sessionStorage.getItem(STATE_KEY);
             if (!raw) return;
             sessionStorage.removeItem(STATE_KEY);
-            const st = JSON.parse(raw) as { active?: number; qty?: Record<string, number> };
+            const st = JSON.parse(raw) as { active?: number };
             if (typeof st.active === 'number' && st.active >= 0 && st.active < n) {
                 prevActive.current = st.active;
                 setActive(st.active);
             }
-            if (st.qty && typeof st.qty === 'object') setQty(st.qty);
         } catch {
             /* storage unavailable: start fresh */
         }
@@ -61,7 +50,7 @@ export function FlavorCoverflow({
 
     const openDetail = (p: ProductItemDetailed) => {
         try {
-            sessionStorage.setItem(STATE_KEY, JSON.stringify({ active, qty }));
+            sessionStorage.setItem(STATE_KEY, JSON.stringify({ active }));
         } catch {
             /* ignore */
         }
@@ -101,45 +90,11 @@ export function FlavorCoverflow({
         if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
     };
 
-    const change = (flavor: string, d: number) => {
-        setHint('');
-        setQty((q) => ({ ...q, [flavor]: Math.max(0, Math.min(99, (q[flavor] ?? 0) + d)) }));
-    };
-
-    const picked = products
-        .map((p) => ({ p, sku: findSkuByName(p.flavor), q: qty[p.flavor] ?? 0 }))
-        .filter((x) => x.sku && x.q > 0) as { p: ProductItemDetailed; sku: string; q: number }[];
-    const totalCount = picked.reduce((s, x) => s + x.q, 0);
-    const totalPrice = picked.reduce((s, x) => s + x.q * (getItem(x.sku)?.price ?? 0), 0);
-
-    const lines = (): CartLine[] | null => {
-        if (totalCount === 0) {
-            setNotice(true);
-            return null;
-        }
-        return picked.map((x) => ({ sku: x.sku, qty: x.q, mode: 'once' as const }));
-    };
-    const addAll = () => {
-        const l = lines();
-        if (!l) return;
-        l.forEach((line) => addLine(line));
-        setQty({});
-    };
-    const buyAll = async () => {
-        const l = lines();
-        if (!l) return;
-        const dest = await buyNow(l);
-        setQty({});
-        router.push(dest === 'checkout' ? '/checkout?type=once' : '/cart');
-    };
-
-    const current = products[active];
 
     return (
         <div className="cf" aria-roledescription="carousel" aria-label="참오트케어 5종 단품">
             <div className="cf__chips" role="tablist" aria-label="맛 선택">
                 {products.map((p, i) => {
-                    const q = qty[p.flavor] ?? 0;
                     return (
                         <button
                             key={p.flavor}
@@ -151,7 +106,6 @@ export function FlavorCoverflow({
                             onClick={() => setActive(i)}
                         >
                             {p.flavor}
-                            {q > 0 ? <span className="cf__chip-qty">{q}</span> : null}
                         </button>
                     );
                 })}
@@ -183,7 +137,6 @@ export function FlavorCoverflow({
                         const item = sku ? getItem(sku) : undefined;
                         const price = item?.price ?? p.price;
                         const list = item?.listPrice ?? p.listPrice;
-                        const q = qty[p.flavor] ?? 0;
                         return (
                             <div
                                 key={p.flavor}
@@ -212,16 +165,6 @@ export function FlavorCoverflow({
                                         {p.icon} 참오트케어 {p.flavor}
                                     </h4>
                                     <p className="cf__ingr">{p.ingredient}</p>
-                                    {/* small detail link between the description and the price; side cards keep the same height */}
-                                    <button
-                                        type="button"
-                                        className="cf__more"
-                                        onClick={() => isCenter && openDetail(p)}
-                                        tabIndex={isCenter ? 0 : -1}
-                                        style={isCenter ? undefined : { visibility: 'hidden' }}
-                                    >
-                                        상세보기 →
-                                    </button>
                                     <div className="cf__price">
                                         <span className="disc">-{Math.round(((list - price) / list) * 100)}%</span>
                                         <strong>{won(price)}</strong>
@@ -230,16 +173,14 @@ export function FlavorCoverflow({
                                     </div>
 
                                     {isCenter ? (
-                                        <div className="cf__controls">
-                                            <div className="cf__stepper" aria-label={`${p.flavor} 수량`}>
-                                                <button type="button" onClick={() => change(p.flavor, -1)} disabled={q === 0} aria-label="수량 빼기">
-                                                    <Minus size={16} />
-                                                </button>
-                                                <span className="oc-num" aria-live="polite">{q}</span>
-                                                <button type="button" onClick={() => change(p.flavor, 1)} aria-label="수량 더하기">
-                                                    <Plus size={16} />
-                                                </button>
-                                            </div>
+                                        <div className="ca ca--two cf__controls">
+                                            <button type="button" className="ca__btn ca__btn--detail" onClick={() => openDetail(p)}>
+                                                <span>상세보기</span>
+                                            </button>
+                                            <button type="button" className="ca__btn ca__btn--buy" onClick={() => openBuy({ kind: 'single', flavor: p.flavor })}>
+                                                <Zap size={15} />
+                                                <span>바로구매</span>
+                                            </button>
                                         </div>
                                     ) : null}
                                 </div>
@@ -255,49 +196,6 @@ export function FlavorCoverflow({
                 ))}
             </div>
 
-            <div className="cf__bar">
-                <div className="cf__summary">
-                    {totalCount > 0 ? (
-                        <>
-                            <span className="cf__picked">{picked.map((x) => `${x.p.flavor} ${x.q}`).join(' · ')}</span>
-                            <strong>
-                                총 {totalCount}개 · {won(totalPrice)}
-                            </strong>
-                        </>
-                    ) : (
-                        <span className="cf__empty">
-                            {hint || `좌우로 넘겨 맛을 고르고, ${current.flavor} 등 원하는 맛의 수량을 선택하세요.`}
-                        </span>
-                    )}
-                </div>
-                <FreeShipHint count={totalCount} />
-                <ShipEta compact />
-                <div className="cf__actions">
-                    <button type="button" className="ca__btn ca__btn--cart" onClick={addAll}>
-                        <ShoppingBag size={15} />
-                        <span>장바구니 담기</span>
-                    </button>
-                    <button type="button" className="ca__btn ca__btn--buy" onClick={buyAll}>
-                        <Zap size={15} />
-                        <span>바로 구매</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* portal: the section's reveal animation uses transforms, which would trap a fixed overlay */}
-            {notice && typeof document !== 'undefined' ? createPortal(
-                <div className="oc-notice" role="alertdialog" aria-modal="true" onClick={() => setNotice(false)}>
-                    <div className="oc-notice__card" onClick={(e) => e.stopPropagation()}>
-                        <span className="oc-notice__icon" aria-hidden="true">🥣</span>
-                        <strong>맛과 수량을 골라 주세요</strong>
-                        <p>좌우로 넘겨 원하는 맛을 가운데에 두고, + 버튼으로 수량을 선택해 주세요.</p>
-                        <button type="button" autoFocus onClick={() => setNotice(false)}>
-                            확인
-                        </button>
-                    </div>
-                </div>,
-                document.body,
-            ) : null}
         </div>
     );
 }

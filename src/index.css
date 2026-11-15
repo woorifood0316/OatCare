@@ -6186,3 +6186,49 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .cart-mix__modes button { color: rgba(59, 42, 32, 0.85); }
 .cart-line__meta { color: rgba(59, 42, 32, 0.78); }
 .cart-line__cycle { color: rgba(59, 42, 32, 0.88); }
+
+/* ===== Shared purchase sheet (BuySheet) ===== */
+/* cards: [상세보기] [바로구매] side by side, same everywhere */
+.ca--two .ca__btn--detail { grid-column: auto; border-color: #d8c8a6; }
+.cf__controls.ca--two { width: 100%; padding-top: 0.6rem; }
+/* wide screens: the same sheet opens in the centre */
+@media (min-width: 801px) {
+  .sbar-sheet { align-items: center; justify-content: center; padding: 1.5rem; }
+  .sbar-sheet__card { max-width: 30rem; max-height: 86vh; border-radius: 20px; }
+}
+.bs-title { flex: 1; min-width: 0; font-size: 1.02rem; font-weight: 800; color: var(--oc-brown); }
+.bs-back { display: inline-flex; align-items: center; gap: 0.1rem; min-height: 44px; padding: 0 0.4rem 0 0; border: 0; background: none; color: var(--oc-maroon); font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.bs-product { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border-radius: 0.9rem; background: var(--oc-cream); }
+.bs-product img { flex: none; width: 3.2rem; height: 3.2rem; border-radius: 0.6rem; object-fit: contain; background: #fff; }
+.bs-product div { display: grid; gap: 0.1rem; min-width: 0; }
+.bs-product strong { font-size: 0.98rem; font-weight: 800; color: var(--oc-brown); }
+.bs-product span { font-size: 0.82rem; color: #5a4838; }
+.bs-note { margin: 0; font-size: 0.85rem; color: #5a4838; }
+.bs-note--foot { font-size: 0.78rem; color: #6a5848; }
+.bs-list { list-style: none; display: grid; gap: 0.5rem; margin: 0; padding: 0; }
+.bs-list button { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; border: 1.5px solid var(--oc-line); border-radius: 0.9rem; background: #fff; color: var(--oc-brown); font: inherit; text-align: left; cursor: pointer; }
+.bs-list button:hover { border-color: var(--oc-maroon); }
+.bs-list img { flex: none; width: 3.4rem; height: 3.4rem; border-radius: 0.6rem; object-fit: cover; background: var(--oc-cream); }
+.bs-list__name { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
+.bs-list__name b { font-size: 0.95rem; font-weight: 800; }
+.bs-list__name small { font-size: 0.78rem; color: #5a4838; }
+.bs-list__price { flex: none; display: grid; justify-items: end; gap: 0.1rem; }
+.bs-list__price b { font-size: 0.95rem; font-weight: 800; color: var(--oc-maroon); }
+.bs-list__price small { font-size: 0.72rem; color: #6a5848; }
+/* the 10-pack page: price + one [구매하기] */
+@media (max-width: 800px) {
+  .sbar--one { grid-template-columns: auto 1fr; align-items: center; }
+  .sbar__sum { display: grid; padding-left: 0.2rem; }
+  .sbar__sum small { font-size: 0.72rem; color: #6a5848; }
+  .sbar__sum b { font-size: 1.1rem; font-weight: 800; color: var(--oc-brown); }
+}
+
+/* Section reveal: a light, short entrance (was 40px over 0.7s on every section); none inside the product sections */
+.oc-scroll-reveal { transform: translateY(10px); transition: opacity 0.25s ease-out, transform 0.25s ease-out; }
+.oc-scroll-reveal--active { transform: none; }
+#bundles .oc-scroll-reveal, #product-lineup .oc-scroll-reveal { opacity: 1; transform: none; transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .oc-scroll-reveal { opacity: 1; transform: none; transition: none; }
+}
+/* the set section shows at once too */
+.oc-bundles-section, .oc-bundles-section.is-visible { opacity: 1; transform: none; transition: none; }
