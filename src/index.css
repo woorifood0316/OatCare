@@ -6033,3 +6033,18 @@ tr.is-muted td { opacity: 0.6; }
 .rt-req--link:hover { border-color: var(--oc-maroon); }
 .rt-req__more { justify-self: end; color: var(--oc-maroon); font-size: 0.82rem; font-weight: 800; }
 .ord-card__badges { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+
+/* checkout: notification switch that unlocks / raises coupons */
+.co-consent { margin: 0 0 0.8rem; padding: 0.85rem 1rem; border: 1.5px solid #e9c46a; border-radius: 14px; background: #fff8e6; transition: background 0.2s, border-color 0.2s; }
+.co-consent.is-on { background: #fdf3f0; border-color: var(--oc-maroon); }
+.co-consent__row { display: flex; align-items: center; gap: 0.8rem; }
+.co-consent__text { flex: 1; display: grid; gap: 0.15rem; text-align: left; }
+.co-consent__text strong { font-size: 1rem; color: var(--oc-brown); }
+.co-consent__text span { font-size: 0.88rem; color: #6a5848; }
+.co-consent__text b { color: var(--oc-maroon); }
+.co-consent__fine { margin: 0.55rem 0 0; font-size: 0.74rem; line-height: 1.55; color: #8a7868; text-align: left; }
+.co-coupon__tag { margin-left: 0.4rem; font-style: normal; font-size: 0.78rem; font-weight: 800; color: var(--oc-maroon); }
+.co-locked { margin-top: 0.4rem; }
+.co-locked .co-addr__item { display: flex; gap: 0.6rem; align-items: center; opacity: 0.75; cursor: default; }
+
+.oc-welcome__fine { display: block; margin-top: 0.25rem; font-size: 0.78rem; line-height: 1.5; color: #8a7868; }

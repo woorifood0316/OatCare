@@ -17,6 +17,7 @@ import {
     SHIPPING_FEE,
     SUBSCRIPTION_DISCOUNT_RATE,
     WELCOME_COUPON_AMOUNT,
+    WELCOME_COUPON_BASE,
     getItem,
 } from './catalog';
 
@@ -137,7 +138,7 @@ export const FAQ_SEED: { question: string; keywords: string; answer: string }[] 
     {
         question: '쿠폰은 어떻게 받아요? 신규 가입 혜택이 있나요?',
         keywords: '쿠폰 할인쿠폰 가입혜택 신규 웰컴 첫구매',
-        answer: `회원가입하면 ${won(WELCOME_COUPON_AMOUNT)} 쿠폰을 바로 드려요. 20·30개 세트, 정기구독, 또는 ${BOX_SIZE}개 이상 주문에 쓸 수 있고, ${COUPON_VALID_DAYS}일 동안 사용할 수 있어요.`,
+        answer: `회원가입하면 ${won(WELCOME_COUPON_BASE)} 쿠폰을 바로 드리고, 이벤트·혜택 알림 수신에 동의하면 ${won(WELCOME_COUPON_AMOUNT)}으로 올려 드려요(한 번만). 리뷰 이벤트·친구 초대 쿠폰도 알림을 켜 둔 회원에게 드려요. 20·30개 세트, 정기구독, 또는 ${BOX_SIZE}개 이상 주문에 쓸 수 있고, ${COUPON_VALID_DAYS}일 동안 사용할 수 있어요.`,
     },
     {
         question: '쿠폰이 적용이 안 돼요',

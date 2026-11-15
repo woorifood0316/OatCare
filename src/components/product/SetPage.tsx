@@ -176,9 +176,9 @@ export function SetPage({ count }: { count: number }) {
                             </li>
                             <li className="pd-facts__coupon">
                                 {item.count >= COUPON_SET_MIN_COUNT ? (
-                                    <>🎟️ 가입 쿠폰 <b>{won(WELCOME_COUPON_AMOUNT)}</b> 금액 상관없이 바로 적용</>
+                                    <>🎟️ 가입 쿠폰 <b>최대 {won(WELCOME_COUPON_AMOUNT)}</b> 금액 상관없이 바로 적용</>
                                 ) : (
-                                    <>🎟️ 가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}은 {WELCOME_COUPON_MIN_COUNT}개(한 박스)부터 적용 · <b>맛보기 세트 + 낱개 {WELCOME_COUPON_MIN_COUNT - item.count}개</b>면 한 박스 완성</>
+                                    <>🎟️ 가입 쿠폰(최대 {won(WELCOME_COUPON_AMOUNT)})은 {WELCOME_COUPON_MIN_COUNT}개(한 박스)부터 적용 · <b>맛보기 세트 + 낱개 {WELCOME_COUPON_MIN_COUNT - item.count}개</b>면 한 박스 완성</>
                                 )}
                             </li>
                         </ul>

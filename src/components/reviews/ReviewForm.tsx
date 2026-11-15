@@ -15,6 +15,7 @@ import {
     WELCOME_COUPON_MIN_COUNT,
 } from '../../lib/catalog';
 import type { Reviewable } from '../../lib/reviews';
+import { ConsentUnlock } from '../mypage/ConsentUnlock';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
@@ -45,7 +46,7 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
     const [agreed, setAgreed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    const [done, setDone] = useState<{ reward: number } | null>(null);
+    const [done, setDone] = useState<{ reward: number; pending: boolean } | null>(null);
 
     const reward = photos.length > 0 ? REVIEW_REWARD_PHOTO : REVIEW_REWARD_TEXT;
     const length = body.trim().length;
@@ -97,7 +98,7 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
                 setBusy(false);
                 return;
             }
-            setDone({ reward: (data.reward as number) ?? 0 });
+            setDone({ reward: (data.reward as number) ?? 0, pending: Boolean(data.pending) });
             setBusy(false);
             router.refresh();
         } catch {
@@ -110,7 +111,9 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
         return (
             <section className="my-card rv-done">
                 <b>리뷰가 등록됐어요. 고마워요!</b>
-                {done.reward > 0 ? (
+                {done.reward > 0 && done.pending ? (
+                    <ConsentUnlock heading={`리뷰 이벤트 쿠폰 ${won(done.reward)}이 준비됐어요`} gainText={`리뷰 이벤트 쿠폰 ${won(done.reward)}`} />
+                ) : done.reward > 0 ? (
                     <p>
                         🎟️ 리뷰 이벤트 쿠폰 <b>{won(done.reward)}</b>을 드렸어요. 마이페이지 쿠폰에서 확인할 수 있어요.
                     </p>
@@ -210,11 +213,12 @@ export function ReviewForm({ items, initialKey, photosEnabled }: { items: Review
                 <label className="addr-check">
                     <input type="checkbox" checked={eventJoined} onChange={(e) => setEventJoined(e.target.checked)} />
                     <span>
-                        <b>리뷰 이벤트 참여</b> · 등록하면 <b>{won(reward)} 쿠폰</b>을 바로 드려요 (글 리뷰 {won(REVIEW_REWARD_TEXT)} · 사진 리뷰 {won(REVIEW_REWARD_PHOTO)})
+                        <b>리뷰 이벤트 참여</b> · 등록하면 <b>{won(reward)} 쿠폰</b>을 드려요 (글 리뷰 {won(REVIEW_REWARD_TEXT)} · 사진 리뷰 {won(REVIEW_REWARD_PHOTO)})
                     </span>
                 </label>
                 <p>
-                    참여한 리뷰에는 <b>&lsquo;리뷰 이벤트 참여&rsquo;</b> 표시가 함께 보여요. 쿠폰은 별점·내용과 관계없이 지급되며,
+                    참여한 리뷰에는 <b>&lsquo;리뷰 이벤트 참여&rsquo;</b> 표시가 함께 보여요. 쿠폰은 별점·내용과 관계없이 지급되며, 이벤트·혜택 알림을 켜 둔 회원은 바로,
+                    꺼 둔 회원은 30일 안에 알림을 켜면 받을 수 있어요. 쿠폰은
                     {COUPON_VALID_DAYS}일 동안 20·30개 세트·정기구독 또는 {WELCOME_COUPON_MIN_COUNT}개(한 박스) 이상 주문에 쓸 수 있어요.
                 </p>
             </div>

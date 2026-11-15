@@ -2,10 +2,10 @@
 
 import { ShipEta } from '../ShipEta';
 import React, { useEffect, useRef, useState } from 'react';
-import { AddressPicker, CheckoutShell, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
+import { AddressPicker, CheckoutShell, ConsentSwitch, useConsentCoupons, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
 import { loadTossSdk as loadSdk } from '../../lib/toss-sdk';
 import { couponDiscount, hasCouponSet, type PricedCart } from '../../lib/catalog';
-import type { Coupon } from '../../lib/coupons';
+import type { ConsentGain, Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 
 const MEMOS = ['', '문 앞에 놓아주세요', '경비실에 맡겨주세요', '배송 전에 연락주세요', '부재 시 연락주세요'];
@@ -14,12 +14,15 @@ export function CheckoutOnce({
     priced,
     addresses,
     coupons,
+    gain,
     customerKey,
     user,
 }: {
     priced: PricedCart;
     addresses: Address[];
     coupons: Coupon[];
+    /** What turning the notifications on gives (null when already agreed). */
+    gain: ConsentGain | null;
     customerKey: string;
     user: { name: string | null; email: string | null };
 }) {
@@ -27,14 +30,20 @@ export function CheckoutOnce({
     const [memo, setMemo] = useState('');
     const noMinimum = hasCouponSet(priced.items);
     // A coupon that fits this order is applied from the start, so the customer sees the discount right away.
+    const consent = useConsentCoupons(coupons, gain);
     const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.sachets, priced.total, noMinimum));
+    // The toggle changes what is usable: pick the best coupon again, so the price drops (or comes back) at once.
+    useEffect(() => {
+        setCouponId(bestCouponId(consent.shown, priced.sachets, priced.total, noMinimum));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [consent.optIn]);
     const [ready, setReady] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const widgets = useRef<any>(null);
     const ensureAddress = useRef<(() => Promise<{ id: string | null; error?: string }>) | null>(null);
 
-    const selected = coupons.find((c) => c.id === couponId) ?? null;
+    const selected = consent.shown.find((c) => c.id === couponId && c.available) ?? null;
     const discount = selected ? couponDiscount(selected, priced.sachets, priced.total, noMinimum) : 0;
     const payable = priced.total - discount;
     const payableRef = useRef(payable);
@@ -88,7 +97,7 @@ export function CheckoutOnce({
             const res = await fetch('/api/checkout/once', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId: useAddressId, memo, couponId, expectedAmount: payable }),
+                body: JSON.stringify({ addressId: useAddressId, memo, couponId: selected?.id ?? null, expectedAmount: payable, marketingOptIn: consent.optIn }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -118,7 +127,15 @@ export function CheckoutOnce({
     return (
         <CheckoutShell title="주문·결제">
             <OrderSummary priced={priced} mode="once" discount={discount} />
-            <CouponPicker coupons={coupons} selectedId={couponId} onSelect={setCouponId} sachets={priced.sachets} total={priced.total} noMinimum={noMinimum} />
+            <CouponPicker
+                coupons={consent.shown}
+                selectedId={couponId}
+                onSelect={setCouponId}
+                sachets={priced.sachets}
+                total={priced.total}
+                noMinimum={noMinimum}
+                consent={consent.offer ? <ConsentSwitch on={consent.optIn} onChange={consent.setOptIn} gainText={consent.gainText} /> : null}
+            />
             <AddressPicker initial={addresses} selectedId={addressId} onSelect={setAddressId} ensureRef={ensureAddress} />
 
             <section className="cart-section">

@@ -5,7 +5,8 @@
 //     a REFERRAL_REWARD coupon - unless two or more of name, phone, address and email are the same as one existing
 //     member's (the referrer included). No limit on how many friends one member invites.
 import { getSql } from './db';
-import { COUPON_VALID_DAYS, REFERRAL_CONFIRM_DAYS, REFERRAL_COUPON_NAME, REFERRAL_REWARD, WELCOME_COUPON_MIN_COUNT } from './catalog';
+import { REFERRAL_CONFIRM_DAYS, REFERRAL_COUPON_NAME, REFERRAL_REWARD } from './catalog';
+import { issueRewardCoupon } from './coupons';
 
 export const REF_PARAM = 'ref';
 export const REF_COOKIE = 'oc_ref';
@@ -48,11 +49,9 @@ export async function recordReferral(friendId: string, code: string | undefined)
     }
 }
 
+/** Each side gets the coupon at once with the notification consent, otherwise it waits until they turn it on. */
 async function giveCoupon(userId: string) {
-    await getSql()`
-        insert into coupons (user_id, source, name, amount, min_order, expires_at)
-        values (${userId}, 'referral', ${REFERRAL_COUPON_NAME}, ${REFERRAL_REWARD}, ${WELCOME_COUPON_MIN_COUNT}, now() + (${COUPON_VALID_DAYS} || ' days')::interval)
-    `;
+    await issueRewardCoupon(userId, 'referral', REFERRAL_COUPON_NAME, REFERRAL_REWARD);
 }
 
 const digits = (s: unknown) => String(s ?? '').replace(/\D/g, '');

@@ -1,13 +1,13 @@
 'use client';
 
 import { ShipEta } from '../ShipEta';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddressPicker, CheckoutShell, ManageHint, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
+import { AddressPicker, CheckoutShell, ConsentSwitch, useConsentCoupons, ManageHint, CouponPicker, OrderSummary, bestCouponId, won } from './Parts';
 import { CardRegistrar } from '../billing/CardRegistrar';
 import { cardText } from '../mypage/PaymentMethodManager';
 import { MIN_SUBSCRIPTION_CHARGES, couponDiscount, type PricedCart } from '../../lib/catalog';
-import type { Coupon } from '../../lib/coupons';
+import type { ConsentGain, Coupon } from '../../lib/coupons';
 import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
 
@@ -21,6 +21,7 @@ export function CheckoutSubscribe({
     addresses,
     methods,
     coupons,
+    gain,
     giftEligible,
     user,
 }: {
@@ -28,6 +29,8 @@ export function CheckoutSubscribe({
     addresses: Address[];
     methods: PaymentMethod[];
     coupons: Coupon[];
+    /** What turning the notifications on gives (null when already agreed). */
+    gain: ConsentGain | null;
     giftEligible: boolean;
     customerKey: string;
     user: { name: string | null; email: string | null };
@@ -55,8 +58,14 @@ export function CheckoutSubscribe({
     const firstCycle = cycles[0]?.[0];
     const firstGroup = priced.items.filter((i) => (i.cycleDays ?? 30) === firstCycle).reduce((sum, i) => sum + i.amount, 0);
     // A fitting coupon is applied from the start (subscriptions have no minimum), so the discount shows right away.
+    const consent = useConsentCoupons(coupons, gain);
     const [couponId, setCouponId] = useState<string | null>(() => bestCouponId(coupons, priced.sachets, firstGroup, true));
-    const selected = coupons.find((c) => c.id === couponId) ?? null;
+    // The toggle changes what is usable: pick the best coupon again, so the price drops (or comes back) at once.
+    useEffect(() => {
+        setCouponId(bestCouponId(consent.shown, priced.sachets, firstGroup, true));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [consent.optIn]);
+    const selected = consent.shown.find((c) => c.id === couponId && c.available) ?? null;
     const discount = selected ? couponDiscount(selected, priced.sachets, firstGroup, true) : 0;
     const payable = priced.total - discount;
 
@@ -80,7 +89,7 @@ export function CheckoutSubscribe({
             const res = await fetch('/api/checkout/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ addressId: useAddressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId }),
+                body: JSON.stringify({ addressId: useAddressId, paymentMethodId: methodId, expectedAmount: payable, agreed: true, agreedMinPeriod: true, couponId: selected?.id ?? null, marketingOptIn: consent.optIn }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -106,7 +115,8 @@ export function CheckoutSubscribe({
         <CheckoutShell title="정기구독 시작">
             <OrderSummary priced={priced} mode="subscribe" discount={discount} discountLabel="쿠폰 할인" gift={giftEligible} />
             <CouponPicker
-                coupons={coupons}
+                coupons={consent.shown}
+                consent={consent.offer ? <ConsentSwitch on={consent.optIn} onChange={consent.setOptIn} gainText={consent.gainText} /> : null}
                 selectedId={couponId}
                 onSelect={setCouponId}
                 sachets={priced.sachets}

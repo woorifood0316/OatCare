@@ -1,5 +1,5 @@
 import { auth } from '../../../../auth';
-import { getSql } from '../../../../lib/db';
+import { setMarketingConsent } from '../../../../lib/consent';
 
 export const runtime = 'edge';
 
@@ -25,10 +25,6 @@ export async function POST(request: Request) {
         return new Response('Bad Request', { status: 400 });
     }
 
-    const sql = getSql();
-    await sql`
-        update users set marketing_agreed = ${agreed}, marketing_updated_at = now()
-        where id = ${session.user.id}
-    `;
+    await setMarketingConsent(session.user.id, agreed, 'mypage');
     return Response.json({ agreed });
 }

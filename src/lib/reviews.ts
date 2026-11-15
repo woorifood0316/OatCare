@@ -1,11 +1,10 @@
 import { getSql } from './db';
+import { issueRewardCoupon } from './coupons';
 import {
-    COUPON_VALID_DAYS,
     REVIEW_COUPON_NAME,
     REVIEW_REWARD_PHOTO,
     REVIEW_REWARD_TEXT,
     REVIEW_STRIKE_LIMIT,
-    WELCOME_COUPON_MIN_COUNT,
     getItem,
 } from './catalog';
 
@@ -151,7 +150,7 @@ export async function createReview(input: {
     body: string;
     photos: string[];
     eventJoined: boolean;
-}): Promise<{ ok: true; id: string; reward: number } | { ok: false; message: string }> {
+}): Promise<{ ok: true; id: string; reward: number; pending: boolean } | { ok: false; message: string }> {
     const sql = getSql();
     const target = (await listReviewables(input.userId)).find((r) => r.key === input.key);
     if (!target) return { ok: false, message: '리뷰를 쓸 수 있는 주문을 찾지 못했어요 (이미 작성했거나 아직 발송 전이에요)' };
@@ -173,16 +172,14 @@ export async function createReview(input: {
     }
     const id = inserted[0].id as string;
 
+    // Issued at once with the notification consent; otherwise it waits (받을 준비 중) until the member turns it on.
+    let pending = false;
     if (reward > 0) {
-        const coupon = await sql`
-            insert into coupons (user_id, source, name, amount, min_order, expires_at)
-            values (${input.userId}, 'review', ${REVIEW_COUPON_NAME}, ${reward}, ${WELCOME_COUPON_MIN_COUNT},
-                    now() + (${COUPON_VALID_DAYS} || ' days')::interval)
-            returning id
-        `;
-        await sql`update reviews set reward_coupon_id = ${coupon[0].id} where id = ${id}`;
+        const coupon = await issueRewardCoupon(input.userId, 'review', REVIEW_COUPON_NAME, reward);
+        pending = coupon.pending;
+        await sql`update reviews set reward_coupon_id = ${coupon.id} where id = ${id}`;
     }
-    return { ok: true, id, reward };
+    return { ok: true, id, reward, pending };
 }
 
 // ---------------- operator ----------------

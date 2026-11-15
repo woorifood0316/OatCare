@@ -3,7 +3,8 @@ import { isUuid, jsonError, sameOrigin, sessionUserId } from '../../../../lib/ap
 import { couponDiscount, hasCouponSet, orderNameOf, priceCart, sanitizeLines } from '../../../../lib/catalog';
 import { getAddress } from '../../../../lib/addresses';
 import { getOrCreateCustomerKey, newOrderNo } from '../../../../lib/orders';
-import { getAvailableCoupon, reserveCoupon } from '../../../../lib/coupons';
+import { reserveCoupon } from '../../../../lib/coupons';
+import { resolveCheckoutCoupon } from '../../../../lib/checkout-coupon';
 
 export const runtime = 'edge';
 
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     const userId = await sessionUserId();
     if (!userId) return jsonError('Unauthorized', 401);
 
-    let body: { addressId?: unknown; memo?: unknown; expectedAmount?: unknown; couponId?: unknown };
+    let body: { addressId?: unknown; memo?: unknown; expectedAmount?: unknown; couponId?: unknown; marketingOptIn?: unknown };
     try {
         body = await request.json();
     } catch {
@@ -34,10 +35,11 @@ export async function POST(request: Request) {
     // Optional coupon: validated on the server, never trusting the client's discount.
     let discount = 0;
     let couponId: string | null = null;
-    if (body.couponId) {
-        if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
-        const coupon = await getAvailableCoupon(userId, body.couponId);
-        if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
+    // The notification toggle at checkout: recorded first, so the coupons it unlocks can be used on this order.
+    const picked = await resolveCheckoutCoupon(userId, body.couponId, body.marketingOptIn, address);
+    if ('error' in picked) return jsonError(picked.error);
+    const coupon = picked.coupon;
+    if (coupon) {
         discount = couponDiscount(coupon, priced.sachets, priced.total, hasCouponSet(priced.items));
         if (discount <= 0) return jsonError(`낱개·맛보기 세트 주문은 ${coupon.minCount}개(한 박스) 이상일 때 쿠폰을 쓸 수 있어요 (20·30개 세트나 정기구독은 금액 상관없이 사용 가능)`);
         couponId = coupon.id;

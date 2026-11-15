@@ -4,7 +4,7 @@ import { couponDiscount, priceCart, sanitizeLines, type CartLine } from '../../.
 import { getAddress } from '../../../../lib/addresses';
 import { removeCartLines } from '../../../../lib/orders';
 import { startSubscription } from '../../../../lib/subscriptions';
-import { getAvailableCoupon } from '../../../../lib/coupons';
+import { resolveCheckoutCoupon } from '../../../../lib/checkout-coupon';
 
 export const runtime = 'edge';
 
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
         agreed?: unknown;
         agreedMinPeriod?: unknown;
         couponId?: unknown;
+        marketingOptIn?: unknown;
     };
     try {
         body = await request.json();
@@ -71,10 +72,10 @@ export async function POST(request: Request) {
 
     let discount = 0;
     let couponId: string | null = null;
-    if (body.couponId) {
-        if (!isUuid(body.couponId)) return jsonError('쿠폰을 확인해 주세요');
-        const coupon = await getAvailableCoupon(userId, body.couponId);
-        if (!coupon) return jsonError('사용할 수 없는 쿠폰이에요');
+    const picked = await resolveCheckoutCoupon(userId, body.couponId, body.marketingOptIn, address);
+    if ('error' in picked) return jsonError(picked.error);
+    const coupon = picked.coupon;
+    if (coupon) {
         discount = couponDiscount(coupon, firstPriced.sachets, firstPriced.total, true);
         if (discount <= 0) return jsonError('사용할 수 없는 쿠폰이에요');
         couponId = coupon.id;

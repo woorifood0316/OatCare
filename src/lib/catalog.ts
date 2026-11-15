@@ -100,7 +100,14 @@ export const FREE_SHIPPING_MIN_COUNT = BOX_SIZE;
 export const MIN_SUBSCRIPTION_CHARGES = 2;
 /** Welcome coupon issued at sign-up. Its minimum (in sachets) applies only to singles / the taster set (20·30 sets and subscriptions: none). */
 export const WELCOME_COUPON_NAME = '신규 가입 쿠폰';
-export const WELCOME_COUPON_AMOUNT = 3000;
+/** Sign-up coupon: 1,000원 at sign-up; turning the event/benefit notifications on raises it to 3,000원 (once per member). */
+export const WELCOME_COUPON_BASE = 1000;
+export const WELCOME_COUPON_BONUS = 2000;
+/** The most the sign-up coupon is worth (with the notification consent). */
+export const WELCOME_COUPON_AMOUNT = WELCOME_COUPON_BASE + WELCOME_COUPON_BONUS;
+export const WELCOME_BONUS_COUPON_NAME = '신규 가입 추가 쿠폰';
+/** Review-event / friend-invitation coupons of members without the notification consent wait this many days. */
+export const COUPON_PENDING_DAYS = 30;
 /** Every coupon (sign-up, review event) is valid for this many days from issue. */
 export const COUPON_VALID_DAYS = 90;
 export const WELCOME_COUPON_DAYS = COUPON_VALID_DAYS;

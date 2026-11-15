@@ -68,6 +68,14 @@ ${order}` };
 답변: ${p.answer}
 
 내 문의 보기: ${SITE()}/mypage/inquiries` };
+        case 'marketing_consent':
+            return {
+                subject: `[참오트케어] 이벤트·혜택 알림 수신 ${p.agreed ? '동의' : '철회'} 안내`,
+                text: `${p.date}에 이벤트·혜택 알림(광고성 정보) 수신에 ${p.agreed ? '동의' : '동의를 철회'}하셨어요.\n\n` +
+                    `${p.agreed ? '쿠폰 만료, 새 맛 출시, 회원 전용 할인 소식을 보내 드릴게요.' : '앞으로 이벤트·혜택 소식은 보내지 않아요. 이미 받으신 쿠폰은 그대로 쓰실 수 있어요.'}\n` +
+                    `주문·결제·배송 안내는 알림 설정과 상관없이 보내 드려요.\n\n` +
+                    `마이페이지 > 내 정보에서 언제든 바꿀 수 있어요: ${SITE()}/mypage/profile`,
+            };
         case 'billing_upcoming':
             return { subject: '[참오트케어] 정기구독 결제 예정 안내', text: `${p.date}에 ${won(p.amount)}이 자동 결제될 예정이에요.\n주기 변경, 건너뛰기, 해지는 결제일 전날까지 가능해요.\n\n구독 관리: ${sub}` };
         default:
@@ -108,6 +116,8 @@ export function adminMessage(event: NotifyEvent, p: P): string {
             return `❓ 답변이 필요한 상품 문의 · ${p.note ?? ''} → ${SITE()}/admin/inquiries`;
         case 'inquiry_answered':
             return `💬 상품 문의 답변 완료`;
+        case 'marketing_consent':
+            return `🔔 알림 수신 ${p.agreed ? '동의' : '철회'}`;
         case 'billing_upcoming':
             return `⏰ 결제 예정 안내 발송 · ${p.date}`;
         default:

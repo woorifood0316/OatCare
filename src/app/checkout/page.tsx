@@ -8,7 +8,7 @@ import { getOrCreateCustomerKey } from '../../lib/orders';
 import { CheckoutOnce } from '../../components/checkout/CheckoutOnce';
 import { CheckoutSubscribe } from '../../components/checkout/CheckoutSubscribe';
 import { listPaymentMethods } from '../../lib/payment-methods';
-import { listCoupons } from '../../lib/coupons';
+import { consentGain, listCoupons } from '../../lib/coupons';
 
 export const runtime = 'edge';
 
@@ -41,7 +41,9 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
     const addresses = await listAddresses(user.id);
     const customerKey = await getOrCreateCustomerKey(user.id);
-    const coupons = (await listCoupons(user.id)).filter((c) => c.available);
+    // Usable coupons plus the ones waiting for the notification consent (shown locked, unlocked by the toggle).
+    const coupons = (await listCoupons(user.id)).filter((c) => c.available || c.pending);
+    const gain = user.marketingAgreed ? null : await consentGain(user.id).catch(() => null);
 
     if (mode === 'subscribe') {
         const methods = await listPaymentMethods(user.id);
@@ -52,6 +54,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
                 addresses={addresses}
                 methods={methods}
                 coupons={coupons}
+                gain={gain}
                 giftEligible={!gifted[0]?.shaker_gifted_at}
                 customerKey={customerKey}
                 user={{ name: user.name, email: user.email }}
@@ -64,6 +67,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             priced={priced}
             addresses={addresses}
             coupons={coupons}
+            gain={gain}
             customerKey={customerKey}
             user={{ name: user.name, email: user.email }}
         />

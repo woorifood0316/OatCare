@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { getAssetUrl } from '../utils/assets';
+import { WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BASE } from '../lib/catalog';
+
+const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
 
 /** First visit with a social account: one required consent (+ optional marketing), then the member is created. */
 export function WelcomeConsent({ name, provider, next }: { name: string | null; provider: string; next: string }) {
@@ -49,7 +52,9 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                     )}
                 </h1>
                 <p className="oc-auth__sub">{provider} 계정으로 처음 오셨어요. 아래에 동의하시면 가입이 끝나요.</p>
-                <p className="oc-auth__perk">🎟️ 가입하면 <b>3,000원 쿠폰</b>을 바로 드려요 (90일 이내 사용)</p>
+                <p className="oc-auth__perk">
+                    🎟️ 가입하면 <b>{won(WELCOME_COUPON_BASE)} 쿠폰</b> · 혜택 알림까지 받으면 <b>{won(WELCOME_COUPON_AMOUNT)} 쿠폰</b>으로 드려요 (90일 이내 사용)
+                </p>
 
                 <label className={`oc-welcome__check oc-welcome__check--req${agreed ? ' is-on' : ''}`}>
                     <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); setError(''); }} />
@@ -61,7 +66,10 @@ export function WelcomeConsent({ name, provider, next }: { name: string | null; 
                 </label>
                 <label className={`oc-welcome__check${marketing ? ' is-on' : ''}`}>
                     <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
-                    <span>(선택) 신제품·혜택 소식을 받을게요.</span>
+                    <span>
+                        (선택) 쿠폰 만료·새 맛·회원 전용 할인 소식을 받을게요 → <b>가입 쿠폰 {won(WELCOME_COUPON_AMOUNT)}</b>
+                        <small className="oc-welcome__fine">이메일·카카오톡·문자로 보내요. 주문·배송 안내는 동의와 상관없이 보내 드려요. 언제든 끌 수 있어요.</small>
+                    </span>
                 </label>
 
                 {error ? <p className="oc-auth__msg oc-auth__msg--error" role="alert">{error}</p> : null}

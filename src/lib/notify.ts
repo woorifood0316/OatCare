@@ -16,7 +16,8 @@ export type NotifyEvent =
     | 'return_rejected'
     | 'return_completed'
     | 'inquiry_pending'
-    | 'inquiry_answered';
+    | 'inquiry_answered'
+    | 'marketing_consent';
 
 /**
  * Queue a notification. Senders (email / operator webhook, later KakaoTalk) pick rows up from here,

@@ -249,6 +249,17 @@ export async function buildCustomerEmail(event: NotifyEvent, p: Record<string, u
             button = { label: '진행 상황 확인하기', url: orderUrl };
             extra = '';
             break;
+        case 'marketing_consent':
+            title = p.agreed ? '이벤트·혜택 알림 수신에 동의하셨어요' : '이벤트·혜택 알림 수신 동의를 철회하셨어요';
+            lead = [
+                p.agreed ? '쿠폰 만료, 새 맛 출시, 회원 전용 할인 소식을 보내 드릴게요.' : '앞으로 이벤트·혜택 소식은 보내지 않아요. 이미 받으신 쿠폰은 그대로 쓰실 수 있어요.',
+                '주문·결제·배송 안내는 알림 설정과 상관없이 보내 드려요.',
+            ];
+            meta = [['처리 일자', String(p.date ?? '')], ['내용', p.agreed ? '수신 동의' : '수신 동의 철회']];
+            extra = '';
+            note = '마이페이지 > 내 정보에서 언제든 바꿀 수 있어요.';
+            button = { label: '알림 설정 보기', url: `${SITE()}/mypage/profile` };
+            break;
         case 'inquiry_answered':
             title = '남기신 상품 문의에 답변이 달렸어요';
             lead = [];

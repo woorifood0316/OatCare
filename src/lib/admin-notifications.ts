@@ -22,6 +22,7 @@ export const EVENT_LABEL: Record<string, string> = {
     return_completed: '교환·반품 완료',
     inquiry_pending: '문의 답변 필요',
     inquiry_answered: '문의 답변',
+    marketing_consent: '알림 수신 동의·철회',
 };
 
 export interface NotificationFilter {
@@ -108,6 +109,7 @@ export async function sendTestEmails(to: string, kinds: NotifyEvent[]) {
         subscription_charged: { orderNo: order?.orderNo, amount: order?.amount },
         billing_upcoming: { date: '2026-12-01', amount: order?.amount ?? 17700 },
         return_approved: { orderNo: order?.orderNo, typeLabel: '반품', note: '(테스트) 11/20 회수 예정' },
+        marketing_consent: { agreed: true, date: '2026년 11월 15일', via: 'test' },
         inquiry_answered: { question: '(테스트) 이 상품 당은 얼마나 되나요?', answer: '그레인 한 포(50g)의 당류는 7g(1일 기준치의 7%)예요.' },
     };
     const results: { kind: string; outcome: string }[] = [];
@@ -127,4 +129,4 @@ export async function sendTestEmails(to: string, kinds: NotifyEvent[]) {
     return { orderNo: order?.orderNo ?? null, results };
 }
 
-export const TEST_KINDS: NotifyEvent[] = ['order_paid', 'order_shipped', 'subscription_charged', 'billing_upcoming', 'return_approved'];
+export const TEST_KINDS: NotifyEvent[] = ['order_paid', 'order_shipped', 'subscription_charged', 'billing_upcoming', 'return_approved', 'marketing_consent'];

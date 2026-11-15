@@ -49,7 +49,7 @@ export function CouponHint({
         return (
             <div className={`cph ${className}`}>
                 <p>
-                    🎟️ 회원가입하면 <b>{won(WELCOME_COUPON_AMOUNT)} 쿠폰</b>을 드려요 · <span className="oc-nowrap">20·30개 세트·정기구독은</span> 금액 상관없이 바로 적용
+                    🎟️ 회원가입하면 <b>최대 {won(WELCOME_COUPON_AMOUNT)} 쿠폰</b>을 드려요 · <span className="oc-nowrap">20·30개 세트·정기구독은</span> 금액 상관없이 바로 적용
                 </p>
             </div>
         );

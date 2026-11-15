@@ -7,8 +7,19 @@ import { backToPrevious, previousPage } from '../../lib/prev-page';
 import { ArrowLeft } from 'lucide-react';
 import { AddressForm } from '../address/AddressForm';
 import { getAssetUrl } from '../../utils/assets';
-import { getItem, FLAVORS, GIFT_SHAKER_NAME, couponDiscount, type PricedCart } from '../../lib/catalog';
-import type { Coupon } from '../../lib/coupons';
+import {
+    getItem,
+    FLAVORS,
+    GIFT_SHAKER_NAME,
+    COUPON_VALID_DAYS,
+    WELCOME_BONUS_COUPON_NAME,
+    WELCOME_COUPON_AMOUNT,
+    WELCOME_COUPON_BONUS,
+    WELCOME_COUPON_MIN_COUNT,
+    couponDiscount,
+    type PricedCart,
+} from '../../lib/catalog';
+import type { ConsentGain, Coupon } from '../../lib/coupons';
 import type { Address, AddressInput } from '../../lib/validate';
 
 export const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -112,6 +123,78 @@ export function OrderSummary({
 }
 
 /** Best usable coupon for this order (largest discount), or null. Used to pre-select it at checkout. */
+/** A coupon as shown at checkout: `raised` / `unlocked` mark what the notification toggle changed. */
+export type ShownCoupon = Coupon & { raised?: boolean; unlocked?: boolean };
+
+/** Same id the server maps to the 2,000원 sign-up bonus coupon (lib/checkout-coupon). */
+const BONUS_PREVIEW_ID = 'welcome-bonus';
+
+/**
+ * The notification toggle at checkout. Off: waiting coupons stay locked. On: they become selectable, the sign-up coupon
+ * shows 3,000원 (or a 2,000원 bonus appears when it was used). Nothing is final until the order is placed: the server
+ * records the consent and issues the coupons when the pay button is pressed.
+ */
+export function useConsentCoupons(coupons: Coupon[], gain: ConsentGain | null) {
+    const [optIn, setOptIn] = useState(false);
+    const offer = Boolean(gain && (gain.pendingIds.length > 0 || gain.welcomeUpgradeId || gain.welcomeBonusNew));
+    const shown: ShownCoupon[] = React.useMemo(() => {
+        if (!optIn || !gain) return coupons;
+        const list: ShownCoupon[] = coupons.map((c) => {
+            if (gain.pendingIds.includes(c.id)) return { ...c, pending: false, available: true, unlocked: true };
+            if (c.id === gain.welcomeUpgradeId) return { ...c, amount: WELCOME_COUPON_AMOUNT, raised: true };
+            return c;
+        });
+        if (gain.welcomeBonusNew) {
+            list.unshift({
+                id: BONUS_PREVIEW_ID,
+                name: WELCOME_BONUS_COUPON_NAME,
+                amount: WELCOME_COUPON_BONUS,
+                minCount: WELCOME_COUPON_MIN_COUNT,
+                expiresAt: new Date(Date.now() + COUPON_VALID_DAYS * 86400000).toISOString(),
+                usedAt: null,
+                source: 'welcome_bonus',
+                pending: false,
+                available: true,
+                unlocked: true,
+            });
+        }
+        return list;
+    }, [coupons, gain, optIn]);
+    const parts: string[] = [];
+    if (gain?.welcomeUpgradeId) parts.push(`신규 가입 쿠폰 ${won(WELCOME_COUPON_AMOUNT)}`);
+    if (gain?.welcomeBonusNew) parts.push(`가입 추가 쿠폰 ${won(WELCOME_COUPON_BONUS)}`);
+    if (gain && gain.pendingIds.length > 0) parts.push(`받을 준비 중인 쿠폰 ${gain.pendingIds.length}장`);
+    return { optIn, setOptIn, shown, offer, gainText: parts.join(' · ') };
+}
+
+/** The switch shown on top of the coupon list (only while the member has not agreed and there is something to gain). */
+export function ConsentSwitch({ on, onChange, gainText }: { on: boolean; onChange: (on: boolean) => void; gainText: string }) {
+    return (
+        <div className={`co-consent${on ? ' is-on' : ''}`}>
+            <div className="co-consent__row">
+                <div className="co-consent__text">
+                    <strong>🔔 이벤트·혜택 알림 받기</strong>
+                    <span>{on ? <>🎉 <b>{gainText}</b>이 적용됐어요</> : <>켜면 <b>{gainText}</b>을 바로 받아요</>}</span>
+                </div>
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={on}
+                    aria-label="이벤트·혜택 알림 받기"
+                    className={`my-switch${on ? ' is-on' : ''}`}
+                    onClick={() => onChange(!on)}
+                >
+                    <span />
+                </button>
+            </div>
+            <p className="co-consent__fine">
+                (선택) 쿠폰 만료, 새 맛 출시, 회원 전용 할인 소식을 이메일·카카오톡·문자로 보내 드려요. 주문·결제·배송 안내는 알림 설정과 상관없이 보내 드려요.
+                결제하면 동의가 확정되고, 마이페이지 &gt; 내 정보에서 언제든 끌 수 있어요. 이미 받은 쿠폰은 알림을 꺼도 그대로 쓸 수 있어요.
+            </p>
+        </div>
+    );
+}
+
 export function bestCouponId(coupons: Coupon[], sachets: number, total: number, noMinimum: boolean): string | null {
     let best: { id: string; d: number } | null = null;
     for (const c of coupons) {
@@ -134,8 +217,9 @@ export function CouponPicker({
     total,
     noMinimum = false,
     note,
+    consent,
 }: {
-    coupons: Coupon[];
+    coupons: ShownCoupon[];
     selectedId: string | null;
     onSelect: (id: string | null) => void;
     /** Sachets in the order (a 20-pack counts 20). */
@@ -144,9 +228,21 @@ export function CouponPicker({
     /** Order has a 20·30 set (or is a subscription): the coupon's minimum does not apply. */
     noMinimum?: boolean;
     note?: string;
+    /** The notification switch (rendered above the list). */
+    consent?: React.ReactNode;
 }) {
     const usable = coupons.filter((c) => c.available);
-    if (usable.length === 0) return null;
+    const locked = coupons.filter((c) => c.pending);
+    if (usable.length === 0 && locked.length === 0 && !consent) return null;
+    if (usable.length === 0) {
+        return (
+            <section className="cart-section">
+                <h2 className="co-h2">쿠폰</h2>
+                {consent}
+                <LockedCoupons list={locked} />
+            </section>
+        );
+    }
     const exp = (iso: string) => {
         const d = new Date(iso);
         return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}까지`;
@@ -197,6 +293,7 @@ export function CouponPicker({
     return (
         <section className="cart-section">
             <h2 className="co-h2">쿠폰</h2>
+            {consent}
             {status}
             <ul className="co-addr">
                 <li>
@@ -216,6 +313,8 @@ export function CouponPicker({
                                 <div>
                                     <strong>
                                         {c.name} · {won(c.amount)} 할인
+                                        {c.raised ? <em className="co-coupon__tag">✨ {won(WELCOME_COUPON_BONUS)} 올랐어요</em> : null}
+                                        {c.unlocked ? <em className="co-coupon__tag">🔓 이제 쓸 수 있어요</em> : null}
                                     </strong>
                                     <span>
                                         {exp(c.expiresAt)} · 20·30개 세트·정기구독은 바로, 낱개·맛보기 세트는 {c.minCount}개(한 박스) 이상
@@ -227,12 +326,35 @@ export function CouponPicker({
                     );
                 })}
             </ul>
+            <LockedCoupons list={locked} />
             {note ? (
                 <p className="cart-note" style={{ textAlign: 'left' }}>
                     {note}
                 </p>
             ) : null}
         </section>
+    );
+}
+
+/** Coupons waiting for the notification consent: visible, not selectable. */
+function LockedCoupons({ list }: { list: Coupon[] }) {
+    if (list.length === 0) return null;
+    return (
+        <ul className="co-addr co-locked">
+            {list.map((c) => (
+                <li key={c.id}>
+                    <div className="co-addr__item is-disabled">
+                        <span aria-hidden="true">🔒</span>
+                        <div>
+                            <strong>
+                                {c.name} · {won(c.amount)} 할인
+                            </strong>
+                            <span>알림을 켜면 바로 받아요 · 받을 준비 중</span>
+                        </div>
+                    </div>
+                </li>
+            ))}
+        </ul>
     );
 }
 

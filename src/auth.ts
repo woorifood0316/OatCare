@@ -6,6 +6,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { cookies } from 'next/headers';
 import { getSql } from './lib/db';
 import { issueWelcomeCoupon } from './lib/coupons';
+import { setMarketingConsent } from './lib/consent';
 import { isBannedAccount } from './lib/reviews';
 import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-app';
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
@@ -86,7 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 } else {
                     const created = await sql`
                         insert into users (name, email, terms_agreed_at, privacy_agreed_at, marketing_agreed, last_login_at)
-                        values (${pending.name}, ${pending.email}, now(), now(), ${creds?.marketing === '1'}, now())
+                        values (${pending.name}, ${pending.email}, now(), now(), false, now())
                         returning id
                     `;
                     userId = created[0].id as string;
@@ -95,6 +96,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         values (${userId}, ${pending.provider}, ${pending.providerAccountId})
                     `;
                     await issueWelcomeCoupon(userId);
+                    if (creds?.marketing === '1') {
+                        try {
+                            await setMarketingConsent(userId, true, 'signup');
+                        } catch (e) {
+                            console.error('[signup] marketing consent failed', e);
+                        }
+                    }
                     // Came through a member's invitation link: record the invitation (coupons follow the first confirmed order).
                     await recordReferral(userId, jar.get(REF_COOKIE)?.value);
                     jar.delete(REF_COOKIE);

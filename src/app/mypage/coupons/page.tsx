@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { Ticket } from 'lucide-react';
 import { getCurrentUser } from '../../../lib/current-user';
-import { listCoupons } from '../../../lib/coupons';
+import { consentGain, listCoupons } from '../../../lib/coupons';
+import { WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BONUS } from '../../../lib/catalog';
+import { ConsentUnlock } from '../../../components/mypage/ConsentUnlock';
 import { PageHead } from '../../../components/mypage/ComingSoon';
 import { InviteNudge } from '../../../components/share/InviteNudge';
 
@@ -17,11 +19,18 @@ export default async function CouponsPage() {
     const user = await getCurrentUser();
     const coupons = await listCoupons(user.id);
     const usable = coupons.filter((c) => c.available);
-    const done = coupons.filter((c) => !c.available);
+    const waiting = coupons.filter((c) => c.pending);
+    const done = coupons.filter((c) => !c.available && !c.pending);
+    const gain = user.marketingAgreed ? null : await consentGain(user.id).catch(() => null);
+    const gainParts: string[] = [];
+    if (gain?.welcomeUpgradeId) gainParts.push(`신규 가입 쿠폰 ${won(WELCOME_COUPON_AMOUNT)}`);
+    if (gain?.welcomeBonusNew) gainParts.push(`가입 추가 쿠폰 ${won(WELCOME_COUPON_BONUS)}`);
+    if (gain && gain.pendingIds.length > 0) gainParts.push(`받을 준비 중인 쿠폰 ${gain.pendingIds.length}장`);
 
     return (
         <>
             <PageHead title="쿠폰" desc="결제할 때 쿠폰을 골라 쓸 수 있어요." />
+            {gainParts.length > 0 ? <ConsentUnlock heading="알림 켜고 쿠폰 받기" gainText={gainParts.join(' · ')} /> : null}
             <InviteNudge heading="쿠폰 더 받는 법: 친구 초대" />
 
             {coupons.length === 0 ? (
@@ -49,6 +58,28 @@ export default async function CouponsPage() {
                         </li>
                     ))}
                 </ul>
+            ) : null}
+
+            {waiting.length > 0 ? (
+                <>
+                    <h2 className="my-card__title" style={{ marginTop: '1.4rem' }}>
+                        받을 준비 중인 쿠폰
+                    </h2>
+                    <ul className="cpn-list">
+                        {waiting.map((c) => (
+                            <li key={c.id} className="cpn is-done">
+                                <div className="cpn__amount">
+                                    <strong>{won(c.amount)}</strong>
+                                    <span>🔒 대기</span>
+                                </div>
+                                <div className="cpn__body">
+                                    <b>{c.name}</b>
+                                    <span>이벤트·혜택 알림을 켜면 바로 받아요 · {day(c.expiresAt)}까지 보관</span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </>
             ) : null}
 
             {done.length > 0 ? (

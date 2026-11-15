@@ -19,7 +19,9 @@ export const runtime = 'edge';
 
 export default async function MyHomePage() {
     const user = await getCurrentUser();
-    const usable = (await listCoupons(user.id)).filter((c) => c.available);
+    const allCoupons = await listCoupons(user.id);
+    const usable = allCoupons.filter((c) => c.available);
+    const waitingCoupons = allCoupons.filter((c) => c.pending).length;
     const safe = async <T,>(f: () => Promise<T>, fallback: T): Promise<T> => {
         try {
             return await f();
@@ -140,7 +142,10 @@ export default async function MyHomePage() {
                 <Link href="/mypage/coupons" className="my-card my-tile">
                     <Ticket size={22} />
                     <strong>쿠폰</strong>
-                    <span>{usable.length > 0 ? `사용 가능한 쿠폰 ${usable.length}장` : '사용 가능한 쿠폰이 없어요'}</span>
+                    <span>
+                        {usable.length > 0 ? `사용 가능한 쿠폰 ${usable.length}장` : '사용 가능한 쿠폰이 없어요'}
+                        {waitingCoupons > 0 ? ` · 받을 준비 중 ${waitingCoupons}장` : ''}
+                    </span>
                 </Link>
                 <Link href="/mypage/reviews" className="my-card my-tile">
                     <Star size={22} />
