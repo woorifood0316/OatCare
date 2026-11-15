@@ -1,6 +1,7 @@
 import { runBilling, runNotifications, runReminders } from '../../../../lib/cron';
 import { runInquiryAnswers } from '../../../../lib/inquiries';
 import { runReferralRewards } from '../../../../lib/referrals';
+import { cleanupAccessLog } from '../../../../lib/access-log';
 
 export const runtime = 'edge';
 
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
         out.billing = await runBilling();
         out.reminders = await runReminders();
         out.referrals = await runReferralRewards(); // friend invitations whose first order is now confirmed
+        out.accessLogCleaned = await cleanupAccessLog(); // admin access log older than 2 years
     }
     if (!job || job === 'notify' || job === 'billing') {
         out.inquiries = await runInquiryAnswers(); // product Q&A whose background answer didn't run

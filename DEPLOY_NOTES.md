@@ -180,3 +180,11 @@ npx wrangler secret put CRON_SECRET     # 사이트의 CRON_SECRET과 같은 값
 - 관리자 화면: `src/middleware.ts`가 렌더링 전에 확인 (비로그인 → 로그인, 관리자 아님 → 404, 12시간 안 쓴 관리자 → `/reauth`에서 다시 로그인). 관리자 API(requireAdmin)도 같은 12시간 기준.
   - 이전에는 app/admin/layout.tsx에서만 확인해서, 관리자 페이지 데이터가 로그인하지 않은 요청의 응답에도 실려 나갔어요. 이번 배포로 막았어요.
 - 실제 휴대폰 확인 필요: 안드로이드 크롬·삼성 인터넷 설치 버튼, 아이폰 사파리 홈 화면 추가, 카카오톡 → 크롬/사파리 넘기기 후 로그인 유지, 아이폰 홈 화면 앱에서 처음 로그인(사파리와 로그인 정보를 따로 보관할 수 있음).
+
+## 17. 보안: 관리자 접속 기록 · 보안 헤더
+
+- DB: `db/access-log.sql` 실행 (admin_access_log 테이블만 추가).
+- `src/middleware.ts`가 /admin과 /api/admin의 모든 요청을 기록해요 (관리자 접속, 비로그인·관리자 아님 차단, 12시간 미사용 재로그인). 관리자 API도 여기서 먼저 막아요(401/403).
+- 관리자 > 접속 기록 (`/admin/access-log`): [차단된 시도만]으로 낯선 IP를 월 1회 확인. 2년 지난 기록은 매일 결제 작업 때 지워요.
+- 보안 헤더(next.config.mjs): HSTS 1년(서브도메인 포함), X-Frame-Options SAMEORIGIN, Permissions-Policy(카메라·마이크·위치 끔), nosniff, Referrer-Policy.
+- Cloudflare(무료)에서 할 일: Security > Security rules > Custom rules에 스캐너 차단 규칙 (/.git, /.env, /wp- 등).

@@ -6139,3 +6139,4 @@ tr.is-muted td { opacity: 0.6; }
 .perk-step__btn:disabled { opacity: 0.6; }
 .perk-step__done { flex: none; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.82rem; font-weight: 800; color: #2f7a46; }
 a.app-sheet__later { text-align: center; text-decoration: none; }
+.my-pill.is-warn { background: #fde8e4; color: #a3301c; }
