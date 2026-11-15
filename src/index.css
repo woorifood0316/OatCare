@@ -6257,3 +6257,25 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .cph-line b { color: var(--oc-maroon); }
 .cph-line.is-ok b { color: #1f5130; }
 .bs-setlink { justify-self: start; font-size: 0.8rem; color: #6a5848; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ===== App notification prompt (order / delivery) ===== */
+.push-card { display: flex; align-items: flex-start; gap: 0.75rem; margin: 0.9rem 0; padding: 0.95rem 1rem; border-radius: 1rem; background: #fff; border: 1.5px solid var(--oc-line); text-align: left; }
+.push-card > svg { flex: none; margin-top: 0.15rem; color: var(--oc-maroon); }
+.push-card > div { flex: 1; min-width: 0; display: grid; gap: 0.3rem; }
+.push-card strong { font-size: 0.98rem; font-weight: 800; color: var(--oc-brown); }
+.push-card > div > span { font-size: 0.84rem; color: #5a4838; line-height: 1.5; }
+.push-card__btn { flex: none; align-self: center; min-height: 44px; padding: 0 1.1rem; border: 0; border-radius: 999px; background: var(--oc-maroon); color: #fff; font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.push-card__btn:disabled { opacity: 0.6; }
+.push-card__opt { display: flex; align-items: flex-start; gap: 0.45rem; margin-top: 0.2rem; font-size: 0.82rem; color: #3b2a20; cursor: pointer; }
+.push-card__opt input { margin-top: 0.2rem; }
+.push-card__opt span { display: grid; gap: 0.15rem; }
+.push-card__opt small { font-size: 0.74rem; color: #6a5848; }
+.push-card.is-done { background: #eaf6ec; border-color: #cfe8d4; }
+.push-card.is-done > svg { color: #1f6f31; }
+.push-card.is-muted { background: #f6f1e7; }
+@media (max-width: 520px) {
+  .push-card { flex-wrap: wrap; }
+  .push-card__btn { width: 100%; }
+}
+.push-link { padding: 0; border: 0; background: none; color: var(--oc-maroon); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.app-reward .push-card { margin: 0.8rem 0 0; }

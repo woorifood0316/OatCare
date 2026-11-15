@@ -5,6 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { JOINED_KEY, OPEN_INSTALL_EVENT, isMarkedInstalled, isPhone, rememberMember, runningAsApp, startInstallCapture, wasMember } from '../../lib/app-install';
 import { CONSENT_COUPON_AMOUNT, COUPON_VALID_DAYS, WELCOME_COUPON_AMOUNT, WELCOME_COUPON_BONUS } from '../../lib/catalog';
 import { InstallSheet } from './InstallSheet';
+import { PushOptIn } from './PushOptIn';
 import { resetInstallInfo } from './useAppInstall';
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
@@ -148,11 +149,8 @@ export function AppInstallHost() {
                                 </>
                             )}
                         </p>
-                        {reward.consentNext ? (
-                            <p className="app-reward__next">
-                                🔔 이벤트·혜택 알림까지 켜면 <b>{won(CONSENT_COUPON_AMOUNT)} 쿠폰</b>을 1장 더 드려요
-                            </p>
-                        ) : null}
+                        {/* the best moment to ask for app notifications: iPhone can only allow them inside the app */}
+                        <PushOptIn heading="배송 출발 소식도 앱 알림으로 받아 보세요" />
                         <p className="app-sheet__fine">쿠폰은 한 번 주문에 1장씩 쓰고, 받은 날부터 {COUPON_VALID_DAYS}일 안에 쓰면 돼요.</p>
                         <div className="app-reward__actions">
                             <a href="/mypage/coupons" className="app-sheet__main">

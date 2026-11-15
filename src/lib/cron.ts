@@ -4,6 +4,7 @@ import { dueSubscriptionIds, mapSubscription, processDueSubscription } from './s
 import { priceCart } from './catalog';
 import { enqueue, type NotifyEvent } from './notify';
 import { adminMessage } from './notify-messages';
+import { pushMessage, sendPushTo } from './push';
 import { buildCustomerEmail } from './email-template';
 
 /** Charge every subscription whose billing day has come (bounded per run to fit edge time limits). */
@@ -101,7 +102,7 @@ export async function sendEmail(to: string, subject: string, text: string, html?
 export async function runNotifications(limit = 50) {
     const sql = getSql();
     const rows = await sql`
-        select n.id, n.channel, n.event, n.payload, n.attempts, u.email
+        select n.id, n.channel, n.event, n.payload, n.attempts, n.user_id, u.email
         from notifications n left join users u on u.id = n.user_id
         where n.status = 'pending' and n.attempts < 5
         order by n.created_at asc limit ${limit}
@@ -114,6 +115,9 @@ export async function runNotifications(limit = 50) {
 
         if (r.channel === 'admin') {
             outcome = await sendAdmin(adminMessage(event, payload));
+        } else if (r.channel === 'push') {
+            const msg = r.user_id ? pushMessage(event, payload) : null;
+            outcome = msg ? await sendPushTo(r.user_id as string, msg) : 'skipped';
         } else {
             const to = r.email as string | null;
             const msg = to && !to.endsWith('.invalid') ? await buildCustomerEmail(event, payload) : null;

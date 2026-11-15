@@ -1,4 +1,5 @@
 import { getSql } from './db';
+import { PUSH_EVENTS } from './push';
 
 export type NotifyEvent =
     | 'order_paid'
@@ -35,6 +36,18 @@ export async function enqueue(
         const userId = opts.userId ?? null;
         if (opts.customer !== false && userId) {
             await sql`insert into notifications (user_id, channel, event, payload) values (${userId}, 'email', ${event}, ${json}::jsonb)`;
+            // the same notice as an app notification, when the member allowed it on any device
+            if (PUSH_EVENTS.has(event)) {
+                try {
+                    await sql`
+                        insert into notifications (user_id, channel, event, payload)
+                        select ${userId}, 'push', ${event}, ${json}::jsonb
+                        where exists (select 1 from push_subscriptions where user_id = ${userId})
+                    `;
+                } catch (e) {
+                    console.error('[notify] push enqueue failed', e); // never costs the email or the admin notice
+                }
+            }
         }
         if (opts.admin !== false) {
             await sql`insert into notifications (user_id, channel, event, payload) values (${userId}, 'admin', ${event}, ${json}::jsonb)`;

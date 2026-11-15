@@ -19,6 +19,7 @@ export const PrivacyContent: React.FC = () => (
                 <li><strong>리뷰 작성 시:</strong> 별점, 후기 내용, 첨부한 사진(선택). 리뷰에는 이름 일부를 가린 형태(예: 김*수)로만 표시합니다.</li>
                 <li><strong>상품 문의 시:</strong> 문의 내용, 비밀글 여부. 문의에는 이름 일부를 가린 형태로만 표시합니다.</li>
                 <li><strong>고객상담 시:</strong> 성명, 연락처, 상담내용</li>
+                <li><strong>앱 알림을 켠 경우:</strong> 기기별 알림 수신 주소(브라우저·휴대폰이 발급한 값), 기기 정보(브라우저 종류). 알림을 끄거나 탈퇴하면 삭제합니다.</li>
                 <li><strong>자동 수집 항목:</strong> 서비스 이용 기록, 접속 로그, 쿠키, 접속 IP 정보</li>
             </ul>
         </section>
@@ -26,7 +27,7 @@ export const PrivacyContent: React.FC = () => (
         <section className="oc-legal-section">
             <h3>2. 개인정보의 수집 및 이용 목적</h3>
             <ul>
-                <li><strong>서비스 제공 및 이행:</strong> 참오트케어 제품 주문 처리, 물품 배송, 구매 완료 안내</li>
+                <li><strong>서비스 제공 및 이행:</strong> 참오트케어 제품 주문 처리, 물품 배송, 구매 완료 안내 (이용자가 켠 경우 앱 알림으로도 안내)</li>
                 <li><strong>정기결제:</strong> 이용자가 정한 주기에 따른 자동 결제, 결제 예정·실패·변경 안내, 환불 처리</li>
                 <li><strong>알림 발송:</strong> 주문·결제·배송 상태 안내 (이메일 등, 카카오톡 알림 도입 시 사전 고지)</li>
                 <li><strong>고객 관리:</strong> 본인 확인, 고객상담 및 민원 처리, 고지사항 전달</li>

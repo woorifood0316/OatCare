@@ -50,9 +50,9 @@ export function MarketingToggle({ initial, updatedAt }: { initial: boolean; upda
     return (
         <div className="my-row">
             <div className="my-row__text">
-                <strong>신제품·혜택 소식 수신</strong>
+                <strong>이벤트·혜택 알림 (광고)</strong>
                 <span>
-                    {on ? '수신 동의 중' : '수신하지 않음'}
+                    {on ? '받는 중 · 쿠폰 만료·새 맛·할인 소식 (앱 알림·이메일·카카오)' : '받지 않음 · 주문·배송 안내는 그대로 가요'}
                     {changedAt ? ` · ${formatDate(changedAt)} 변경` : ''}
                 </span>
                 {error ? <span className="my-error">{error}</span> : null}
@@ -72,7 +72,7 @@ export function MarketingToggle({ initial, updatedAt }: { initial: boolean; upda
                 type="button"
                 role="switch"
                 aria-checked={on}
-                aria-label="신제품·혜택 소식 수신"
+                aria-label="이벤트·혜택 알림"
                 className={`my-switch${on ? ' is-on' : ''}`}
                 onClick={toggle}
                 disabled={busy}

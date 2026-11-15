@@ -10,6 +10,7 @@ import type { Address } from '../../lib/validate';
 import type { PaymentMethod } from '../../lib/payment-methods';
 import { cardText } from './PaymentMethodManager';
 import { ProductThumb } from '../product/ProductThumbs';
+import { PushOptIn } from '../app/PushOptIn';
 import { InviteLine, InviteNudge } from '../share/InviteNudge';
 
 export interface HistoryItem {
@@ -361,6 +362,7 @@ export function SubscriptionManager({
     return (
         <>
             {justStarted ? <p className="sub-banner">정기구독이 시작됐어요. 첫 회차 결제가 완료됐어요.</p> : null}
+            {justStarted ? <PushOptIn heading="결제일 전에 앱 알림으로 미리 알려 드릴까요?" sub="정기결제 예정, 결제 완료, 배송 출발을 앱 알림으로 바로 알려 드려요." /> : null}
             {subs.map((s) => (
                 <Card key={s.id} sub={s} addresses={addresses} methods={methods} history={history[s.id] ?? []} onUpdate={setSubs} />
             ))}

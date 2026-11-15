@@ -5,6 +5,7 @@ import { finalizeWidgetPayment } from '../../../lib/payments';
 import { OrderBrief } from '../../../components/checkout/OrderBrief';
 import { InviteNudge } from '../../../components/share/InviteNudge';
 import { InstallCard } from '../../../components/app/InstallCard';
+import { PushOptIn } from '../../../components/app/PushOptIn';
 
 export const runtime = 'edge';
 
@@ -31,6 +32,7 @@ export default async function CheckoutSuccessPage({
     return (
         <Result ok message="결제가 완료됐어요">
             <OrderBrief order={result.order} />
+            <PushOptIn heading="배송 출발하면 앱 알림으로 알려 드릴까요?" />
             <InstallCard />
             <InviteNudge heading="맛있게 드시고, 친구에게도 알려 주세요" />
         </Result>

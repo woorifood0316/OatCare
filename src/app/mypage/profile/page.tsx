@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getCurrentUser } from '../../../lib/current-user';
 import { PageHead } from '../../../components/mypage/ComingSoon';
 import { MarketingToggle } from '../../../components/mypage/MarketingToggle';
+import { PushToggle } from '../../../components/app/PushOptIn';
 import { WithdrawButton } from '../../../components/WithdrawButton';
 import { LogoutButton } from '../../../components/LogoutButton';
 import { LogoutAllButton } from '../../../components/LogoutAllButton';
@@ -64,6 +65,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
             <section className="my-card">
                 <h2 className="my-card__title">알림 설정</h2>
+                <PushToggle />
                 <MarketingToggle initial={user.marketingAgreed} updatedAt={user.marketingUpdatedAt} />
             </section>
 
