@@ -6158,5 +6158,31 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .pd-rec__kind.is-set { background: var(--oc-maroon); color: #fff !important; }
 .pd-rec__card em small { font-size: 0.75rem; font-weight: 600; color: #8a7a6a; }
 /* label | value: a wrapped value stays in its column instead of running under the label */
-.pd-facts li { display: grid; grid-template-columns: 3.6rem 1fr; column-gap: 0.4rem; }
-.pd-facts li > b { min-width: 0; }
+.pd-facts--rows li { display: grid; grid-template-columns: 3.6rem 1fr; column-gap: 0.4rem; }
+.pd-facts--rows li > b { min-width: 0; }
+.cph__sub { margin: 0.25rem 0 0; font-size: 0.82rem; color: #5a4838; }
+.my-hero__cta { display: grid; gap: 0.45rem; justify-items: start; }
+.my-hero .my-hero__terms { margin: 0; font-size: 0.86rem; color: #fff7e8; opacity: 0.95; }
+.my-hero .my-hero__terms b { color: #f2c14e; }
+@media (min-width: 900px) { .my-hero__cta { justify-items: end; text-align: right; } }
+.my-status-line { display: flex; align-items: center; gap: 0.55rem; margin: 0 0 0.9rem; padding: 0.8rem 1rem; border-radius: 0.9rem; background: #fff; border: 1.5px solid var(--oc-line); color: var(--oc-brown); text-decoration: none; font-size: 0.95rem; }
+.my-status-line > svg { flex: none; color: var(--oc-maroon); }
+.my-status-line > span { flex: 1; }
+.my-status-line em { flex: none; font-style: normal; font-weight: 800; font-size: 0.85rem; color: var(--oc-maroon); }
+
+/* --- design review fixes --- */
+/* very small phones: the account button shows its icon only, so the brand name has room */
+@media (max-width: 374px) {
+  .oc-nav .oc-nav__auth span { display: none; }
+  .oc-nav .oc-nav__auth { padding: 0.45rem; }
+}
+/* set price: the per-unit price is its own small line (no stray slash at the line start) */
+.pd-price__unit { flex-basis: 100%; margin-top: -0.2rem; font-size: 0.85rem; color: #6a5848; }
+/* tablets: the product photo no longer pushes the name and price below the first screen */
+@media (min-width: 600px) and (max-width: 800px) {
+  .pd-gallery { aspect-ratio: auto; height: min(52vh, 440px); }
+}
+/* cart: flavour mix and delivery cycle read before the countdown box */
+.cart-mix__modes button { color: rgba(59, 42, 32, 0.85); }
+.cart-line__meta { color: rgba(59, 42, 32, 0.78); }
+.cart-line__cycle { color: rgba(59, 42, 32, 0.88); }

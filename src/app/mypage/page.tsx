@@ -72,6 +72,19 @@ export default async function MyHomePage() {
         <>
             <PageHead title={`${user.name || '회원'}님, 안녕하세요`} desc="구독과 주문, 배송 현황을 한곳에서 확인하세요." />
 
+            {/* Orders on the way come first: people open 마이페이지 mostly to check a delivery. */}
+            {shipping + preparing > 0 ? (
+                <Link href="/mypage/orders" className="my-status-line">
+                    <Package size={18} aria-hidden="true" />
+                    <span>
+                        {shipping > 0 ? <b>배송 중 {shipping}건</b> : null}
+                        {shipping > 0 && preparing > 0 ? ' · ' : null}
+                        {preparing > 0 ? <b>준비 중 {preparing}건</b> : null}
+                    </span>
+                    <em>주문·배송 보기 →</em>
+                </Link>
+            ) : null}
+
             <section className="my-card my-hero">
                 <div>
                     <h2>
@@ -105,11 +118,16 @@ export default async function MyHomePage() {
                             </li>
                         ) : null}
                     </ul>
-                    <p className="my-hero__note">최소 {MIN_SUBSCRIPTION_CHARGES}회 이용 조건이에요</p>
                 </div>
-                <Link href="/#bundles" className="my-btn my-btn--primary">
-                    정기구독 알아보기
-                </Link>
+                {/* the commitment sits right by the button, as visible as the perks */}
+                <div className="my-hero__cta">
+                    <Link href="/#bundles" className="my-btn my-btn--primary">
+                        정기구독 알아보기
+                    </Link>
+                    <p className="my-hero__terms">
+                        <span className="oc-nowrap">20일 또는 30일마다 배송</span> · <b className="oc-nowrap">최소 {MIN_SUBSCRIPTION_CHARGES}회 이용</b>
+                    </p>
+                </div>
             </section>
 
             <InstallCard />

@@ -88,7 +88,7 @@ export function useMixChoice(sku: string) {
             {mode === 'custom' ? (
                 <div className="pd-pick">
                     <p className="pd-pick__guide">
-                        맛마다 <b>+</b>를 누르면 <b>{MIX_UNIT}개씩</b> 담겨요
+                        원하는 맛만 골라 <b>{MIX_UNIT}개 단위</b>로 담아 <b>총 {count}개</b>를 채워 주세요. 안 고른 맛은 빠져요.
                     </p>
                     <MixBar count={count} detail={detail} />
                     <div className="pd-pick__grid">

@@ -26,6 +26,8 @@ export function CouponHint({
     mode,
     count,
     noMinimum,
+    total,
+    oneCycle = true,
     className = '',
 }: {
     mode: 'once' | 'subscribe';
@@ -33,6 +35,10 @@ export function CouponHint({
     count: number;
     /** The order has a 20·30 set (or is a subscription): no minimum. */
     noMinimum: boolean;
+    /** Subscription cart: the amount per delivery, to show "첫 결제 X원 · 이후 매회 Y원". */
+    total?: number;
+    /** All subscriptions on the same cycle (otherwise the coupon only goes on the first one). */
+    oneCycle?: boolean;
     className?: string;
 }) {
     const [state, setState] = useState<CouponState | null>(null);
@@ -51,6 +57,11 @@ export function CouponHint({
                 <p>
                     🎟️ 회원가입하면 <b>쿠폰 최대 {won(SIGNUP_COUPON_MAX)}</b> (한 번 주문에 1장씩) · <span className="oc-nowrap">20·30개 세트·정기구독은</span> 금액 상관없이 바로 적용
                 </p>
+                {mode === 'subscribe' && total ? (
+                    <p className="cph__sub">
+                        정기구독은 <b>매회 {won(total)}</b>이고, 쿠폰은 첫 결제에서 빠져요.
+                    </p>
+                ) : null}
             </div>
         );
     }
@@ -66,6 +77,16 @@ export function CouponHint({
                 <p>
                     🎟️ <b>{won(top.amount)} 쿠폰</b>이 결제 단계에서 <b>자동 적용</b>돼요{mode === 'subscribe' ? ' (첫 결제)' : ''}
                 </p>
+                {mode === 'subscribe' && total && oneCycle && total > top.amount ? (
+                    <p className="cph__sub">
+                        <span className="oc-nowrap">
+                            첫 결제 <b>{won(total - top.amount)}</b>
+                        </span>{' · '}
+                        <span className="oc-nowrap">
+                            이후 매회 <b>{won(total)}</b>
+                        </span>
+                    </p>
+                ) : null}
             </div>
         );
     }
@@ -73,9 +94,11 @@ export function CouponHint({
     return (
         <div className={`cph ${className}`}>
             <p>
-                🎟️ <b>{won(best.amount)} 쿠폰</b>은 낱개·맛보기 세트 <span className="oc-nowrap">{best.minCount}개(한 박스)부터</span> 써요 ·{' '}
+                🎟️ <b>{won(best.amount)} 쿠폰</b>은 낱개·맛보기 세트 합계 <span className="oc-nowrap">{best.minCount}개(한 박스)부터</span> 써요 ·{' '}
+                <span className="oc-nowrap">지금 {count}개</span>,{' '}
                 <span className="oc-nowrap">
-                    <b>{short}개</b> 더 담으면 적용
+                    낱개 <b>{short}개</b>
+                    {short % 10 === 0 ? <> (맛보기 세트 {short / 10}개)</> : null} 더 담으면 적용
                 </span>
             </p>
             <p className="cph__up">

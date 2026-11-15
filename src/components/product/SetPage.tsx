@@ -166,7 +166,7 @@ export function SetPage({ count }: { count: number }) {
                             <span className="pd-price__pct">{pct}%</span>
                             <s>{won(item.listPrice)}</s>
                             <strong>{won(item.price)}</strong>
-                            <small>/ 개당 {won(unit)}</small>
+                            <small className="pd-price__unit">개당 {won(unit)}</small>
                         </div>
                         <ul className="pd-facts">
                             {page.points.map((p) => (

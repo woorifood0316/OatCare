@@ -105,7 +105,7 @@ export const Nav: React.FC<NavProps> = ({ onOpenDrawer }) => {
                         {cartReady && cartCount > 0 ? <span className="oc-nav__cart-badge">{cartCount}</span> : null}
                     </a>
                     {status !== 'loading' && (
-                        <a className="oc-nav__auth" href={isLoggedIn ? '/mypage' : '/login'}>
+                        <a className="oc-nav__auth" href={isLoggedIn ? '/mypage' : '/login'} aria-label={isLoggedIn ? '마이페이지' : '로그인'}>
                             <User size={15} />
                             <span>{isLoggedIn ? '마이페이지' : '로그인'}</span>
                         </a>
@@ -434,7 +434,8 @@ export const QuickReviews: React.FC = () => {
             <ScrollReveal delay={0.3} className="oc-marquee-container">
                 <div className="oc-marquee-track">
                     {marqueeList.map((r, idx) => (
-                        <div key={`${r.name}-${idx}`} className="oc-marquee-card">
+                        // The list is repeated for the endless scroll: only the first copy is read by screen readers.
+                        <div key={`${r.name}-${idx}`} className="oc-marquee-card" aria-hidden={idx >= REVIEWS.length ? true : undefined}>
                             <div className="oc-marquee-card-top">
                                 <span className="oc-review-flavor-chip">{r.flavor}</span>
                                 <div className="oc-review-glass-stars">
@@ -823,40 +824,40 @@ export const BUNDLES: (ProductDetailItem & {
             flavor: '든든 20개입 한달 박스',
             icon: '📦',
             badge: 'BEST 인기 1위 (개당 935원)',
-            tag: '맛별 최소 5개 선택 · 무료 배송',
+            tag: '원하는 맛 5개 단위 선택 · 무료 배송',
             img: '/assets/bundle-all-2.jpg',
             price: 18700,
             listPrice: 25000,
             unitPrice: 935,
             count: 20,
             highlight: true,
-            ingredient: '5가지 맛 중 원하는 맛을 자유 조합 (맛별 최소 5개 선택 가능)',
+            ingredient: '5가지 골고루(맛마다 4개) 또는 원하는 맛을 5개 단위로 골라 20개',
             calories: '평균 195 kcal / 1포',
             accentColor: '#D97706',
-            desc: '정가 개당 1,250원에서 개당 935원으로 파격 할인! 맛별로 최소 5개씩 자유롭게 조합하여 한 달 아침을 든든하게 해결하는 인기 1위 세트 (무료 배송)',
+            desc: '정가 개당 1,250원에서 개당 935원으로 파격 할인! 5가지 골고루 받거나 원하는 맛을 5개 단위로 골라 한 달 아침을 든든하게 해결하는 인기 1위 세트 (무료 배송)',
             tasteNote: '한 달간 매일 아침을 책임지는 재구매율 1위 베스트셀러 세트',
             mood: '⚡ 한 달 아침 완벽 해결',
             shakeColor: '#F59E0B',
-            optionNotice: '맛별 최소 5개 이상 자율 선택 조합',
+            optionNotice: '5가지 골고루(맛마다 4개) 또는 원하는 맛 5개 단위 선택',
         },
         {
             flavor: '대용량 30개입 패밀리 박스',
             icon: '👑',
             badge: '최고 혜택 (개당 870원)',
-            tag: '맛별 최소 5개 선택 · 보틀 증정',
+            tag: '원하는 맛 5개 단위 선택 · 보틀 증정',
             img: '/assets/bundle-all-3.jpg',
             price: 26100,
             listPrice: 37500,
             unitPrice: 870,
             count: 30,
-            ingredient: '원하는 맛 자율 조합 (맛별 최소 5개) + 참오트케어 전용 쉐이커 보틀 증정',
+            ingredient: '5가지 골고루(맛마다 6개) 또는 원하는 맛 5개 단위 + 참오트케어 전용 쉐이커 보틀 증정',
             calories: '평균 195 kcal / 1포',
             accentColor: '#7A2331',
             desc: '정가 개당 1,250원에서 개당 870원 파격 최저가! 온 가족 대용량 세트로 전용 쉐이커 보틀까지 무료 증정합니다.',
             tasteNote: '개당 870원 최저가 + 전용 쉐이커 보틀 100% 증정 패밀리 세트',
             mood: '👨‍👩‍👧‍👦 온 가족 대용량 혜택',
             shakeColor: '#B91C1C',
-            optionNotice: '맛별 최소 5개 선택 + 전용 보틀 무료 증정',
+            optionNotice: '5가지 골고루(맛마다 6개) 또는 5개 단위 선택 + 전용 보틀 무료 증정',
         },
     ];
 

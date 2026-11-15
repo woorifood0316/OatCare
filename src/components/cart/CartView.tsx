@@ -198,6 +198,7 @@ function Section({
     };
     const priced = priceCart(lines, mode);
     const listTotal = lines.reduce((sum, l) => sum + (getItem(l.sku)?.listPrice ?? 0) * l.qty, 0);
+    const hasBundle = lines.some((l) => getItem(l.sku)?.kind === 'bundle');
     const blocked = priced.error !== null;
 
     return (
@@ -217,24 +218,39 @@ function Section({
                 ))}
             </ul>
             <div className="cart-summary">
-                <div className="cart-summary__row cart-summary__row--plain">
-                    <span>상품 금액</span>
-                    <span>{won(priced.subtotal)}</span>
-                </div>
+                {/* 정가 → 할인 → 배송비 → 결제 예정: the discount is shown once, as already taken off (never twice). */}
+                {mode === 'once' && listTotal > priced.subtotal ? (
+                    <>
+                        <div className="cart-summary__row cart-summary__row--plain">
+                            <span>정가 합계</span>
+                            <span>{won(listTotal)}</span>
+                        </div>
+                        <div className="cart-summary__row cart-summary__row--sub">
+                            <span>{hasBundle ? '세트 할인' : '할인'}</span>
+                            <span>-{won(listTotal - priced.subtotal)}</span>
+                        </div>
+                    </>
+                ) : (
+                    <div className="cart-summary__row cart-summary__row--plain">
+                        <span>상품 금액</span>
+                        <span>{won(priced.subtotal)}</span>
+                    </div>
+                )}
                 <div className="cart-summary__row cart-summary__row--plain">
                     <span>배송비</span>
-                    <span>{priced.shipping === 0 ? '무료' : won(priced.shipping)}</span>
+                    <span>
+                        {priced.shipping === 0
+                            ? mode === 'once' && hasBundle
+                                ? '무료 · 세트 상품 포함'
+                                : mode === 'once'
+                                  ? '무료 · 한 박스 채움'
+                                  : '무료'
+                            : won(priced.shipping)}
+                    </span>
                 </div>
-                {mode === 'once' ? (
-                    <FreeShipHint count={priced.sachets} hasBundle={lines.some((l) => getItem(l.sku)?.kind === 'bundle')} className="cart-fsh" />
-                ) : null}
-                <CouponHint mode={mode} count={priced.sachets} noMinimum={hasCouponSet(lines)} className="cart-cph" />
-                {mode === 'once' && listTotal > priced.subtotal ? (
-                    <div className="cart-summary__row cart-summary__row--sub">
-                        <span>할인 혜택</span>
-                        <span>-{won(listTotal - priced.subtotal)}</span>
-                    </div>
-                ) : null}
+                {/* the free-shipping hint only while there is still something to reach */}
+                {mode === 'once' && priced.shipping > 0 ? <FreeShipHint count={priced.sachets} hasBundle={hasBundle} className="cart-fsh" /> : null}
+                <CouponHint mode={mode} count={priced.sachets} noMinimum={hasCouponSet(lines)} total={priced.total} oneCycle={new Set(lines.map((l) => l.cycleDays ?? 30)).size === 1} className="cart-cph" />
                 <div className="cart-summary__row">
                     <span>{totalLabel}</span>
                     <strong>{won(priced.total)}</strong>

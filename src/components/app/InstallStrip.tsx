@@ -5,13 +5,33 @@ import { X } from 'lucide-react';
 import { dismissInstallStrip, isPhone, openInstallSheet, stripDismissed } from '../../lib/app-install';
 import { offerText, useAppInstall } from './useAppInstall';
 
+/** Sections where the customer compares and picks products: the strip steps aside while any of them is on screen. */
+const SHOP_SECTIONS = ['#bundles', '#product-lineup', '#signup-perks'];
+
 /**
- * A slim strip at the bottom of the home page on phones (e.g. right after a QR scan). It never covers the page,
- * closes with one tap and stays away for 14 days; people using the app never see it.
+ * A slim strip at the bottom of the home page on phones (e.g. right after a QR scan). It steps aside while the sets
+ * and flavours are on screen (never covering the products), closes with one tap and stays away for 14 days; people
+ * using the app never see it.
  */
 export function InstallStrip() {
     const ins = useAppInstall();
     const [show, setShow] = useState(false);
+    const [overShop, setOverShop] = useState(false);
+
+    useEffect(() => {
+        const els = SHOP_SECTIONS.map((sel) => document.querySelector(sel)).filter((el): el is Element => Boolean(el));
+        if (els.length === 0) return;
+        const visible = new Set<Element>();
+        const io = new IntersectionObserver((entries) => {
+            for (const e of entries) {
+                if (e.isIntersecting) visible.add(e.target);
+                else visible.delete(e.target);
+            }
+            setOverShop(visible.size > 0);
+        });
+        els.forEach((el) => io.observe(el));
+        return () => io.disconnect();
+    }, []);
 
     useEffect(() => {
         if (ins.hidden || !isPhone() || stripDismissed()) return;
@@ -19,7 +39,7 @@ export function InstallStrip() {
         return () => clearTimeout(t);
     }, [ins.hidden]);
 
-    if (!show || ins.hidden) return null;
+    if (!show || ins.hidden || overShop) return null;
     const offer = offerText(ins.info);
     return (
         <div className="app-strip" role="region" aria-label="앱 설치 안내">

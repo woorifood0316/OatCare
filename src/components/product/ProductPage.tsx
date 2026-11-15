@@ -125,7 +125,7 @@ export function ProductPage({ slug }: { slug: string }) {
                             <strong>{won(item.price)}</strong>
                             <small>/ 1포</small>
                         </div>
-                        <ul className="pd-facts">
+                        <ul className="pd-facts pd-facts--rows">
                             <li>
                                 <b>주원료</b> {page.ingredient}
                             </li>
