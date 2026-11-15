@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { BellRing } from 'lucide-react';
-import { disablePush, enablePush, pushState, type PushState } from '../../lib/push-client';
+import { disablePush, enablePush, prefetchPushKey, pushState, type PushState } from '../../lib/push-client';
 import { openInstallSheet } from '../../lib/app-install';
 import { consentGiftText } from '../mypage/consentResult';
 
@@ -23,6 +23,7 @@ export function PushOptIn({ heading, sub }: { heading: string; sub?: string }) {
 
     useEffect(() => {
         pushState().then(setState);
+        void prefetchPushKey();
         fetch('/api/app/install', { cache: 'no-store' })
             .then((r) => (r.ok ? (r.json() as Promise<Member>) : null))
             .then((m) => setMe(m))
@@ -115,21 +116,27 @@ export function PushToggle() {
     const [error, setError] = useState('');
     useEffect(() => {
         pushState().then(setState);
+        void prefetchPushKey(); // ready before the first tap
     }, []);
     if (!state || state === 'unsupported') return null;
 
     const on = state === 'on';
+    // The switch moves at once; registering with the phone's push service (1-3 s) happens behind it and the switch
+    // goes back, with a note, only if that fails.
     const toggle = async () => {
         if (busy) return;
         setBusy(true);
         setError('');
         if (on) {
-            await disablePush();
             setState('off');
+            await disablePush();
         } else {
+            setState('on');
             const r = await enablePush(false);
-            setState(r.ok ? 'on' : r.reason === 'denied' ? 'denied' : 'off');
-            if (!r.ok && r.reason !== 'denied') setError('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요.');
+            if (!r.ok) {
+                setState(r.reason === 'denied' ? 'denied' : 'off');
+                if (r.reason !== 'denied') setError('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요.');
+            }
         }
         setBusy(false);
     };
@@ -157,7 +164,7 @@ export function PushToggle() {
                 {error ? <span className="my-error">{error}</span> : null}
             </div>
             {state === 'needs-app' || state === 'denied' ? null : (
-                <button type="button" role="switch" aria-checked={on} aria-label="주문·배송 앱 알림" className={`my-switch${on ? ' is-on' : ''}`} onClick={toggle} disabled={busy}>
+                <button type="button" role="switch" aria-checked={on} aria-label="주문·배송 앱 알림" className={`my-switch${on ? ' is-on' : ''}`} onClick={toggle} aria-busy={busy}>
                     <span />
                 </button>
             )}

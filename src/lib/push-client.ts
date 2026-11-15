@@ -19,6 +19,19 @@ function b64urlToBytes(s: string): Uint8Array {
     return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
+// The site key, fetched once and reused (prefetched when a notification switch appears).
+let keyPromise: Promise<string | null> | null = null;
+export function prefetchPushKey(): Promise<string | null> {
+    keyPromise ??= fetch('/api/push', { cache: 'no-store' })
+        .then((r) => (r.ok ? (r.json() as Promise<{ key: string | null }>) : { key: null }))
+        .then((d) => d.key)
+        .catch(() => {
+            keyPromise = null;
+            return null;
+        });
+    return keyPromise;
+}
+
 const supported = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
 export async function pushState(): Promise<PushState> {
@@ -43,7 +56,7 @@ export async function enablePush(marketing = false): Promise<{ ok: true; consent
     try {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return { ok: false, reason: 'denied' };
-        const { key } = (await (await fetch('/api/push', { cache: 'no-store' })).json()) as { key: string | null };
+        const key = await prefetchPushKey();
         if (!key) return { ok: false, reason: 'failed' };
         const reg = await navigator.serviceWorker.ready;
         const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(key) as BufferSource }));
@@ -65,8 +78,10 @@ export async function disablePush(): Promise<void> {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
         if (!sub) return;
-        await fetch('/api/push', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
-        await sub.unsubscribe();
+        await Promise.all([
+            fetch('/api/push', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }),
+            sub.unsubscribe(),
+        ]);
     } catch {
         /* already gone */
     }

@@ -32,7 +32,8 @@ export function PaymentMethodManager({ initial }: { initial: PaymentMethod[] }) 
             {dialog}
             <div className="my-card__head">
                 <h2 className="my-card__title">결제수단 (정기결제 카드)</h2>
-                <CardRegistrar next="/mypage/payment" />
+                {/* no card yet: the empty state below has the one register button */}
+                {list.length > 0 ? <CardRegistrar next="/mypage/payment" label="+ 카드 추가" /> : null}
             </div>
             {notice ? <p className="my-error">{notice}</p> : null}
 

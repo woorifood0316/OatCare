@@ -51,7 +51,7 @@ export default async function OrderDetailPage({
             <OrderBrief order={order} />
 
             {order.carrier && order.trackingNo ? (
-                <section className="my-card">
+                <section id="tracking" className="my-card">
                     <h2 className="my-card__title">배송 조회</h2>
                     <dl className="my-dl">
                         <div>

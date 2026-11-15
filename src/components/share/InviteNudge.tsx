@@ -30,12 +30,12 @@ export function InviteNudge({ heading }: { heading: string }) {
 }
 
 /** One-line invitation for task screens (결제수단·배송지, no subscription yet): present but out of the way. */
-export function InviteLine() {
+export function InviteLine({ text }: { text?: string } = {}) {
     return (
         <div className="inv-line">
             <Gift size={15} aria-hidden="true" />
             <span>
-                친구 초대하고 쿠폰 받기 · 친구 첫 구매가 확정되면 둘 다 {won(REFERRAL_REWARD)} (1회)
+                {text ? <>{text} · </> : <>친구 초대하고 쿠폰 받기 · </>}친구 첫 구매가 확정되면 둘 다 {won(REFERRAL_REWARD)} (1회)
             </span>
             <ShareButton {...SHARE} label="초대하기 →" className="inv-line__btn" />
         </div>

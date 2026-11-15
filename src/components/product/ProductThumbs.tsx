@@ -14,7 +14,12 @@ function itemOf(line: { sku?: string; name: string }) {
 export function ProductThumb({ line, size = 'md' }: { line: { sku?: string; name: string }; size?: 'sm' | 'md' }) {
     const item = itemOf(line);
     if (!item) return <span className={`pthumb pthumb--${size} pthumb--empty`} aria-hidden="true" />;
-    return <img className={`pthumb pthumb--${size}`} src={getAssetUrl(item.img)} alt="" loading="lazy" />;
+    // a single sachet sits small in its square photo: it is shown zoomed in so the pack reads at thumbnail size
+    return (
+        <span className={`pthumb pthumb--${size}${item.kind === 'single' ? ' pthumb--single' : ''}`}>
+            <img src={getAssetUrl(item.img)} alt="" loading="lazy" />
+        </span>
+    );
 }
 
 /** The products of one order as photos laid over each other (sets first, at most 3, then "+N"). */

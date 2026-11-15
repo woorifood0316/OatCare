@@ -54,6 +54,16 @@ export default function Home() {
         });
     }, []);
 
+    // ?buy=1 (e.g. 쿠폰함 '쓰러 가기'): open the purchase sheet at the product list, sets and singles together.
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('buy') !== '1') return;
+        url.searchParams.delete('buy');
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        const t = setTimeout(() => openBuy({ kind: 'list' }), 300);
+        return () => clearTimeout(t);
+    }, []);
+
     // Fallback (arrived from a product page's header link, or the saved position expired): go to the lineup section.
     useEffect(() => {
         let target: string | null = null;

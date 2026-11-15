@@ -6296,3 +6296,44 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .promo__note div { display: grid; gap: 0.15rem; min-width: 0; font-size: 0.84rem; color: #222; }
 .promo__note b { font-weight: 700; }
 .promo__note small { font-size: 0.72rem; color: #666; }
+
+/* --- 마이페이지 review fixes --- */
+/* thumbnails: a frame that clips; single sachets zoomed so the pack is readable */
+.pthumb { position: relative; overflow: hidden; }
+.pthumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pthumb--single img { transform: scale(1.55); }
+/* stacked photos take less width, so the order title keeps its room */
+.pstack .pthumb + .pthumb { margin-left: -1.9rem; }
+.ord-card__item strong { flex: 1; }
+/* order cards say where they go */
+.ord-card__go { align-self: flex-end; font-size: 0.82rem; font-weight: 800; color: var(--oc-maroon); }
+/* phones: the top bar already shows the screen title on sub pages, so the page heading keeps only its line of text */
+@media (max-width: 899px) {
+  .my-main:has(.my-topbar--sub) .my-head h1 { display: none; }
+}
+
+/* mypage: plain subscription card (no promo hero) */
+.my-subpromo { display: flex; align-items: center; justify-content: space-between; gap: 0.9rem; color: var(--oc-brown); text-decoration: none; }
+.my-subpromo h2 { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 800; }
+.my-subpromo p { margin: 0; font-size: 0.88rem; line-height: 1.5; }
+.my-subpromo small { display: block; margin-top: 0.2rem; font-size: 0.78rem; color: rgba(59, 42, 32, 0.6); }
+.my-subpromo__go { flex: none; font-size: 0.85rem; font-weight: 800; color: var(--oc-maroon); }
+
+/* coupon card: name + amount, then the conditions across the full width, then the button */
+.cpn { flex-direction: column; align-items: stretch; gap: 0.35rem; }
+.cpn__top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.cpn__top b { min-width: 0; font-size: 0.92rem; }
+.cpn__top strong { flex: none; color: var(--oc-maroon); font-size: 1.1rem; font-weight: 800; }
+.cpn__top strong small { margin-left: 0.25rem; color: rgba(59, 42, 32, 0.6); font-size: 0.72rem; font-weight: 700; }
+.cpn__meta { margin: 0; font-size: 0.8rem; line-height: 1.5; color: rgba(59, 42, 32, 0.62); }
+.cpn .cpn__cta { align-self: flex-end; margin-top: 0.2rem; }
+
+/* order list: a shipment on its way stands out, finished orders step back */
+.ord-card--live { border-color: var(--oc-maroon); box-shadow: 0 0 0 1px var(--oc-maroon) inset; }
+.ord-card--muted { background: #faf6ef; }
+.ord-card--muted .ord-card__item strong, .ord-card--muted .ord-card__bottom b { color: rgba(59, 42, 32, 0.7); }
+.ord-card--muted .pstack { opacity: 0.75; }
+.ord-card--muted .ord-card__go { color: rgba(59, 42, 32, 0.55); font-weight: 700; }
+.ord-card__go--pill { padding: 0.4rem 0.85rem; border-radius: 999px; background: var(--oc-maroon); color: #fff7e8; }
+.my-subpromo { margin-top: 0.9rem; }
+.cart-note + .app-card { margin-top: 1rem; }

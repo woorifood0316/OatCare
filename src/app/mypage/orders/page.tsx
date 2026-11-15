@@ -43,7 +43,7 @@ export default async function OrdersPage() {
                 <ul className="ord-list">
                     {orders.map((o) => (
                         <li key={o.id}>
-                            <Link href={`/mypage/orders/${o.orderNo}`} className="my-card ord-card">
+                            <Link href={`/mypage/orders/${o.orderNo}${o.status === 'shipped' && o.trackingNo ? '#tracking' : ''}`} className={`my-card ord-card${o.status === 'shipped' ? ' ord-card--live' : ['delivered', 'canceled', 'failed'].includes(o.status) ? ' ord-card--muted' : ''}`}>
                                 <div className="ord-card__top">
                                     <span className="ord-card__badges">
                                         <span className={`ord-status ord-status--${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
@@ -66,6 +66,8 @@ export default async function OrdersPage() {
                                     <span>{o.orderNo}</span>
                                     <b>{won(o.amount)}</b>
                                 </div>
+                                {/* the whole card is the link; this only says where it goes */}
+                                <span className={`ord-card__go${o.status === 'shipped' && o.trackingNo ? ' ord-card__go--pill' : ''}`}>{o.status === 'shipped' && o.trackingNo ? '배송 조회 →' : '주문 상세 →'}</span>
                             </Link>
                         </li>
                     ))}

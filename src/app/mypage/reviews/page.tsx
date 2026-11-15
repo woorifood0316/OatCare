@@ -5,7 +5,7 @@ import { r2Config } from '../../../lib/r2';
 import { REVIEW_STRIKE_LIMIT, getItem } from '../../../lib/catalog';
 import { VIOLATION_LABEL } from '../../../lib/review-filter';
 import { PageHead } from '../../../components/mypage/ComingSoon';
-import { InviteNudge } from '../../../components/share/InviteNudge';
+import { InviteLine } from '../../../components/share/InviteNudge';
 import { ReviewForm, ReviewPolicy } from '../../../components/reviews/ReviewForm';
 
 export const runtime = 'edge';
@@ -60,8 +60,6 @@ export default async function MyReviewsPage({ searchParams }: { searchParams: Pr
                 </>
             )}
 
-            {mine.length > 0 ? <InviteNudge heading="내가 맛보고 평가한 그 맛, 친구는 어떻게 평가할까요?" /> : null}
-
             {mine.length > 0 ? (
                 <section className="my-card">
                     <h2 className="co-h2">내가 쓴 리뷰</h2>
@@ -85,6 +83,9 @@ export default async function MyReviewsPage({ searchParams }: { searchParams: Pr
                     </ul>
                 </section>
             ) : null}
+
+            {/* the invitation comes after the member's own reviews */}
+            {mine.length > 0 ? <InviteLine text="내가 맛보고 평가한 그 맛, 친구는 어떻게 평가할까요?" /> : null}
         </>
     );
 }

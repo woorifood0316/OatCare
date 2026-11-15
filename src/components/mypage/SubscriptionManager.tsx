@@ -11,7 +11,7 @@ import type { PaymentMethod } from '../../lib/payment-methods';
 import { cardText } from './PaymentMethodManager';
 import { ProductThumb } from '../product/ProductThumbs';
 import { PushOptIn } from '../app/PushOptIn';
-import { InviteLine, InviteNudge } from '../share/InviteNudge';
+import { InviteLine } from '../share/InviteNudge';
 
 export interface HistoryItem {
     orderNo: string;
@@ -348,14 +348,16 @@ export function SubscriptionManager({
 
     if (subs.length === 0) {
         return (
-            <section className="my-card my-placeholder">
-                <Repeat size={24} />
-                <p>이용 중인 정기구독이 없어요</p>
-                <Link href="/#bundles" className="my-btn my-btn--primary">
-                    정기구독 알아보기
-                </Link>
+            <>
+                <section className="my-card my-placeholder">
+                    <Repeat size={24} />
+                    <p>이용 중인 정기구독이 없어요</p>
+                    <Link href="/#bundles" className="my-btn my-btn--primary">
+                        정기구독 알아보기
+                    </Link>
+                </section>
                 <InviteLine />
-            </section>
+            </>
         );
     }
 
@@ -367,7 +369,7 @@ export function SubscriptionManager({
                 <Card key={s.id} sub={s} addresses={addresses} methods={methods} history={history[s.id] ?? []} onUpdate={setSubs} />
             ))}
             {subs.some((s) => s.status !== 'canceled') ? (
-                <InviteNudge heading={justStarted ? '정기구독 시작을 축하해요! 친구에게도 알려 주세요' : '구독 중인 이 맛, 친구에게도 알려 주세요'} />
+                <InviteLine text={justStarted ? '정기구독 시작을 축하해요! 친구에게도 알려 주세요' : '구독 중인 이 맛, 친구에게도 알려 주세요'} />
             ) : (
                 <InviteLine />
             )}
