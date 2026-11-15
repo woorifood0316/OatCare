@@ -6279,3 +6279,20 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 }
 .push-link { padding: 0; border: 0; background: none; color: var(--oc-maroon); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .app-reward .push-card { margin: 0.8rem 0 0; }
+
+/* 관리자 › 이벤트 알림 */
+.promo { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.2rem; align-items: start; }
+@media (max-width: 860px) { .promo { grid-template-columns: minmax(0, 1fr); } }
+.promo__form { display: grid; gap: 0.8rem; }
+.promo__form label { display: grid; gap: 0.3rem; font-size: 0.88rem; font-weight: 700; }
+.promo__form small { font-weight: 500; color: #8a7a6a; }
+.promo__form input, .promo__form textarea { padding: 0.6rem 0.7rem; border: 1px solid var(--oc-line); border-radius: 0.6rem; font: inherit; font-size: 0.92rem; background: #fff; }
+.promo__form .adm-btn { justify-self: start; }
+.promo__ok { margin: 0; padding: 0.55rem 0.7rem; border-radius: 0.6rem; background: #eaf6ec; color: #1f5130; font-weight: 700; font-size: 0.88rem; }
+.promo__preview { display: grid; gap: 0.4rem; }
+.promo__label { font-size: 0.78rem; color: #8a7a6a; }
+.promo__note { display: flex; gap: 0.6rem; padding: 0.75rem; border-radius: 0.9rem; background: #f2f2f4; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.promo__note img { width: 2.2rem; height: 2.2rem; border-radius: 0.5rem; flex: none; }
+.promo__note div { display: grid; gap: 0.15rem; min-width: 0; font-size: 0.84rem; color: #222; }
+.promo__note b { font-weight: 700; }
+.promo__note small { font-size: 0.72rem; color: #666; }

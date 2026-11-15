@@ -112,6 +112,7 @@ export function PushOptIn({ heading, sub }: { heading: string; sub?: string }) {
 export function PushToggle() {
     const [state, setState] = useState<PushState | null>(null);
     const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
     useEffect(() => {
         pushState().then(setState);
     }, []);
@@ -121,12 +122,14 @@ export function PushToggle() {
     const toggle = async () => {
         if (busy) return;
         setBusy(true);
+        setError('');
         if (on) {
             await disablePush();
             setState('off');
         } else {
             const r = await enablePush(false);
             setState(r.ok ? 'on' : r.reason === 'denied' ? 'denied' : 'off');
+            if (!r.ok && r.reason !== 'denied') setError('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요.');
         }
         setBusy(false);
     };
@@ -151,6 +154,7 @@ export function PushToggle() {
                         '결제·배송·정기결제 안내를 앱 알림으로 받아요'
                     )}
                 </span>
+                {error ? <span className="my-error">{error}</span> : null}
             </div>
             {state === 'needs-app' || state === 'denied' ? null : (
                 <button type="button" role="switch" aria-checked={on} aria-label="주문·배송 앱 알림" className={`my-switch${on ? ' is-on' : ''}`} onClick={toggle} disabled={busy}>

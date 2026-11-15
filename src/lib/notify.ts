@@ -18,7 +18,9 @@ export type NotifyEvent =
     | 'return_completed'
     | 'inquiry_pending'
     | 'inquiry_answered'
-    | 'marketing_consent';
+    | 'marketing_consent'
+    /** shop-written event / benefit app notification (lib/promo-push.ts); push channel only */
+    | 'promo_push';
 
 /**
  * Queue a notification. Senders (email / operator webhook, later KakaoTalk) pick rows up from here,

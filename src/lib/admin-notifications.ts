@@ -6,6 +6,7 @@ import { getOrderByNo, type Order } from './orders';
 import type { NotifyEvent } from './notify';
 
 export const EVENT_LABEL: Record<string, string> = {
+    promo_push: '이벤트 알림 (광고)',
     order_paid: '주문 완료',
     order_canceled: '주문 취소',
     order_shipped: '발송 안내',

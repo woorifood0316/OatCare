@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff, Star, RotateCcw, MessageCircleQuestion, BookOpen, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Package, Repeat, Users, Bell, CalendarOff, Star, RotateCcw, MessageCircleQuestion, BookOpen, ShieldCheck, Megaphone } from 'lucide-react';
 
 const NAV = [
     { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
@@ -15,6 +15,7 @@ const NAV = [
     { href: '/admin/members', label: '회원', icon: Users },
     { href: '/admin/reviews', label: '리뷰', icon: Star },
     { href: '/admin/notifications', label: '알림', icon: Bell },
+    { href: '/admin/push', label: '이벤트 알림', icon: Megaphone },
     { href: '/admin/holidays', label: '휴무일', icon: CalendarOff },
     { href: '/admin/access-log', label: '접속 기록', icon: ShieldCheck },
 ] as const;
