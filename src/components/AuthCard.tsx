@@ -159,6 +159,9 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     void mode;
     const errorCode = params.get('error');
     const notice = params.get('notice');
+    // Identity check from 내 정보: only the member's own login is offered, so another one cannot start a second account.
+    const viaParam = params.get('via');
+    const reauthVia: Provider | null = notice === 'reauth' && (viaParam === 'kakao' || viaParam === 'naver' || viaParam === 'google') ? viaParam : null;
 
     let message: { tone: 'error' | 'info'; text: string } | null = null;
     if (notice === 'reauth') {
@@ -251,14 +254,20 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     <span>참오트케어</span>
                 </a>
 
-                <h1 className="oc-auth__title">참오트케어 시작하기</h1>
-                <p className="oc-auth__sub">
-                    쓰시는 카카오·네이버 계정으로 바로 시작해요.
-                    <br />
-                    처음이시면 동의 한 번으로 가입까지 끝나요.
-                </p>
+                {reauthVia ? (
+                    <h1 className="oc-auth__title">본인 확인</h1>
+                ) : (
+                    <>
+                        <h1 className="oc-auth__title">참오트케어 시작하기</h1>
+                        <p className="oc-auth__sub">
+                            쓰시는 카카오·네이버 계정으로 바로 시작해요.
+                            <br />
+                            처음이시면 동의 한 번으로 가입까지 끝나요.
+                        </p>
 
-                <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>쿠폰 혜택 최대 {SIGNUP_COUPON_MAX.toLocaleString('ko-KR')}원</b> (가입 · 앱 설치 · 알림 받기)</p>
+                        <p className="oc-auth__perk">🎟️ 처음 가입하면 <b>쿠폰 혜택 최대 {SIGNUP_COUPON_MAX.toLocaleString('ko-KR')}원</b> (가입 · 앱 설치 · 알림 받기)</p>
+                    </>
+                )}
 
                 {message && (
                     <p className={`oc-auth__msg oc-auth__msg--${message.tone}`} role="alert">
@@ -286,6 +295,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     {(['kakao', 'naver', 'google'] as Provider[])
                         .filter((p) => !(p === 'google' && env?.inApp))
                         .filter((p) => !handoff || p === 'kakao' || p === handoff)
+                        .filter((p) => !reauthVia || p === reauthVia)
                         .map((p) => (
                         <button
                             key={p}
@@ -296,7 +306,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         >
                             <span className="oc-auth__btn-icon">{ICONS[p]}</span>
                             <span>
-                                {pending === p ? '이동 중...' : buttonTitle(p)}
+                                {pending === p ? '이동 중...' : reauthVia ? `${PROVIDER_LABEL_EXISTS[p]}로 본인 확인` : buttonTitle(p)}
                             </span>
                         </button>
                     ))}
@@ -304,7 +314,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
 
 
 
-                {(
+                {!reauthVia && (
                     <div className="oc-auth__collect">
                         <strong>가입 시 받는 정보</strong>
                         <ul>
@@ -316,7 +326,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                     </div>
                 )}
 
-                <p className="oc-auth__legal">
+                {reauthVia ? null : <p className="oc-auth__legal">
                     처음 오신 분은 다음 화면에서{' '}
                     <a href="/terms" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegal('terms'); }}>
                         이용약관
@@ -326,7 +336,7 @@ function AuthCardInner({ mode }: { mode: Mode }) {
                         개인정보처리방침
                     </a>
                     에 동의하면 가입돼요. 만 14세 미만은 가입할 수 없어요.
-                </p>
+                </p>}
                 {env?.inApp ? (
                     <p className="oc-auth__inapp">구글 계정은 크롬·사파리 같은 일반 브라우저에서 이용할 수 있어요.</p>
                 ) : null}
