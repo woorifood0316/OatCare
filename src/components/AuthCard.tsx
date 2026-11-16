@@ -21,6 +21,8 @@ const PROVIDER_LABEL: Record<Provider, string> = {
     google: '구글',
 };
 
+const PROVIDER_LABEL_EXISTS: Record<string, string> = { kakao: '카카오', naver: '네이버', google: '구글' };
+
 const ERROR_MESSAGES: Record<string, string> = {
     AccessDenied: '로그인이 취소되었거나 허용되지 않았어요. 다시 시도해 주세요.',
     Configuration: '로그인 설정에 문제가 있어요. 잠시 후 다시 시도해 주세요.',
@@ -159,8 +161,17 @@ function AuthCardInner({ mode }: { mode: Mode }) {
     const notice = params.get('notice');
 
     let message: { tone: 'error' | 'info'; text: string } | null = null;
-    if (notice === 'not-registered') {
+    if (notice === 'reauth') {
+        const via = PROVIDER_LABEL_EXISTS[params.get('via') ?? ''];
+        message = { tone: 'info', text: `본인 확인을 위해 ${via ? `[${via}] 버튼으로 ` : ''}다시 로그인해 주세요. 로그인하면 바로 내 정보를 수정할 수 있어요.` };
+    } else if (notice === 'not-registered') {
         message = { tone: 'info', text: '아직 가입되지 않은 계정이에요. 아래에서 3초 만에 가입해 주세요.' };
+    } else if (errorCode === 'exists') {
+        const via = PROVIDER_LABEL_EXISTS[params.get('via') ?? ''];
+        message = {
+            tone: 'info',
+            text: via ? `이미 ${via}로 가입된 회원이에요. 아래 [${via}] 버튼으로 로그인해 주세요.` : '이미 다른 방법으로 가입된 회원이에요. 처음 가입한 방법으로 로그인해 주세요.',
+        };
     } else if (errorCode) {
         const reason = params.get('reason');
         const base = ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default;

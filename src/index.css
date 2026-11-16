@@ -6341,3 +6341,51 @@ a.perk-band__btn { text-decoration: none; text-align: center; }
 .cpn__date b { margin-left: 0.2rem; color: var(--oc-brown); font-weight: 800; }
 .inv-line > span { line-height: 1.4; }
 .inv-line__sub { display: block; margin-top: 0.1rem; font-size: 0.76rem; color: rgba(106, 88, 72, 0.8); white-space: nowrap; }
+
+/* mypage home: menu tiles a little denser on phones so more of them fit above the tab bar */
+@media (max-width: 899px) {
+  .my-grid { gap: 0.55rem; }
+  .my-grid .my-tile { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+}
+
+/* 내 정보: member info with changes in place */
+.pf-list { margin: 0; }
+.pf-row { padding: 0.75rem 0; border-bottom: 1px solid var(--oc-line); }
+.pf-row:last-child { border-bottom: 0; }
+.pf-row__main { display: flex; align-items: baseline; gap: 0.8rem; font-size: 0.92rem; }
+.pf-row__main dt { flex: none; width: 4.6rem; color: rgba(59, 42, 32, 0.62); }
+.pf-row__main dd { flex: 1; min-width: 0; margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.pf-row__btn { flex: none; padding: 0.3rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; color: var(--oc-brown); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.pf-row__btn:hover { border-color: var(--oc-maroon); color: var(--oc-maroon); }
+.pf-hint { display: block; margin-top: 0.2rem; font-size: 0.76rem; font-weight: 600; color: #a0661c; }
+.pf-empty { font-weight: 600; color: rgba(59, 42, 32, 0.5); }
+.pf-empty--warn { color: #b3261e; }
+.pf-edit { display: grid; gap: 0.55rem; margin-top: 0.7rem; padding: 0.85rem; border-radius: 0.8rem; background: #faf6ef; }
+.pf-edit input { width: 100%; box-sizing: border-box; padding: 0.7rem 0.8rem; border: 1px solid var(--oc-line); border-radius: 0.6rem; background: #fff; font: inherit; font-size: 1rem; }
+.pf-edit input:focus { outline: 2px solid var(--oc-gold); border-color: transparent; }
+.pf-edit__label { display: grid; gap: 0.35rem; font-size: 0.82rem; color: rgba(59, 42, 32, 0.75); }
+.pf-edit p { margin: 0; font-size: 0.86rem; line-height: 1.55; }
+.pf-edit .my-error { margin: 0; }
+.pf-edit__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.45rem; }
+.pf-edit__actions .my-btn { margin: 0; padding: 0.55rem 1rem; font-size: 0.86rem; }
+.pf-edit--check { background: #fff8e6; }
+.pf-done { margin: 0 0 0.4rem; padding: 0.55rem 0.8rem; border-radius: 0.6rem; background: #eef6ea; color: #2f6b2a; font-size: 0.85rem; font-weight: 700; }
+.pf-via { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.pf-via small { display: block; margin-top: 0.2rem; font-size: 0.8rem; font-weight: 500; color: rgba(59, 42, 32, 0.6); }
+
+/* 회원 탈퇴: small, at the very bottom; reasons and the typed name before it goes */
+.pf-leave { margin: 1.2rem 0 0.5rem; text-align: center; }
+.pf-leave .my-error { text-align: left; }
+.wd { text-align: left; }
+.wd__reasons { display: grid; gap: 0.4rem; margin: 0.6rem 0 0; padding: 0; border: 0; }
+.wd__reasons legend { margin-bottom: 0.45rem; padding: 0; font-weight: 800; font-size: 0.9rem; }
+.wd__reason { display: flex; align-items: center; gap: 0.55rem; padding: 0.55rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 0.6rem; background: #fff; font-size: 0.88rem; cursor: pointer; }
+.wd__reason.is-on { border-color: var(--oc-maroon); background: #fbf1ef; }
+.wd__reason input { accent-color: var(--oc-maroon); width: 1.05rem; height: 1.05rem; margin: 0; }
+.wd textarea { width: 100%; box-sizing: border-box; margin-top: 0.2rem; padding: 0.65rem 0.75rem; border: 1px solid var(--oc-line); border-radius: 0.6rem; font: inherit; font-size: 0.9rem; resize: vertical; }
+.wd__confirm { display: grid; gap: 0.4rem; margin-top: 0.9rem; font-size: 0.86rem; line-height: 1.55; }
+.wd__confirm b { color: #b3261e; }
+.wd__confirm input { padding: 0.7rem 0.8rem; border: 1px solid var(--oc-line); border-radius: 0.6rem; font: inherit; font-size: 1rem; }
+.wd .oc-auth__btn--danger:disabled { opacity: 0.4; cursor: not-allowed; }
+.adm-reasons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.adm-reasons li { display: flex; gap: 0.5rem; padding: 0.45rem 0.8rem; border: 1px solid var(--oc-line); border-radius: 999px; background: #fff; font-size: 0.85rem; }

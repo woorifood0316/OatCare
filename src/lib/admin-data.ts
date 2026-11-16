@@ -180,6 +180,7 @@ export interface MemberRow {
     id: string;
     name: string | null;
     email: string | null;
+    phone: string | null;
     role: string;
     providers: string[];
     createdAt: string;
@@ -193,18 +194,19 @@ export async function searchMembers(q?: string): Promise<MemberRow[]> {
     const sql = getSql();
     const like = q ? `%${q.trim()}%` : null;
     const rows = await sql`
-        select u.id, u.name, u.email, u.role, u.created_at, u.marketing_agreed, u.app_installed_at,
+        select u.id, u.name, u.email, u.phone, u.role, u.created_at, u.marketing_agreed, u.app_installed_at,
             (select array_agg(a.provider) from accounts a where a.user_id = u.id) as providers,
             (select count(*)::int from orders o where o.user_id = u.id and o.status <> 'pending') as order_count,
             (select count(*)::int from subscriptions s where s.user_id = u.id and s.status = 'active') as active_subs
         from users u
-        where (${like}::text is null or u.name ilike ${like} or u.email ilike ${like})
+        where (${like}::text is null or u.name ilike ${like} or u.email ilike ${like} or u.phone ilike ${like})
         order by u.created_at desc limit 100
     `;
     return rows.map((r) => ({
         id: r.id as string,
         name: (r.name as string | null) ?? null,
         email: (r.email as string | null) ?? null,
+        phone: (r.phone as string | null) ?? null,
         role: r.role as string,
         providers: ((r.providers as string[] | null) ?? []).filter(Boolean),
         createdAt: new Date(r.created_at as string).toISOString(),
@@ -213,6 +215,27 @@ export async function searchMembers(q?: string): Promise<MemberRow[]> {
         orderCount: r.order_count as number,
         activeSubs: r.active_subs as number,
     }));
+}
+
+/** Why members left (not linked to anyone): counts per reason and the latest written comments. */
+export async function withdrawalSummary(days = 90): Promise<{ total: number; byReason: { reason: string; n: number }[]; recent: { at: string; reasons: string[]; detail: string | null; provider: string | null; memberDays: number | null }[] }> {
+    const sql = getSql();
+    const [tot, by, recent] = await Promise.all([
+        sql`select count(*)::int n from withdrawal_reasons where created_at > now() - make_interval(days => ${days})`,
+        sql`select r reason, count(*)::int n from withdrawal_reasons, unnest(reasons) r where created_at > now() - make_interval(days => ${days}) group by 1 order by 2 desc`,
+        sql`select created_at, reasons, detail, provider, member_days from withdrawal_reasons order by created_at desc limit 20`,
+    ]);
+    return {
+        total: (tot[0]?.n as number) ?? 0,
+        byReason: by.map((r) => ({ reason: r.reason as string, n: r.n as number })),
+        recent: recent.map((r) => ({
+            at: new Date(r.created_at as string).toISOString(),
+            reasons: (r.reasons as string[] | null) ?? [],
+            detail: (r.detail as string | null) ?? null,
+            provider: (r.provider as string | null) ?? null,
+            memberDays: (r.member_days as number | null) ?? null,
+        })),
+    };
 }
 
 export interface NotificationRow {

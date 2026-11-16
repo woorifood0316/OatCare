@@ -12,6 +12,7 @@ import { KakaoLoginError, exchangeKakaoCode, mapKakaoUser } from './lib/kakao-ap
 import { PENDING_COOKIE, openPending, pendingCookieOptions, sealPending } from './lib/pending-signup';
 import { REF_COOKIE, recordReferral } from './lib/referrals';
 import { consumeHandoff } from './lib/handoff';
+import { existingLoginFor } from './lib/existing-login';
 
 /** Logins last this long and are renewed whenever the member comes back ("모든 기기에서 로그아웃" ends them early). */
 const SESSION_DAYS = 180;
@@ -96,8 +97,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     `;
                     userId = created[0].id as string;
                     await sql`
-                        insert into accounts (user_id, provider, provider_account_id)
-                        values (${userId}, ${pending.provider}, ${pending.providerAccountId})
+                        insert into accounts (user_id, provider, provider_account_id, email)
+                        values (${userId}, ${pending.provider}, ${pending.providerAccountId}, ${pending.email})
                     `;
                     await issueWelcomeCoupon(userId);
                     if (creds?.marketing === '1') {
@@ -157,12 +158,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     set last_login_at = now(), name = coalesce(nullif(name, ''), ${user.name ?? null})
                     where id = ${userId}
                 `;
+                // the email this login gives, kept for pointing a later second sign-up to this login
+                if (user.email) await sql`update accounts set email = ${user.email} where provider = ${provider} and provider_account_id = ${providerAccountId} and email is null`;
                 user.id = userId;
                 return true;
             }
 
             // Expelled for breaking the review policy: the same social login cannot sign up again.
             if (await isBannedAccount(provider, providerAccountId)) return '/login?error=banned';
+
+            // Already a member through another social login with the same email: log in that way instead of a second account.
+            const via = await existingLoginFor(user.email);
+            if (via && via !== provider) return `/login?error=exists&via=${via}`;
 
             // New social account: no separate sign-up page. Keep its profile for 15 minutes and show the one-tap
             // consent screen; /welcome then creates the member and logs them in.

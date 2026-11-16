@@ -110,7 +110,7 @@ export default async function MyHomePage() {
                 <Link href="/mypage/profile" className="my-card my-tile">
                     <User size={22} />
                     <strong>내 정보</strong>
-                    <span>이름·연락처·회원 탈퇴</span>
+                    <span>이름·연락처·이메일·알림 설정</span>
                 </Link>
                 <Link href="/mypage/coupons" className="my-card my-tile">
                     <Ticket size={22} />

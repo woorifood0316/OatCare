@@ -1,4 +1,4 @@
-import { searchMembers } from '../../../lib/admin-data';
+import { searchMembers, withdrawalSummary } from '../../../lib/admin-data';
 import { day, PROVIDER_KO } from '../../../components/admin/format';
 import { LogoutAllButton } from '../../../components/LogoutAllButton';
 
@@ -6,13 +6,13 @@ export const runtime = 'edge';
 
 export default async function AdminMembers({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
     const { q } = await searchParams;
-    const members = await searchMembers(q);
+    const [members, leave] = await Promise.all([searchMembers(q), withdrawalSummary()]);
 
     return (
         <>
             <h1 className="adm-h1">회원</h1>
             <form className="adm-filters" method="get">
-                <input name="q" defaultValue={q ?? ''} placeholder="이름 또는 이메일" aria-label="검색" />
+                <input name="q" defaultValue={q ?? ''} placeholder="이름·이메일·전화번호" aria-label="검색" />
                 <button type="submit" className="adm-btn adm-btn--primary">
                     검색
                 </button>
@@ -24,6 +24,7 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                         <tr>
                             <th>이름</th>
                             <th>이메일</th>
+                            <th>전화번호</th>
                             <th>가입 방법</th>
                             <th>가입일</th>
                             <th className="r">주문</th>
@@ -40,6 +41,7 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                                     {m.name ?? '-'} {m.role === 'admin' ? <span className="my-pill is-on">관리자</span> : null}
                                 </td>
                                 <td>{m.email ?? '-'}</td>
+                                <td>{m.phone ?? '-'}</td>
                                 <td>{m.providers.map((p) => PROVIDER_KO[p] ?? p).join(', ')}</td>
                                 <td>{day(m.createdAt)}</td>
                                 <td className="r">{m.orderCount}</td>
@@ -54,6 +56,47 @@ export default async function AdminMembers({ searchParams }: { searchParams: Pro
                     </tbody>
                 </table>
             </div>
+
+            <h2 className="adm-h2">탈퇴 사유 (최근 90일 {leave.total}명)</h2>
+            <p className="adm-muted">누가 탈퇴했는지는 남기지 않고, 고른 사유와 남긴 말, 가입 방법, 이용 기간만 남아요.</p>
+            {leave.total === 0 ? (
+                <p className="adm-muted">최근 90일 동안 탈퇴한 회원이 없어요.</p>
+            ) : (
+                <>
+                    <ul className="adm-reasons">
+                        {leave.byReason.map((r) => (
+                            <li key={r.reason}>
+                                <span>{r.reason}</span>
+                                <b>{r.n}명</b>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="adm-table-wrap">
+                        <table className="adm-table">
+                            <thead>
+                                <tr>
+                                    <th>탈퇴일</th>
+                                    <th>사유</th>
+                                    <th>남긴 말</th>
+                                    <th>가입 방법</th>
+                                    <th className="r">이용 기간</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {leave.recent.map((w, i) => (
+                                    <tr key={i}>
+                                        <td>{day(w.at)}</td>
+                                        <td>{w.reasons.join(', ') || '-'}</td>
+                                        <td>{w.detail ?? '-'}</td>
+                                        <td>{w.provider ? (PROVIDER_KO[w.provider] ?? w.provider) : '-'}</td>
+                                        <td className="r">{w.memberDays != null ? `${w.memberDays}일` : '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
         </>
     );
 }
