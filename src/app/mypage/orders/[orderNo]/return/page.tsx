@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getCurrentUser } from '../../../../../lib/current-user';
 import { getOrderByNo } from '../../../../../lib/orders';
 import { listReturnsForOrder, refundedSoFar, returnWindow, returnableLines } from '../../../../../lib/returns';
-import { r2Config } from '../../../../../lib/r2';
+import { r2PrivateConfig } from '../../../../../lib/r2';
 import { PageHead } from '../../../../../components/mypage/ComingSoon';
 import { ReturnForm } from '../../../../../components/returns/ReturnForm';
 
@@ -45,7 +45,7 @@ export default async function ReturnRequestPage({ params }: { params: Promise<{ 
                     changeOfMindOk={win.changeOfMind}
                     changeOfMindUntil={md(win.changeOfMindUntil)}
                     defectUntil={md(win.defectUntil)}
-                    photosEnabled={Boolean(r2Config())}
+                    photosEnabled={Boolean(r2PrivateConfig())}
                 />
             )}
         </>

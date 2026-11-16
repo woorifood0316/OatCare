@@ -1,17 +1,20 @@
 import { jsonError, sameOrigin, sessionUserId } from '../../../../lib/api';
-import { r2Config, r2Put } from '../../../../lib/r2';
+import { r2Config, r2Put, r2PrivateConfig, r2PutPrivate } from '../../../../lib/r2';
+import { newReturnPhoto } from '../../../../lib/return-photo';
 
 export const runtime = 'edge';
 
 const MAX_BYTES = 800 * 1024; // photos are shrunk in the browser first (about 150–400 KB); this is the hard cap
 const TYPES: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 
-/** Upload one review photo (or, with purpose=return, an exchange/return evidence photo) to R2 and return its public URL. */
+/**
+ * Upload one review photo to the public bucket (returns its public URL), or with purpose=return an exchange/return
+ * evidence photo to the PRIVATE bucket (returns an address only its sender and admins can open).
+ */
 export async function POST(request: Request) {
     if (!sameOrigin(request)) return jsonError('Forbidden', 403);
     const userId = await sessionUserId();
     if (!userId) return jsonError('로그인이 필요해요', 401);
-    if (!r2Config()) return jsonError('사진 올리기는 준비 중이에요', 503);
 
     let form: FormData;
     try {
@@ -25,10 +28,15 @@ export async function POST(request: Request) {
     if (!ext) return jsonError('JPG·PNG·WEBP 사진만 올릴 수 있어요');
     if (file.size > MAX_BYTES) return jsonError('사진 용량이 너무 커요');
 
-    const month = new Date().toISOString().slice(0, 7);
-    const folder = form.get('purpose') === 'return' ? 'returns' : 'reviews';
-    const key = `${folder}/${month}/${crypto.randomUUID()}.${ext}`;
+    const forReturn = form.get('purpose') === 'return';
+    if (!(forReturn ? r2PrivateConfig() : r2Config())) return jsonError('사진 올리기는 준비 중이에요', 503);
     try {
+        if (forReturn) {
+            const p = newReturnPhoto(userId, ext);
+            await r2PutPrivate(p.key, await file.arrayBuffer(), file.type);
+            return Response.json({ url: p.url });
+        }
+        const key = `reviews/${new Date().toISOString().slice(0, 7)}/${crypto.randomUUID()}.${ext}`;
         const url = await r2Put(key, await file.arrayBuffer(), file.type);
         return Response.json({ url });
     } catch {

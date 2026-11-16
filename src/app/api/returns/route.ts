@@ -1,6 +1,6 @@
 import { jsonError, sameOrigin, sessionUserId } from '../../../lib/api';
 import { getOrderByNo } from '../../../lib/orders';
-import { r2Config } from '../../../lib/r2';
+import { isOwnReturnPhoto } from '../../../lib/return-photo';
 import { RETURN_MAX_PHOTOS } from '../../../lib/catalog';
 import { enqueue } from '../../../lib/notify';
 import {
@@ -68,9 +68,9 @@ export async function POST(request: Request) {
     if (items.length === 0) return jsonError('신청할 상품을 선택해 주세요');
 
     const detail = typeof body.detail === 'string' ? body.detail.trim().slice(0, 1000) : '';
-    const cfg = r2Config();
+    // only photos this member uploaded to the private bucket (see lib/return-photo.ts)
     const photos = (Array.isArray(body.photos) ? body.photos : [])
-        .filter((u): u is string => typeof u === 'string' && Boolean(cfg) && u.startsWith(`${cfg!.publicUrl}/returns/`))
+        .filter((u): u is string => typeof u === 'string' && isOwnReturnPhoto(u, userId))
         .slice(0, RETURN_MAX_PHOTOS);
     if (reason !== 'change_of_mind') {
         if (detail.length < 10) return jsonError('어떤 문제가 있는지 10자 이상 적어 주세요');
