@@ -1,14 +1,46 @@
 import { getSql } from './db';
-import { cancelPayment, confirmPayment, paymentLabel } from './toss';
+import { cancelPayment, confirmPayment, isUncertain, paymentLabel, type TossPayment } from './toss';
+import { lookupPayment } from './payment-check';
 import { clearCartMode, getOrderByNo, type Order } from './orders';
 import { enqueue } from './notify';
 import { markCouponUsed, restoreCouponForOrder } from './coupons';
 
-type Result = { ok: true; order: Order } | { ok: false; message: string; order?: Order | null };
+type Result =
+    | { ok: true; order: Order }
+    /** checking: the payment company gave no clear answer yet; the order is 결제 확인 중 and must not be paid again */
+    | { ok: false; message: string; order?: Order | null; checking?: boolean };
+
+export const WIDGET_CHECKING_MESSAGE = '결제 결과를 확인하고 있어요. 다시 결제하지 마시고, 몇 분 뒤 주문 내역에서 확인해 주세요.';
+
+/** Mark a widget order paid. Only the first caller runs the follow-ups (coupon, cart, notification). */
+export async function completeWidgetOrder(order: Order, payment: TossPayment): Promise<boolean> {
+    const sql = getSql();
+    const updated = await sql`
+        update orders set status = 'paid', payment_key = ${payment.paymentKey}, key_type = 'widget',
+            payment_label = ${paymentLabel(payment)}, paid_at = now(), fail_reason = null, updated_at = now()
+        where id = ${order.id} and status in ('pending', 'checking')
+        returning id
+    `;
+    if (updated.length === 0) return false;
+    await markCouponUsed(order.id);
+    if (order.userId) await clearCartMode(order.userId, 'once');
+    await enqueue('order_paid', { orderNo: order.orderNo, amount: order.amount, items: order.items }, { userId: order.userId });
+    return true;
+}
+
+/** Leave the order 결제 확인 중 (keeps its coupon) with the key needed to look it up later. */
+async function markChecking(orderId: string, paymentKey: string, reason: string) {
+    await getSql()`
+        update orders set status = 'checking', payment_key = ${paymentKey}, key_type = 'widget', fail_reason = ${reason.slice(0, 300)}, updated_at = now()
+        where id = ${orderId} and status in ('pending', 'checking')
+    `;
+}
 
 /**
  * Called from the Toss success redirect. Verifies the amount against our own order row
  * (never trust the URL), confirms with Toss, then marks the order paid. Idempotent.
+ * An unclear answer (no response, a server error on their side) is looked up; still unclear -> 결제 확인 중,
+ * never "failed" on a guess.
  */
 export async function finalizeWidgetPayment(
     userId: string,
@@ -16,6 +48,7 @@ export async function finalizeWidgetPayment(
 ): Promise<Result> {
     const order = await getOrderByNo(params.orderId, userId);
     if (!order) return { ok: false, message: '주문을 찾을 수 없어요' };
+    if (order.status === 'checking') return settleChecking(order, userId);
     if (order.status !== 'pending') {
         // Refreshing the success page must not charge or fail anything twice.
         return order.status === 'paid' || order.status === 'preparing' || order.status === 'shipped' || order.status === 'delivered'
@@ -29,31 +62,56 @@ export async function finalizeWidgetPayment(
     }
 
     const res = await confirmPayment(params.paymentKey, order.orderNo, order.amount);
-    if (!res.ok) {
+    if (res.ok) {
+        await completeWidgetOrder(order, res.data);
+    } else if (isUncertain(res)) {
+        const seen = await lookupPayment({ keySet: 'widget', orderNo: order.orderNo, amount: order.amount, paymentKey: params.paymentKey, since: new Date() });
+        if (seen.state === 'paid') await completeWidgetOrder(order, seen.payment);
+        else if (seen.state === 'failed') {
+            await markFailed(order.id, `${res.code}: ${seen.reason}`);
+            return { ok: false, message: res.message, order };
+        } else {
+            await markChecking(order.id, params.paymentKey, `${res.code}: ${seen.reason}`);
+            return { ok: false, checking: true, message: WIDGET_CHECKING_MESSAGE, order };
+        }
+    } else {
         await markFailed(order.id, `${res.code}: ${res.message}`);
         return { ok: false, message: res.message, order };
     }
 
-    const sql = getSql();
-    const updated = await sql`
-        update orders set status = 'paid', payment_key = ${res.data.paymentKey}, key_type = 'widget',
-            payment_label = ${paymentLabel(res.data)}, paid_at = now(), updated_at = now()
-        where id = ${order.id} and status = 'pending'
-        returning id
-    `;
-    if (updated.length > 0) {
-        await markCouponUsed(order.id);
-        await clearCartMode(userId, 'once');
-        await enqueue('order_paid', { orderNo: order.orderNo, amount: order.amount, items: order.items }, { userId });
-    }
     const fresh = await getOrderByNo(order.orderNo, userId);
     return { ok: true, order: fresh ?? order };
+}
+
+/** An order left 결제 확인 중: look again (the success page refreshed, or the job). */
+async function settleChecking(order: Order, userId?: string): Promise<Result> {
+    const seen = await lookupWidget(order);
+    if (seen.state === 'paid') {
+        await completeWidgetOrder(order, seen.payment);
+        const fresh = await getOrderByNo(order.orderNo, userId);
+        return { ok: true, order: fresh ?? order };
+    }
+    if (seen.state === 'failed') {
+        await markFailed(order.id, seen.reason);
+        return { ok: false, message: '결제가 승인되지 않았어요. 청구된 금액은 없어요.', order };
+    }
+    return { ok: false, checking: true, message: WIDGET_CHECKING_MESSAGE, order };
+}
+
+function lookupWidget(order: Order) {
+    return lookupPayment({ keySet: 'widget', orderNo: order.orderNo, amount: order.amount, paymentKey: order.paymentKey, since: new Date(order.createdAt) });
+}
+
+/** Job: settle one-time orders left 결제 확인 중. */
+export async function settleCheckingWidgetOrder(order: Order): Promise<'paid' | 'failed' | 'checking'> {
+    const r = await settleChecking(order);
+    return r.ok ? 'paid' : r.checking ? 'checking' : 'failed';
 }
 
 async function markFailed(orderId: string, reason: string) {
     await getSql()`
         update orders set status = 'failed', fail_reason = ${reason.slice(0, 300)}, updated_at = now()
-        where id = ${orderId} and status = 'pending'
+        where id = ${orderId} and status in ('pending', 'checking')
     `;
 }
 

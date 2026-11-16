@@ -126,8 +126,8 @@ export async function PATCH(request: Request, ctx: Ctx) {
             }
             const result = await chargeSubscription(sub);
             if (!result.ok) return Response.json({ error: result.message, subscriptions: await listSubscriptions(userId) }, { status: 402 });
-            await markCharged(sub);
-            await enqueue('subscription_charged', { subscriptionId: id, orderNo: result.order.orderNo, amount: result.order.amount }, { userId });
+            const counted = await markCharged(sub);
+            if (counted.counted) await enqueue('subscription_charged', { subscriptionId: id, orderNo: result.order.orderNo, amount: result.order.amount }, { userId });
             return done({ orderNo: result.order.orderNo });
         }
         default:

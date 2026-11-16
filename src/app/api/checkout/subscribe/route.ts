@@ -109,6 +109,10 @@ export async function POST(request: Request) {
                 subscriptionId: result.subscriptionId,
                 amount: result.order.amount,
             });
+        } else if (result.code === 'CHECKING' || result.code === 'BUSY') {
+            // result not known yet: taken out of the cart so it is not paid twice; the job completes it
+            doneCycles.add(cycleDays);
+            results.push({ cycleDays, ok: false, message: result.message });
         } else {
             results.push({ cycleDays, ok: false, message: result.message });
         }

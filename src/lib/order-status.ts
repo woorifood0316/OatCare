@@ -1,7 +1,8 @@
-export type OrderStatus = 'pending' | 'paid' | 'preparing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
+export type OrderStatus = 'pending' | 'checking' | 'paid' | 'preparing' | 'shipped' | 'delivered' | 'canceled' | 'failed';
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
     pending: '결제 대기',
+    checking: '결제 확인 중',
     paid: '결제 완료',
     preparing: '상품 준비 중',
     shipped: '배송 중',
@@ -13,6 +14,7 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 /** Statuses the admin may move an order to, from each status. */
 export const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
     pending: [],
+    checking: [],
     paid: ['preparing', 'shipped'],
     preparing: ['shipped'],
     shipped: ['delivered'],

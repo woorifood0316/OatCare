@@ -1,8 +1,9 @@
 import { getSql } from './db';
 import { CartLine, MIN_SUBSCRIPTION_CHARGES, giftItem, orderNameOf, priceCart, sanitizeLines } from './catalog';
-import { chargeBilling, paymentLabel } from './toss';
+import { chargeBilling, isUncertain, paymentLabel, type TossPayment } from './toss';
+import { lookupPayment } from './payment-check';
 import { getBillingKey } from './payment-methods';
-import { getOrCreateCustomerKey, mapOrder, newOrderNo, type Order } from './orders';
+import { getOrCreateCustomerKey, getOrderByNo, mapOrder, newOrderNo, type Order } from './orders';
 import { addDays, todayKst } from './dates';
 import { enqueue } from './notify';
 import { markCouponUsed, reserveCoupon } from './coupons';
@@ -74,9 +75,71 @@ export interface ChargeExtras {
     gift?: boolean;
 }
 
-/** Create the order row and charge the saved card. Does NOT touch the subscription's schedule. */
+const PAID_LIKE = ['paid', 'preparing', 'shipped', 'delivered'];
+export const CHECKING_MESSAGE = '결제 결과를 확인하고 있어요. 다시 결제하지 말고 잠시 후 주문 내역을 확인해 주세요.';
+
+/** Complete a subscription order the payment company approved. Only the first caller gets the order back (side effects run once). */
+export async function completeSubscriptionOrder(orderId: string, payment: TossPayment): Promise<Order | null> {
+    const sql = getSql();
+    const paid = await sql`
+        update orders set status = 'paid', payment_key = ${payment.paymentKey}, key_type = 'api',
+            payment_label = ${paymentLabel(payment)}, paid_at = now(), fail_reason = null, updated_at = now()
+        where id = ${orderId} and status in ('pending', 'checking') returning *
+    `;
+    if (paid.length === 0) return null;
+    const order = mapOrder(paid[0]);
+    await sql`insert into billing_attempts (subscription_id, order_id, ok) values (${order.subscriptionId}, ${order.id}, true)`;
+    await markCouponUsed(order.id);
+    if (order.items.some((i) => i.gift) && order.userId) {
+        await sql`update users set shaker_gifted_at = now() where id = ${order.userId} and shaker_gifted_at is null`;
+    }
+    return order;
+}
+
+export async function failSubscriptionOrder(orderId: string, reason: string, subscriptionId: string | null, code: string): Promise<boolean> {
+    const sql = getSql();
+    // A failed order frees its coupon automatically (see coupons.ts).
+    const r = await sql`update orders set status = 'failed', fail_reason = ${reason.slice(0, 300)}, updated_at = now()
+                        where id = ${orderId} and status in ('pending', 'checking') returning id`;
+    if (r.length > 0 && subscriptionId) {
+        await sql`insert into billing_attempts (subscription_id, order_id, ok, error_code, error_message)
+                  values (${subscriptionId}, ${orderId}, false, ${code}, ${reason.slice(0, 300)})`;
+    }
+    return r.length > 0;
+}
+
+/**
+ * Charge the saved card for the subscription's next round (paid_count + 1). Does NOT touch the schedule.
+ *  - The round already approved: that order is returned, nothing is charged.
+ *  - An unresolved try of this round (no clear answer last time): it is looked up at the payment company and
+ *    completed, failed, or left 결제 확인 중 - never charged again under a new number while unclear.
+ *  - Otherwise a new try (order) for this round. The database allows only one unresolved try per round, so two
+ *    runs at once cannot both charge.
+ * A clear refusal (card declined, limit) fails the try; the next try of the round then gets a new order number.
+ */
 export async function chargeSubscription(sub: Subscription, extras: ChargeExtras = {}): Promise<ChargeResult> {
     const sql = getSql();
+    const round = sub.paidCount + 1;
+
+    const approved = await sql`select * from orders where subscription_id = ${sub.id} and charge_no = ${round} and status = any(${PAID_LIKE}) limit 1`;
+    if (approved[0]) return { ok: true, order: mapOrder(approved[0]) };
+
+    const open = await sql`select * from orders where subscription_id = ${sub.id} and charge_no = ${round} and status in ('pending', 'checking') limit 1`;
+    if (open[0]) {
+        const prev = mapOrder(open[0]);
+        const seen = await lookupPayment({ keySet: 'api', orderNo: prev.orderNo, amount: prev.amount, since: new Date(prev.createdAt) });
+        if (seen.state === 'paid') {
+            const done = (await completeSubscriptionOrder(prev.id, seen.payment)) ?? (await getOrderByNo(prev.orderNo));
+            return done ? { ok: true, order: done } : { ok: false, code: 'CHECKING', message: CHECKING_MESSAGE, order: prev };
+        }
+        if (seen.state === 'unknown') {
+            await sql`update orders set status = 'checking', fail_reason = ${seen.reason}, updated_at = now() where id = ${prev.id} and status = 'pending'`;
+            return { ok: false, code: 'CHECKING', message: CHECKING_MESSAGE, order: prev };
+        }
+        await failSubscriptionOrder(prev.id, seen.reason, sub.id, 'NOT_CHARGED');
+        // nothing was taken for that try: go on with a new one
+    }
+
     const priced = priceCart(sub.lines, 'subscribe');
     if (priced.error) return { ok: false, code: 'INVALID_ITEMS', message: priced.error };
     if (!sub.userId || !sub.paymentMethodId) {
@@ -93,14 +156,21 @@ export async function chargeSubscription(sub: Subscription, extras: ChargeExtras
     const user = await sql`select name, email from users where id = ${sub.userId}`;
     const orderNo = newOrderNo();
 
-    const inserted = await sql`
-        insert into orders (order_no, user_id, kind, subscription_id, status, items, subtotal, shipping_fee, amount,
-            discount_amount, ship_name, ship_phone, ship_zip, ship_address1, ship_address2)
-        values (${orderNo}, ${sub.userId}, 'subscription', ${sub.id}, 'pending', ${JSON.stringify(items)}::jsonb,
-            ${priced.subtotal}, ${priced.shipping}, ${amount}, ${discount},
-            ${sub.shipName}, ${sub.shipPhone}, ${sub.shipZip}, ${sub.shipAddress1}, ${sub.shipAddress2})
-        returning *
-    `;
+    let inserted;
+    try {
+        inserted = await sql`
+            insert into orders (order_no, user_id, kind, subscription_id, charge_no, status, items, subtotal, shipping_fee, amount,
+                discount_amount, ship_name, ship_phone, ship_zip, ship_address1, ship_address2)
+            values (${orderNo}, ${sub.userId}, 'subscription', ${sub.id}, ${round}, 'pending', ${JSON.stringify(items)}::jsonb,
+                ${priced.subtotal}, ${priced.shipping}, ${amount}, ${discount},
+                ${sub.shipName}, ${sub.shipPhone}, ${sub.shipZip}, ${sub.shipAddress1}, ${sub.shipAddress2})
+            returning *
+        `;
+    } catch (e) {
+        // another run opened a try for this round at the same moment: that one goes on, this one stops
+        if (String((e as { code?: string }).code) === '23505') return { ok: false, code: 'BUSY', message: '이미 결제를 진행하고 있어요. 잠시 후 확인해 주세요.' };
+        throw e;
+    }
     const order = mapOrder(inserted[0]);
 
     if (extras.couponId) {
@@ -122,31 +192,37 @@ export async function chargeSubscription(sub: Subscription, extras: ChargeExtras
         customerName: sub.shipName ?? ((user[0]?.name as string | null) ?? null),
     });
 
-    if (!res.ok) {
-        const reason = `${res.code}: ${res.message}`.slice(0, 300);
-        // A failed order frees its coupon automatically (see coupons.ts).
-        await sql`update orders set status = 'failed', fail_reason = ${reason}, updated_at = now() where id = ${order.id}`;
-        await sql`insert into billing_attempts (subscription_id, order_id, ok, error_code, error_message)
-                  values (${sub.id}, ${order.id}, false, ${res.code}, ${res.message.slice(0, 300)})`;
+    if (res.ok) {
+        const done = (await completeSubscriptionOrder(order.id, res.data)) ?? (await getOrderByNo(orderNo));
+        return done ? { ok: true, order: done } : { ok: false, code: 'CHECKING', message: CHECKING_MESSAGE, order };
+    }
+
+    if (isUncertain(res)) {
+        // No clear answer: ask what happened before deciding. Still unclear -> 결제 확인 중 (the coupon stays held).
+        const seen = await lookupPayment({ keySet: 'api', orderNo, amount, since: new Date(order.createdAt) });
+        if (seen.state === 'paid') {
+            const done = (await completeSubscriptionOrder(order.id, seen.payment)) ?? (await getOrderByNo(orderNo));
+            return done ? { ok: true, order: done } : { ok: false, code: 'CHECKING', message: CHECKING_MESSAGE, order };
+        }
+        if (seen.state === 'unknown') {
+            await sql`update orders set status = 'checking', fail_reason = ${`${res.code}: ${seen.reason}`.slice(0, 300)}, updated_at = now()
+                      where id = ${order.id} and status = 'pending'`;
+            return { ok: false, code: 'CHECKING', message: CHECKING_MESSAGE, order };
+        }
+        await failSubscriptionOrder(order.id, `${res.code}: ${seen.reason}`, sub.id, res.code);
         return { ok: false, code: res.code, message: res.message, order };
     }
 
-    const paid = await sql`
-        update orders set status = 'paid', payment_key = ${res.data.paymentKey}, key_type = 'api',
-            payment_label = ${paymentLabel(res.data)}, paid_at = now(), updated_at = now()
-        where id = ${order.id} returning *
-    `;
-    await sql`insert into billing_attempts (subscription_id, order_id, ok) values (${sub.id}, ${order.id}, true)`;
-    if (extras.couponId) await markCouponUsed(order.id);
-    if (extras.gift) await sql`update users set shaker_gifted_at = now() where id = ${sub.userId} and shaker_gifted_at is null`;
-    return { ok: true, order: mapOrder(paid[0]) };
+    await failSubscriptionOrder(order.id, `${res.code}: ${res.message}`, sub.id, res.code);
+    return { ok: false, code: res.code, message: res.message, order };
 }
 
 /**
  * Schedule bookkeeping after a successful charge: counts the payment and, if the customer had asked to cancel
  * during the minimum period, ends the subscription now that the minimum has been paid.
+ * Counted once per round: only while paid_count is still what it was before that round (`counted`).
  */
-export async function markCharged(sub: Subscription): Promise<{ status: SubStatus; endedNow: boolean }> {
+export async function markCharged(sub: Subscription): Promise<{ status: SubStatus; endedNow: boolean; counted: boolean }> {
     const rows = await getSql()`
         update subscriptions set
             last_billed_at = now(), fail_count = 0, skip_next = false, processing_at = null,
@@ -159,15 +235,16 @@ export async function markCharged(sub: Subscription): Promise<{ status: SubStatu
             cancel_reason = case when cancel_requested_at is not null and paid_count + 1 >= ${MIN_SUBSCRIPTION_CHARGES}
                                  then coalesce(cancel_reason, '고객 해지 (최소 이용기간 종료)') else cancel_reason end,
             updated_at = now()
-        where id = ${sub.id}
+        where id = ${sub.id} and paid_count = ${sub.paidCount}
         returning status
     `;
+    if (rows.length === 0) return { status: sub.status, endedNow: false, counted: false };
     const status = (rows[0]?.status as SubStatus) ?? 'active';
     const endedNow = status === 'canceled';
     if (endedNow) {
         await enqueue('subscription_canceled', { subscriptionId: sub.id, reason: '최소 이용기간(2회) 종료 후 해지' }, { userId: sub.userId });
     }
-    return { status, endedNow };
+    return { status, endedNow, counted: true };
 }
 
 export interface FirstChargeInput {
@@ -197,12 +274,14 @@ export async function startSubscription(input: FirstChargeInput): Promise<Charge
     const result = await chargeSubscription(sub, { discount: input.discount, couponId: input.couponId, gift: input.gift });
 
     if (!result.ok) {
+        // No clear answer yet: the subscription stays; the job completes it (or cancels it) once the result is known.
+        if (result.code === 'CHECKING' || result.code === 'BUSY') return { ...result, subscriptionId: sub.id };
         await sql`update subscriptions set status = 'canceled', canceled_at = now(), cancel_reason = '첫 결제 실패', updated_at = now()
                   where id = ${sub.id}`;
         return { ...result, subscriptionId: sub.id };
     }
-    await markCharged(sub);
-    await enqueue(
+    const counted = await markCharged(sub);
+    if (counted.counted) await enqueue(
         'subscription_started',
         { subscriptionId: sub.id, orderNo: result.order.orderNo, amount: result.order.amount, cycleDays: input.cycleDays },
         { userId: input.userId },
@@ -210,7 +289,7 @@ export async function startSubscription(input: FirstChargeInput): Promise<Charge
     return { ...result, subscriptionId: sub.id };
 }
 
-export type DueOutcome = 'charged' | 'skipped' | 'failed' | 'suspended' | 'busy';
+export type DueOutcome = 'charged' | 'skipped' | 'failed' | 'suspended' | 'busy' | 'checking';
 
 /** Process one due subscription (called by the daily billing job). */
 export async function processDueSubscription(id: string): Promise<{ id: string; outcome: DueOutcome; detail?: string }> {
@@ -235,8 +314,8 @@ export async function processDueSubscription(id: string): Promise<{ id: string; 
 
         const result = await chargeSubscription(sub);
         if (result.ok) {
-            await markCharged(sub);
-            await enqueue(
+            const counted = await markCharged(sub);
+            if (counted.counted) await enqueue(
                 'subscription_charged',
                 { subscriptionId: sub.id, orderNo: result.order.orderNo, amount: result.order.amount },
                 { userId: sub.userId },
@@ -244,6 +323,11 @@ export async function processDueSubscription(id: string): Promise<{ id: string; 
             return { id, outcome: 'charged' };
         }
 
+        if (result.code === 'CHECKING' || result.code === 'BUSY') {
+            // result not known yet: not a failure; the date stays so the next run looks again
+            await sql`update subscriptions set processing_at = null where id = ${sub.id}`;
+            return { id, outcome: 'checking', detail: result.message };
+        }
         const fails = sub.failCount + 1;
         if (fails >= MAX_FAILS) {
             await sql`update subscriptions set status = 'past_due', fail_count = ${fails}, processing_at = null, updated_at = now() where id = ${sub.id}`;

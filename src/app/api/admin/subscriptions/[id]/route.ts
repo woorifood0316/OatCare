@@ -53,8 +53,8 @@ export async function PATCH(request: Request, ctx: Ctx) {
         case 'retry_now': {
             const result = await chargeSubscription(sub);
             if (!result.ok) return jsonError(result.message, 402);
-            await markCharged(sub);
-            await enqueue('subscription_charged', { subscriptionId: id, orderNo: result.order.orderNo, amount: result.order.amount }, { userId: sub.userId });
+            const counted = await markCharged(sub);
+            if (counted.counted) await enqueue('subscription_charged', { subscriptionId: id, orderNo: result.order.orderNo, amount: result.order.amount }, { userId: sub.userId });
             break;
         }
         default:

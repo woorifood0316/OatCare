@@ -2,6 +2,7 @@ import { runBilling, runNotifications, runReminders } from '../../../../lib/cron
 import { runInquiryAnswers } from '../../../../lib/inquiries';
 import { runReferralRewards } from '../../../../lib/referrals';
 import { cleanupAccessLog } from '../../../../lib/access-log';
+import { settleUnclearPayments } from '../../../../lib/payment-settle';
 
 export const runtime = 'edge';
 
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
         out.accessLogCleaned = await cleanupAccessLog(); // admin access log older than 2 years
     }
     if (!job || job === 'notify' || job === 'billing') {
+        out.payments = await settleUnclearPayments(); // payments whose result was unclear (결제 확인 중)
         out.inquiries = await runInquiryAnswers(); // product Q&A whose background answer didn't run
         out.notifications = await runNotifications();
     }

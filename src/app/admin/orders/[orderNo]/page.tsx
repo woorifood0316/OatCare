@@ -191,7 +191,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ o
                 </section>
             ) : null}
 
-            {order.status !== 'canceled' && order.status !== 'failed' && order.status !== 'pending' ? (
+            {order.status !== 'canceled' && order.status !== 'failed' && order.status !== 'pending' && order.status !== 'checking' ? (
                 <AdminOrderActions
                     orderNo={order.orderNo}
                     status={order.status}

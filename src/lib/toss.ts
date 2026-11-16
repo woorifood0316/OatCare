@@ -8,6 +8,9 @@ const BASE = process.env.TOSS_API_BASE || 'https://api.tosspayments.com';
 
 export type KeySet = 'widget' | 'api';
 
+/** How long to wait for the payment company before treating the result as unknown. */
+const TIMEOUT_MS = 25_000;
+
 export interface TossError {
     ok: false;
     status: number;
@@ -29,15 +32,22 @@ async function toss<T>(
     body?: unknown,
     idempotencyKey?: string,
 ): Promise<TossResult<T>> {
-    const res = await fetch(BASE + path, {
-        method,
-        headers: {
-            Authorization: `Basic ${btoa(`${secretFor(keySet)}:`)}`,
-            'Content-Type': 'application/json',
-            ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
-        },
-        body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+        res = await fetch(BASE + path, {
+            method,
+            headers: {
+                Authorization: `Basic ${btoa(`${secretFor(keySet)}:`)}`,
+                'Content-Type': 'application/json',
+                ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+            },
+            body: body === undefined ? undefined : JSON.stringify(body),
+            signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+    } catch (e) {
+        // No answer (timeout, connection dropped): the payment may or may not have gone through.
+        return { ok: false, status: 0, code: 'NETWORK_ERROR', message: (e as Error)?.name === 'TimeoutError' ? '결제사 응답 시간 초과' : '결제사 연결 오류' };
+    }
     let data: Record<string, unknown> = {};
     try {
         data = await res.json();
@@ -127,4 +137,32 @@ export function chargeBilling(input: ChargeInput) {
         },
         `charge-${rest.orderId}`,
     );
+}
+
+/**
+ * An error that does not prove the payment failed: no answer, a server error on their side, or "already processed"
+ * (a retry of a request that went through). The result must be looked up before deciding anything.
+ */
+export function isUncertain(e: TossError): boolean {
+    return e.status === 0 || e.status >= 500 || UNCERTAIN_CODES.has(e.code);
+}
+const UNCERTAIN_CODES = new Set([
+    'NETWORK_ERROR',
+    'UNKNOWN',
+    'UNKNOWN_PAYMENT_ERROR',
+    'FAILED_INTERNAL_SYSTEM_PROCESSING',
+    'FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING',
+    'ALREADY_PROCESSED_PAYMENT',
+    'DUPLICATED_ORDER_ID',
+    'PROVIDER_ERROR',
+]);
+
+/** A payment by its paymentKey (widget payments: the key comes back on the success redirect). */
+export function getPayment(keySet: KeySet, paymentKey: string) {
+    return toss<TossPayment>(keySet, 'GET', `/v1/payments/${encodeURIComponent(paymentKey)}`);
+}
+
+/** A payment by our order number (subscription charges). 404 NOT_FOUND_PAYMENT: none was made. */
+export function getPaymentByOrderId(keySet: KeySet, orderId: string) {
+    return toss<TossPayment>(keySet, 'GET', `/v1/payments/orders/${encodeURIComponent(orderId)}`);
 }
